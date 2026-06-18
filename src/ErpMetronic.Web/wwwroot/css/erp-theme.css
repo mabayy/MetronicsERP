@@ -1,0 +1,233 @@
+/*
+ * erp-theme.css — Tema bergaya Metronic 8 (Demo1) di atas Bootstrap 5.
+ * Catatan: ini adalah lapisan "Metronic-like" agar aplikasi langsung tampil rapi
+ * tanpa file lisensi. Untuk memakai Metronic asli, lihat docs/02-integrasi-metronic.md
+ * (cukup ganti referensi CSS/JS di _Layout.cshtml dengan bundle Metronic).
+ */
+
+:root {
+    --erp-primary: #009ef7;
+    --erp-primary-light: #f1faff;
+    --erp-success: #50cd89;
+    --erp-info: #7239ea;
+    --erp-warning: #ffc700;
+    --erp-danger: #f1416c;
+    --erp-dark: #181c32;
+    --erp-body-bg: #f5f8fa;
+    --erp-sidebar-bg: #1e1e2d;
+    --erp-sidebar-item: #9899ac;
+    --erp-sidebar-active: #ffffff;
+    --erp-sidebar-active-bg: #2a2a3c;
+    --erp-text-muted: #a1a5b7;
+    --erp-border: #eff2f5;
+    --erp-sidebar-width: 265px;
+    --erp-header-height: 65px;
+}
+
+body {
+    background-color: var(--erp-body-bg);
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.95rem;
+    color: #5e6278;
+}
+
+/* ===================== Layout shell ===================== */
+.erp-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--erp-sidebar-width);
+    background-color: var(--erp-sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    z-index: 1030;
+    transition: transform .3s ease;
+}
+
+.erp-sidebar .erp-brand {
+    height: var(--erp-header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+}
+
+.erp-brand .bi {
+    color: var(--erp-primary);
+    margin-right: 10px;
+    font-size: 1.5rem;
+}
+
+.erp-menu {
+    list-style: none;
+    margin: 0;
+    padding: 15px 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.erp-menu .menu-heading {
+    color: var(--erp-text-muted);
+    text-transform: uppercase;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    padding: 16px 25px 6px;
+}
+
+.erp-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--erp-sidebar-item);
+    padding: 10px 25px;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 8px;
+    margin: 1px 12px;
+    transition: all .15s ease;
+}
+
+.erp-menu a .bi {
+    font-size: 1.15rem;
+    width: 20px;
+    text-align: center;
+}
+
+.erp-menu a:hover {
+    color: var(--erp-sidebar-active);
+    background-color: rgba(255, 255, 255, .03);
+}
+
+.erp-menu a.active {
+    color: var(--erp-sidebar-active);
+    background-color: var(--erp-sidebar-active-bg);
+}
+
+.erp-main {
+    margin-left: var(--erp-sidebar-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.erp-header {
+    height: var(--erp-header-height);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.erp-header .page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--erp-dark);
+    margin: 0;
+}
+
+.erp-content {
+    padding: 30px;
+    flex: 1;
+}
+
+.erp-footer {
+    padding: 20px 30px;
+    color: var(--erp-text-muted);
+    font-size: .9rem;
+    border-top: 1px solid var(--erp-border);
+}
+
+.erp-toggle {
+    display: none;
+    border: none;
+    background: transparent;
+    font-size: 1.4rem;
+    color: var(--erp-dark);
+}
+
+/* ===================== Cards ===================== */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, .03);
+}
+
+.card .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--erp-border);
+    min-height: 60px;
+    align-items: center;
+    display: flex;
+    font-weight: 600;
+    color: var(--erp-dark);
+}
+
+/* ===================== Statistic widgets ===================== */
+.stat-card {
+    border-radius: 12px;
+    padding: 24px;
+    color: #fff;
+}
+.stat-card .stat-value { font-size: 1.9rem; font-weight: 700; }
+.stat-card .stat-label { opacity: .85; }
+.bg-grad-primary { background: linear-gradient(135deg, #009ef7, #4dbbf9); }
+.bg-grad-success { background: linear-gradient(135deg, #50cd89, #7ddaa6); }
+.bg-grad-warning { background: linear-gradient(135deg, #ffc700, #ffd84d); }
+.bg-grad-info    { background: linear-gradient(135deg, #7239ea, #9b6ff0); }
+
+/* ===================== Buttons & misc ===================== */
+.btn-primary {
+    background-color: var(--erp-primary);
+    border-color: var(--erp-primary);
+}
+.btn-primary:hover { background-color: #0089d6; border-color: #0089d6; }
+.text-primary { color: var(--erp-primary) !important; }
+
+.table > thead {
+    background-color: #f9f9f9;
+    text-transform: uppercase;
+    font-size: .8rem;
+    letter-spacing: .4px;
+    color: var(--erp-text-muted);
+}
+.table > :not(caption) > * > * { padding: .9rem .75rem; }
+
+.badge-light-success { background: #e8fff3; color: #50cd89; }
+.badge-light-danger  { background: #fff5f8; color: #f1416c; }
+.badge-light-primary { background: #f1faff; color: #009ef7; }
+
+/* ===================== Auth pages ===================== */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e1e2d, #2a2a40);
+    padding: 20px;
+}
+.auth-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+
+/* ===================== Responsive ===================== */
+@media (max-width: 991.98px) {
+    .erp-sidebar { transform: translateX(-100%); }
+    .erp-sidebar.show { transform: translateX(0); }
+    .erp-main { margin-left: 0; }
+    .erp-toggle { display: inline-block; }
+}

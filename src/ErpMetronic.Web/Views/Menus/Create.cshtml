@@ -1,0 +1,67 @@
+@model MenuItemViewModel
+@{
+    ViewData["Title"] = "Tambah Menu";
+    var roles = ViewBag.Roles as string[] ?? Array.Empty<string>();
+}
+
+<div class="card">
+    <div class="card-header">Form Menu Baru</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Title" class="form-label fw-semibold"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Icon" class="form-label fw-semibold"></label>
+                    <input asp-for="Icon" class="form-control" placeholder="contoh: bi-box" />
+                    <span class="text-muted small">Lihat daftar ikon di icons.getbootstrap.com (tanpa prefix titik).</span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ParentId" class="form-label fw-semibold"></label>
+                    <select asp-for="ParentId" asp-items="ViewBag.Parents" class="form-select">
+                        <option value="">(Menu utama / level atas)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="RequiredRole" class="form-label fw-semibold"></label>
+                    <select asp-for="RequiredRole" class="form-select">
+                        <option value="">(Semua pengguna login)</option>
+                        @foreach (var r in roles)
+                        {
+                            <option value="@r">@r</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Controller" class="form-label fw-semibold"></label>
+                    <input asp-for="Controller" class="form-control" placeholder="contoh: Products" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Action" class="form-label fw-semibold"></label>
+                    <input asp-for="Action" class="form-control" placeholder="Index" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Url" class="form-label fw-semibold"></label>
+                    <input asp-for="Url" class="form-control" placeholder="opsional, mis. https://..." />
+                </div>
+                <div class="col-12">
+                    <span class="text-muted small"><i class="bi bi-info-circle"></i> Kosongkan Controller & URL untuk membuat <strong>grup/header</strong>. Jika URL diisi, ia diutamakan.</span>
+                </div>
+                <div class="col-12 form-check ms-2">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

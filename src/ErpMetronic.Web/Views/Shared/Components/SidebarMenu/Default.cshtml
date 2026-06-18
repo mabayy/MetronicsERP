@@ -1,0 +1,42 @@
+@using ErpMetronic.Web.ViewComponents
+@model List<MenuNode>
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string ActiveClass(string? c) => !string.IsNullOrEmpty(c) && string.Equals(currentController, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+
+@functions {
+    string Href(ErpMetronic.Domain.Entities.MenuItem m, IUrlHelper url)
+    {
+        if (!string.IsNullOrEmpty(m.Url)) return m.Url!;
+        if (!string.IsNullOrEmpty(m.Controller))
+            return url.Action(string.IsNullOrEmpty(m.Action) ? "Index" : m.Action, m.Controller) ?? "#";
+        return "#";
+    }
+}
+
+<ul class="erp-menu">
+    @foreach (var node in Model)
+    {
+        if (node.Children.Count > 0)
+        {
+            <li class="menu-heading">@node.Item.Title</li>
+            foreach (var child in node.Children)
+            {
+                <li>
+                    <a class="@ActiveClass(child.Controller)" href="@Href(child, Url)">
+                        <i class="bi @(child.Icon ?? "bi-dot")"></i> @child.Title
+                    </a>
+                </li>
+            }
+        }
+        else
+        {
+            <li>
+                <a class="@ActiveClass(node.Item.Controller)" href="@Href(node.Item, Url)">
+                    <i class="bi @(node.Item.Icon ?? "bi-dot")"></i> @node.Item.Title
+                </a>
+            </li>
+        }
+    }
+</ul>

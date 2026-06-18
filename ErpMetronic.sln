@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1080D91F-849C-45BB-A4C9-DD2A912D47DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErpMetronic.Domain", "src\ErpMetronic.Domain\ErpMetronic.Domain.csproj", "{72BE911F-BD8D-4525-B621-8EA8CB91E35A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErpMetronic.Infrastructure", "src\ErpMetronic.Infrastructure\ErpMetronic.Infrastructure.csproj", "{133AA390-19B1-4DF6-9ED4-3FDC794491AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErpMetronic.Web", "src\ErpMetronic.Web\ErpMetronic.Web.csproj", "{566AA6F0-FA5D-443E-BEBB-A88C312F6052}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{72BE911F-BD8D-4525-B621-8EA8CB91E35A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72BE911F-BD8D-4525-B621-8EA8CB91E35A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72BE911F-BD8D-4525-B621-8EA8CB91E35A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72BE911F-BD8D-4525-B621-8EA8CB91E35A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{133AA390-19B1-4DF6-9ED4-3FDC794491AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{133AA390-19B1-4DF6-9ED4-3FDC794491AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{133AA390-19B1-4DF6-9ED4-3FDC794491AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{133AA390-19B1-4DF6-9ED4-3FDC794491AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{566AA6F0-FA5D-443E-BEBB-A88C312F6052}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{566AA6F0-FA5D-443E-BEBB-A88C312F6052}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{566AA6F0-FA5D-443E-BEBB-A88C312F6052}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{566AA6F0-FA5D-443E-BEBB-A88C312F6052}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{72BE911F-BD8D-4525-B621-8EA8CB91E35A} = {1080D91F-849C-45BB-A4C9-DD2A912D47DC}
+		{133AA390-19B1-4DF6-9ED4-3FDC794491AE} = {1080D91F-849C-45BB-A4C9-DD2A912D47DC}
+		{566AA6F0-FA5D-443E-BEBB-A88C312F6052} = {1080D91F-849C-45BB-A4C9-DD2A912D47DC}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,138 @@
+@model List<MenuItem>
+@{
+    ViewData["Title"] = "Master Menu";
+    var roots = Model.Where(m => m.ParentId == null).OrderBy(m => m.SortOrder).ToList();
+    List<MenuItem> ChildrenOf(int id) => Model.Where(m => m.ParentId == id).OrderBy(m => m.SortOrder).ToList();
+}
+
+@functions {
+    string Target(MenuItem m)
+    {
+        if (!string.IsNullOrEmpty(m.Url)) return m.Url!;
+        if (!string.IsNullOrEmpty(m.Controller)) return $"/{m.Controller}/{(string.IsNullOrEmpty(m.Action) ? "Index" : m.Action)}";
+        return "—";
+    }
+}
+
+@Html.AntiForgeryToken()
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <div>
+            <span>Struktur Menu</span>
+            <small class="text-muted ms-2"><i class="bi bi-arrows-move"></i> seret untuk mengubah urutan</small>
+        </div>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Menu</a>
+    </div>
+    <div class="card-body">
+        <div id="reorderStatus" class="small text-success mb-2" style="height:18px;"></div>
+        <ul id="rootList" class="menu-tree">
+            @foreach (var root in roots)
+            {
+                var children = ChildrenOf(root.Id);
+                <li class="menu-row" data-id="@root.Id">
+                    <div class="menu-row-head">
+                        <span class="drag-handle" title="Seret"><i class="bi bi-grip-vertical"></i></span>
+                        <i class="bi @(root.Icon ?? "bi-dot") me-2 text-primary"></i>
+                        <span class="fw-semibold text-dark">@root.Title</span>
+                        @if (children.Any()) { <span class="badge-light-primary px-2 rounded ms-2">Grup</span> }
+                        @if (!string.IsNullOrEmpty(root.RequiredRole)) { <span class="badge-light-danger px-2 rounded ms-1">@root.RequiredRole</span> }
+                        @if (!root.IsActive) { <span class="badge-light-danger px-2 rounded ms-1">Nonaktif</span> }
+                        <span class="text-muted small ms-2">@Target(root)</span>
+                        <span class="row-actions">
+                            <a asp-action="Edit" asp-route-id="@root.Id" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                            @if (!root.IsSystem)
+                            {
+                                <form asp-action="Delete" asp-route-id="@root.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus menu ini beserta sub-menunya?');">
+                                    <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            }
+                        </span>
+                    </div>
+                    <ul class="menu-tree child-list" data-parent="@root.Id">
+                        @foreach (var child in children)
+                        {
+                            <li class="menu-row" data-id="@child.Id">
+                                <div class="menu-row-head">
+                                    <span class="drag-handle" title="Seret"><i class="bi bi-grip-vertical"></i></span>
+                                    <i class="bi @(child.Icon ?? "bi-dot") me-2"></i>
+                                    <span class="text-dark">@child.Title</span>
+                                    @if (!string.IsNullOrEmpty(child.RequiredRole)) { <span class="badge-light-danger px-2 rounded ms-1">@child.RequiredRole</span> }
+                                    @if (!child.IsActive) { <span class="badge-light-danger px-2 rounded ms-1">Nonaktif</span> }
+                                    <span class="text-muted small ms-2">@Target(child)</span>
+                                    <span class="row-actions">
+                                        <a asp-action="Edit" asp-route-id="@child.Id" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                                        @if (!child.IsSystem)
+                                        {
+                                            <form asp-action="Delete" asp-route-id="@child.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus menu ini?');">
+                                                <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        }
+                                    </span>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+        <p class="text-muted small mt-3 mb-0">
+            <i class="bi bi-info-circle"></i> Sub-menu dapat diseret antar grup. Untuk memindahkan
+            item ke/dari level utama, gunakan tombol <strong>Edit</strong> lalu ubah "Menu Induk".
+        </p>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .menu-tree { list-style: none; padding-left: 0; margin: 0; }
+        .child-list { padding-left: 32px; margin-top: 4px; min-height: 8px; }
+        .menu-row-head { display: flex; align-items: center; gap: 4px; padding: 10px 12px; background: #fff; border: 1px solid var(--erp-border); border-radius: 8px; margin-bottom: 6px; }
+        .menu-row-head:hover { background: #f9f9f9; }
+        .drag-handle { cursor: grab; color: #a1a5b7; padding: 0 6px; }
+        .row-actions { margin-left: auto; white-space: nowrap; }
+        .sortable-ghost { opacity: .4; }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script>
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const status = document.getElementById('reorderStatus');
+
+        function listPayload(ul) {
+            const parent = ul.dataset.parent ? parseInt(ul.dataset.parent) : null;
+            const ids = [...ul.children]
+                .filter(li => li.classList.contains('menu-row'))
+                .map(li => parseInt(li.dataset.id));
+            return { parentId: parent, ids: ids };
+        }
+
+        async function saveOrder(ul) {
+            const payload = listPayload(ul);
+            try {
+                const res = await fetch('@Url.Action("Reorder", "Menus")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    status.textContent = '✓ Urutan tersimpan';
+                    setTimeout(() => status.textContent = '', 1500);
+                } else {
+                    status.textContent = '✗ Gagal menyimpan urutan';
+                }
+            } catch { status.textContent = '✗ Gagal menyimpan urutan'; }
+        }
+
+        const opts = (group) => ({
+            group: group, handle: '.drag-handle', animation: 150, fallbackOnBody: true,
+            ghostClass: 'sortable-ghost',
+            onEnd: (evt) => { saveOrder(evt.to); if (evt.from !== evt.to) saveOrder(evt.from); }
+        });
+
+        Sortable.create(document.getElementById('rootList'), opts('roots'));
+        document.querySelectorAll('.child-list').forEach(el => Sortable.create(el, opts('children')));
+    </script>
+}

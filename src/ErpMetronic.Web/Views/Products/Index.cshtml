@@ -1,0 +1,47 @@
+@model List<Product>
+@{ ViewData["Title"] = "Produk"; }
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Produk</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Produk</a>
+    </div>
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="mb-3">
+            <div class="input-group">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Cari nama atau SKU..." />
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Cari</button>
+            </div>
+        </form>
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>SKU</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th class="text-end">Harga Jual</th><th class="text-center">Stok</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada data</td></tr>
+            }
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><span class="badge-light-primary px-2 py-1 rounded">@p.Sku</span></td>
+                    <td class="fw-semibold text-dark">@p.Name</td>
+                    <td>@p.Category?.Name</td>
+                    <td>@p.UnitOfMeasure?.Name</td>
+                    <td class="text-end">@p.SellingPrice.ToString("N0")</td>
+                    <td class="text-center">
+                        @if (p.StockQuantity <= p.ReorderLevel) { <span class="badge-light-danger px-2 py-1 rounded">@p.StockQuantity</span> }
+                        else { <span class="badge-light-success px-2 py-1 rounded">@p.StockQuantity</span> }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                        <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                        <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus produk ini?');">
+                            <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

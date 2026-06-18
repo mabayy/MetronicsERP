@@ -1,0 +1,17 @@
+## .NET build output
+bin/
+obj/
+publish/
+*.user
+
+## Rider / VS
+.idea/
+.vs/
+
+## Secrets & local config (jangan commit rahasia)
+appsettings.Production.json
+*.log
+run.log
+
+## Metronic berlisensi (jangan commit aset komersial)
+src/ErpMetronic.Web/wwwroot/assets/

@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var lowStock = ViewBag.LowStock as List<Product> ?? new();
+    var recent = ViewBag.RecentProducts as List<Product> ?? new();
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card bg-grad-primary">
+            <i class="bi bi-box fs-2"></i>
+            <div class="stat-value">@ViewBag.ProductCount</div>
+            <div class="stat-label">Total Produk</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card bg-grad-success">
+            <i class="bi bi-tags fs-2"></i>
+            <div class="stat-value">@ViewBag.CategoryCount</div>
+            <div class="stat-label">Kategori</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card bg-grad-info">
+            <i class="bi bi-people fs-2"></i>
+            <div class="stat-value">@ViewBag.CustomerCount</div>
+            <div class="stat-label">Pelanggan</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card bg-grad-warning">
+            <i class="bi bi-truck fs-2"></i>
+            <div class="stat-value">@ViewBag.SupplierCount</div>
+            <div class="stat-label">Pemasok</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">Produk Terbaru</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>SKU</th><th>Nama</th><th>Kategori</th><th class="text-end">Stok</th></tr>
+                    </thead>
+                    <tbody>
+                    @if (recent.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-4">Belum ada data</td></tr>
+                    }
+                    @foreach (var p in recent)
+                    {
+                        <tr>
+                            <td><span class="badge-light-primary px-2 py-1 rounded">@p.Sku</span></td>
+                            <td class="fw-semibold text-dark">@p.Name</td>
+                            <td>@p.Category?.Name</td>
+                            <td class="text-end">@p.StockQuantity</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Stok Menipis</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Produk</th><th class="text-end">Stok</th><th class="text-end">Min</th></tr></thead>
+                    <tbody>
+                    @if (lowStock.Count == 0)
+                    {
+                        <tr><td colspan="3" class="text-center text-muted py-4">Semua stok aman</td></tr>
+                    }
+                    @foreach (var p in lowStock)
+                    {
+                        <tr>
+                            <td class="fw-semibold text-dark">@p.Name</td>
+                            <td class="text-end"><span class="badge-light-danger px-2 py-1 rounded">@p.StockQuantity</span></td>
+                            <td class="text-end text-muted">@p.ReorderLevel</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

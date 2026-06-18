@@ -1,0 +1,46 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Masuk";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-dark"><i class="bi bi-box-seam text-primary"></i> ERP Metronic</h3>
+        <p class="text-muted">Silakan masuk untuk melanjutkan</p>
+    </div>
+
+    <form asp-action="Login" method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label fw-semibold"></label>
+            <input asp-for="Email" class="form-control form-control-lg" placeholder="nama@perusahaan.com" autofocus />
+            <span asp-validation-for="Email" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label fw-semibold"></label>
+            <input asp-for="Password" class="form-control form-control-lg" placeholder="••••••••" />
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100">Masuk</button>
+    </form>
+
+    <div class="text-center text-muted small mt-4">
+        Akun demo: <strong>admin@erpmetronic.local</strong> / <strong>Admin#12345</strong>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
