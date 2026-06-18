@@ -1,7 +1,6 @@
 @model MenuItemViewModel
 @{
     ViewData["Title"] = "Edit Menu";
-    var roles = ViewBag.Roles as string[] ?? Array.Empty<string>();
 }
 
 <div class="card">
@@ -13,6 +12,7 @@
         <form asp-action="Edit" method="post">
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="IsSystem" />
+            <input type="hidden" asp-for="RequiredRole" />
             <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
             <div class="row g-3">
                 <div class="col-md-6">
@@ -32,16 +32,6 @@
                     </select>
                     <span asp-validation-for="ParentId" class="text-danger small"></span>
                 </div>
-                <div class="col-md-6">
-                    <label asp-for="RequiredRole" class="form-label fw-semibold"></label>
-                    <select asp-for="RequiredRole" class="form-select">
-                        <option value="">(Semua pengguna login)</option>
-                        @foreach (var r in roles)
-                        {
-                            <option value="@r">@r</option>
-                        }
-                    </select>
-                </div>
                 <div class="col-md-4">
                     <label asp-for="Controller" class="form-label fw-semibold"></label>
                     <input asp-for="Controller" class="form-control" placeholder="contoh: Products" />
@@ -57,6 +47,7 @@
                 <div class="col-12">
                     <span class="text-muted small"><i class="bi bi-info-circle"></i> Kosongkan Controller & URL untuk membuat <strong>grup/header</strong>. Jika URL diisi, ia diutamakan.</span>
                 </div>
+                <partial name="_MenuAccessFields" model="Model" />
                 <div class="col-12 form-check ms-2">
                     <input asp-for="IsActive" class="form-check-input" />
                     <label asp-for="IsActive" class="form-check-label">Aktif</label>

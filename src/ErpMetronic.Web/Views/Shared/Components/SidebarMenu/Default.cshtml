@@ -20,12 +20,12 @@
     {
         if (node.Children.Count > 0)
         {
-            <li class="menu-heading">@node.Item.Title</li>
+            <li class="menu-heading"><span class="menu-label">@node.Item.Title</span></li>
             foreach (var child in node.Children)
             {
                 <li>
-                    <a class="@ActiveClass(child.Controller)" href="@Href(child, Url)">
-                        <i class="bi @(child.Icon ?? "bi-dot")"></i> @child.Title
+                    <a class="@ActiveClass(child.Controller)" href="@Href(child, Url)" title="@child.Title">
+                        <i class="bi @(child.Icon ?? "bi-dot")"></i> <span class="menu-label">@child.Title</span>
                     </a>
                 </li>
             }
@@ -33,8 +33,8 @@
         else
         {
             <li>
-                <a class="@ActiveClass(node.Item.Controller)" href="@Href(node.Item, Url)">
-                    <i class="bi @(node.Item.Icon ?? "bi-dot")"></i> @node.Item.Title
+                <a class="@ActiveClass(node.Item.Controller)" href="@Href(node.Item, Url)" title="@node.Item.Title">
+                    <i class="bi @(node.Item.Icon ?? "bi-dot")"></i> <span class="menu-label">@node.Item.Title</span>
                 </a>
             </li>
         }

@@ -40,6 +40,12 @@ public class MenuItem : BaseEntity
     public MenuItem? Parent { get; set; }
     public ICollection<MenuItem> Children { get; set; } = new List<MenuItem>();
 
+    /// <summary>Divisi yang diizinkan mengakses menu ini (kosong = tidak dibatasi divisi).</summary>
+    public ICollection<MenuItemDivision> AllowedDivisions { get; set; } = new List<MenuItemDivision>();
+
+    /// <summary>Posisi yang diizinkan mengakses menu ini (kosong = tidak dibatasi posisi).</summary>
+    public ICollection<MenuItemPosition> AllowedPositions { get; set; } = new List<MenuItemPosition>();
+
     /// <summary>Item bawaan sistem—boleh diedit/diurutkan, tetapi tidak dapat dihapus.</summary>
     public bool IsSystem { get; set; }
 }

@@ -1,0 +1,57 @@
+@model List<ProductStock>
+@{ ViewData["Title"] = "Saldo Stok"; }
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Saldo Stok per Gudang</span>
+        <a asp-action="Movements" class="btn btn-sm btn-light"><i class="bi bi-clock-history"></i> Riwayat</a>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-sm-5 col-md-4">
+                <label class="form-label small fw-semibold mb-1">Gudang</label>
+                <select name="warehouseId" asp-items="ViewBag.Warehouses" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Semua gudang</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <a asp-action="Balances" class="btn btn-sm btn-light">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr><th>SKU</th><th>Produk</th><th>Gudang</th><th class="text-end">Saldo</th><th class="text-end">Titik Pesan Ulang</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">Belum ada saldo stok</td></tr>
+                }
+                @foreach (var s in Model)
+                {
+                    var low = s.Product != null && s.Quantity <= s.Product.ReorderLevel;
+                    <tr>
+                        <td><span class="badge-light-primary px-2 py-1 rounded">@s.Product?.Sku</span></td>
+                        <td class="fw-semibold text-dark">@s.Product?.Name</td>
+                        <td>@s.Warehouse?.Name</td>
+                        <td class="text-end fw-semibold">@s.Quantity</td>
+                        <td class="text-end text-muted">@s.Product?.ReorderLevel</td>
+                        <td>
+                            @if (low)
+                            {
+                                <span class="badge-light-danger px-2 py-1 rounded"><i class="bi bi-exclamation-triangle"></i> Menipis</span>
+                            }
+                            else
+                            {
+                                <span class="badge-light-success px-2 py-1 rounded">Aman</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

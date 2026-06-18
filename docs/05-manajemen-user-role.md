@@ -1,8 +1,14 @@
-# Tahap 5 — Manajemen User & Role
+# Tahap 5 — Manajemen User (Akses berbasis Posisi)
+
+> **Pembaruan:** Modul **Role/Peran** Identity telah **ditiadakan**. Hak akses kini ditentukan
+> oleh **Posisi/Jabatan** (lihat [Tahap 10 — Master Menu](10-master-menu.md#hak-akses-menu-berdasarkan-divisi--posisi)). Sebuah posisi dapat
+> ditandai *administrator* (`Position.IsAdministrator`); pengguna pada posisi tersebut memperoleh
+> hak admin penuh. `RolesController`, halaman *Peran/Role*, dan penetapan role pada form pengguna
+> sudah dihapus. Bagian di bawah yang menyebut "role" hanya relevan untuk riwayat desain awal.
 
 ## Tujuan
-Menyediakan antarmuka administrasi untuk mengelola pengguna dan peran (role), termasuk
-penetapan role ke pengguna. Modul ini hanya dapat diakses oleh `Administrator`.
+Menyediakan antarmuka administrasi untuk mengelola pengguna beserta **divisi** & **posisi**-nya.
+Modul ini hanya dapat diakses oleh pengguna berposisi *administrator*.
 
 ## Komponen
 
@@ -42,6 +48,15 @@ Pemilihan role di form memakai checkbox `name="SelectedRoles"` (di-bind ke `List
 - Anti-forgery token pada semua POST.
 - Proteksi akun & role sistem agar tidak terhapus tidak sengaja.
 - Email unik dipaksakan oleh konfigurasi Identity.
+
+## Divisi/Departemen & Posisi/Jabatan
+
+Setiap pengguna kini dapat ditautkan ke sebuah **Divisi** dan **Posisi** (master data,
+dikelola di menu *Administrasi → Divisi/Posisi*). Field ini bersifat opsional dan dipilih
+pada form Create/Edit pengguna (`DivisionId`, `PositionId` pada `ApplicationUser`).
+
+Divisi & posisi inilah yang dipakai untuk **mengatur akses menu** — lihat
+[Tahap 10 — Master Menu](10-master-menu.md#hak-akses-menu-berdasarkan-divisi--posisi).
 
 ## Hasil / Verifikasi
 - `/Users` dan `/Roles` mengembalikan 200 bagi Administrator.

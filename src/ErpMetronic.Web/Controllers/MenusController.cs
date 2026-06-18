@@ -40,7 +40,7 @@ public class MenusController : Controller
         }
 
         var nextOrder = await NextSortOrderAsync(model.ParentId);
-        _db.MenuItems.Add(new MenuItem
+        var entity = new MenuItem
         {
             Title = model.Title,
             Icon = Normalize(model.Icon),
@@ -52,7 +52,13 @@ public class MenusController : Controller
             IsActive = model.IsActive,
             SortOrder = nextOrder,
             CreatedBy = User.Identity?.Name
-        });
+        };
+        foreach (var divId in model.DivisionIds.Distinct())
+            entity.AllowedDivisions.Add(new MenuItemDivision { DivisionId = divId });
+        foreach (var posId in model.PositionIds.Distinct())
+            entity.AllowedPositions.Add(new MenuItemPosition { PositionId = posId });
+
+        _db.MenuItems.Add(entity);
         await _db.SaveChangesAsync();
         TempData["Success"] = "Menu berhasil ditambahkan.";
         return RedirectToAction(nameof(Index));
@@ -60,7 +66,10 @@ public class MenusController : Controller
 
     public async Task<IActionResult> Edit(int id)
     {
-        var item = await _db.MenuItems.FindAsync(id);
+        var item = await _db.MenuItems
+            .Include(m => m.AllowedDivisions)
+            .Include(m => m.AllowedPositions)
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (item is null) return NotFound();
 
         await PopulateSelectsAsync(item.ParentId, item.Id);
@@ -74,6 +83,8 @@ public class MenusController : Controller
             Url = item.Url,
             ParentId = item.ParentId,
             RequiredRole = item.RequiredRole,
+            DivisionIds = item.AllowedDivisions.Select(a => a.DivisionId).ToList(),
+            PositionIds = item.AllowedPositions.Select(a => a.PositionId).ToList(),
             IsActive = item.IsActive,
             IsSystem = item.IsSystem
         });
@@ -82,7 +93,10 @@ public class MenusController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(MenuItemViewModel model)
     {
-        var item = await _db.MenuItems.FindAsync(model.Id);
+        var item = await _db.MenuItems
+            .Include(m => m.AllowedDivisions)
+            .Include(m => m.AllowedPositions)
+            .FirstOrDefaultAsync(m => m.Id == model.Id);
         if (item is null) return NotFound();
 
         if (model.ParentId == item.Id)
@@ -108,6 +122,14 @@ public class MenusController : Controller
         item.IsActive = model.IsActive;
         item.UpdatedAt = DateTime.UtcNow;
         item.UpdatedBy = User.Identity?.Name;
+
+        // Sinkronkan hak akses divisi & posisi
+        var divIds = model.DivisionIds.Distinct().ToHashSet();
+        var posIds = model.PositionIds.Distinct().ToHashSet();
+        item.AllowedDivisions.Clear();
+        item.AllowedPositions.Clear();
+        foreach (var d in divIds) item.AllowedDivisions.Add(new MenuItemDivision { MenuItemId = item.Id, DivisionId = d });
+        foreach (var p in posIds) item.AllowedPositions.Add(new MenuItemPosition { MenuItemId = item.Id, PositionId = p });
 
         await _db.SaveChangesAsync();
         TempData["Success"] = "Menu berhasil diperbarui.";
@@ -172,7 +194,8 @@ public class MenusController : Controller
             .ToListAsync();
 
         ViewBag.Parents = new SelectList(parents, "Id", "Title", selectedParent);
-        ViewBag.Roles = AppRoles.All;
+        ViewBag.Divisions = await _db.Divisions.OrderBy(d => d.Name).ToListAsync();
+        ViewBag.Positions = await _db.Positions.OrderBy(p => p.Name).ToListAsync();
     }
 
     private static string? Normalize(string? value)

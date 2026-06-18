@@ -62,9 +62,67 @@ yang otomatis muncul setelah operasi CRUD.
 > Karena tema kustom dibangun di atas Bootstrap 5 yang sama dengan Metronic 8, sebagian besar
 > kelas (`card`, `table`, `btn`, grid) sudah kompatibel.
 
+## Tema Warna (3 Skema yang Dapat Diganti)
+
+Aplikasi menyediakan **3 tema** yang dapat dipilih pengguna lewat tombol palet (ikon
+`bi-palette`) di header. Pilihan disimpan di `localStorage` dan diterapkan tanpa reload, serta
+ada *no-flash loader* di `<head>` agar tidak berkedip saat memuat.
+
+| Tema | Nama | Palet (gelap→terang) | Karakter |
+|------|------|----------------------|----------|
+| `sapphire` | **Safir** | `#111844` `#4B5694` `#7288AE` `#EAE0CF` | Navy elegan + aksen krem (default) |
+| `mocha` | **Kopi** | `#4B2E2B` `#8C5A3C` `#C08552` `#FFF8F0` | Cokelat hangat |
+| `emerald` | **Zamrud** | `#1F6F5F` `#2FA084` `#6FCF97` `#EEEEEE` | Hijau segar |
+
+Implementasi (`wwwroot/css/erp-theme.css`): seluruh warna memakai **token CSS** pada `:root`
+dan di-override per `[data-theme="..."]`. Atribut `data-theme` disetel pada elemen `<html>`:
+
+```javascript
+// no-flash loader di <head>
+(function () {
+    var t = localStorage.getItem('erp-theme') || 'sapphire';
+    document.documentElement.setAttribute('data-theme', t);
+})();
+```
+
+**Kontras dijaga (WCAG)**: warna tombol primer dipilih cukup gelap agar teks putih terbaca
+(rasio ≥ 4.5:1), judul memakai warna paling gelap dari palet di atas kartu putih, dan teks
+menu pada sidebar memakai turunan terang dari palet. Warna status (sukses/hijau,
+bahaya/merah) sengaja **dipertahankan lintas tema** agar maknanya tetap konsisten.
+
+Untuk menambah tema baru: duplikasi satu blok `[data-theme="..."]`, ganti nilai token, lalu
+tambahkan satu opsi `.theme-option` di switcher header `_Layout.cshtml`.
+
+## Sidebar Expand / Collapse
+
+Sidebar dapat **diciutkan menjadi rail ikon** dan dilebarkan kembali:
+
+- **Desktop**: tombol di header (`#erpCollapse`) menamb/menghapus kelas `erp-sidebar-collapsed`
+  pada `<html>`. Saat ciut, lebar sidebar mengecil (`--erp-sidebar-collapsed-width: 78px`) dan
+  margin konten ikut menyesuaikan otomatis karena keduanya memakai variabel
+  `--erp-sidebar-width`. Label disembunyikan (`.menu-label`, `.brand-label`), heading grup
+  menjadi garis pemisah, dan saat **hover** sidebar melebar sementara (*flyout*) tanpa menggeser
+  konten.
+- **Mobile** (<992px): tetap memakai pola *off-canvas* (tombol hamburger `#erpToggle`
+  menggeser sidebar masuk/keluar).
+- **Status disimpan** di `localStorage` (`erp-sidebar = collapsed|expanded`) dan diterapkan
+  oleh *no-flash loader* di `<head>` agar konsisten antar halaman.
+
+```javascript
+document.getElementById('erpCollapse').addEventListener('click', function () {
+    var collapsed = document.documentElement.classList.toggle('erp-sidebar-collapsed');
+    localStorage.setItem('erp-sidebar', collapsed ? 'collapsed' : 'expanded');
+});
+```
+
+> Label menu dibungkus `<span class="menu-label">` (di ViewComponent `SidebarMenu`) agar dapat
+> disembunyikan saat ciut; atribut `title` pada tiap tautan memberi tooltip ikon.
+
 ## Hasil / Verifikasi
 Jalankan aplikasi dan buka halaman mana pun — sidebar, header, dan kartu tampil rapi dengan
-skema warna Metronic.
+skema warna Metronic. Ganti tema via tombol palet di header; pilihan bertahan setelah refresh
+dan halaman login pun mengikuti tema. Tombol ciut/lebar pada header mengubah sidebar menjadi
+rail ikon dan kembali, dengan status yang bertahan antar halaman.
 
 ## Selanjutnya
 ➡️ [Tahap 3 — Database, EF Core & Migrasi](03-database-efcore.md)

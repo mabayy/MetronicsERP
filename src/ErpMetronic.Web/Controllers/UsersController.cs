@@ -1,8 +1,10 @@
 using ErpMetronic.Infrastructure.Identity;
+using ErpMetronic.Infrastructure.Persistence;
 using ErpMetronic.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErpMetronic.Web.Controllers;
@@ -11,35 +13,36 @@ namespace ErpMetronic.Web.Controllers;
 public class UsersController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly ApplicationDbContext _db;
 
-    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
+    public UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext db)
     {
         _userManager = userManager;
-        _roleManager = roleManager;
+        _db = db;
     }
 
     public async Task<IActionResult> Index()
     {
+        var divisions = await _db.Divisions.ToDictionaryAsync(d => d.Id, d => d.Name);
+        var positions = await _db.Positions.ToDictionaryAsync(p => p.Id, p => p);
+
         var users = await _userManager.Users.ToListAsync();
-        var list = new List<UserListItemViewModel>();
-        foreach (var u in users)
+        var list = users.Select(u => new UserListItemViewModel
         {
-            list.Add(new UserListItemViewModel
-            {
-                Id = u.Id,
-                FullName = u.FullName,
-                Email = u.Email ?? string.Empty,
-                IsActive = u.IsActive,
-                Roles = await _userManager.GetRolesAsync(u)
-            });
-        }
+            Id = u.Id,
+            FullName = u.FullName,
+            Email = u.Email ?? string.Empty,
+            IsActive = u.IsActive,
+            Division = u.DivisionId.HasValue && divisions.TryGetValue(u.DivisionId.Value, out var dn) ? dn : null,
+            Position = u.PositionId.HasValue && positions.TryGetValue(u.PositionId.Value, out var pos) ? pos.Name : null,
+            IsAdministrator = u.PositionId.HasValue && positions.TryGetValue(u.PositionId.Value, out var p2) && p2.IsAdministrator
+        }).ToList();
         return View(list);
     }
 
     public async Task<IActionResult> Create()
     {
-        await PopulateRolesAsync();
+        await PopulateLookupsAsync();
         return View(new CreateUserViewModel());
     }
 
@@ -48,7 +51,7 @@ public class UsersController : Controller
     {
         if (!ModelState.IsValid)
         {
-            await PopulateRolesAsync();
+            await PopulateLookupsAsync(model.DivisionId, model.PositionId);
             return View(model);
         }
 
@@ -58,6 +61,8 @@ public class UsersController : Controller
             Email = model.Email,
             FullName = model.FullName,
             IsActive = model.IsActive,
+            DivisionId = model.DivisionId,
+            PositionId = model.PositionId,
             EmailConfirmed = true
         };
 
@@ -65,12 +70,9 @@ public class UsersController : Controller
         if (!result.Succeeded)
         {
             foreach (var err in result.Errors) ModelState.AddModelError(string.Empty, err.Description);
-            await PopulateRolesAsync();
+            await PopulateLookupsAsync(model.DivisionId, model.PositionId);
             return View(model);
         }
-
-        if (model.SelectedRoles.Any())
-            await _userManager.AddToRolesAsync(user, model.SelectedRoles);
 
         TempData["Success"] = "Pengguna berhasil ditambahkan.";
         return RedirectToAction(nameof(Index));
@@ -87,9 +89,10 @@ public class UsersController : Controller
             FullName = user.FullName,
             Email = user.Email ?? string.Empty,
             IsActive = user.IsActive,
-            SelectedRoles = (await _userManager.GetRolesAsync(user)).ToList()
+            DivisionId = user.DivisionId,
+            PositionId = user.PositionId
         };
-        await PopulateRolesAsync();
+        await PopulateLookupsAsync(user.DivisionId, user.PositionId);
         return View(model);
     }
 
@@ -98,7 +101,7 @@ public class UsersController : Controller
     {
         if (!ModelState.IsValid)
         {
-            await PopulateRolesAsync();
+            await PopulateLookupsAsync(model.DivisionId, model.PositionId);
             return View(model);
         }
 
@@ -109,11 +112,9 @@ public class UsersController : Controller
         user.Email = model.Email;
         user.UserName = model.Email;
         user.IsActive = model.IsActive;
+        user.DivisionId = model.DivisionId;
+        user.PositionId = model.PositionId;
         await _userManager.UpdateAsync(user);
-
-        var currentRoles = await _userManager.GetRolesAsync(user);
-        await _userManager.RemoveFromRolesAsync(user, currentRoles.Except(model.SelectedRoles));
-        await _userManager.AddToRolesAsync(user, model.SelectedRoles.Except(currentRoles));
 
         TempData["Success"] = "Pengguna berhasil diperbarui.";
         return RedirectToAction(nameof(Index));
@@ -136,6 +137,9 @@ public class UsersController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task PopulateRolesAsync()
-        => ViewBag.AllRoles = await _roleManager.Roles.Select(r => r.Name!).ToListAsync();
+    private async Task PopulateLookupsAsync(int? division = null, int? position = null)
+    {
+        ViewBag.Divisions = new SelectList(await _db.Divisions.OrderBy(d => d.Name).ToListAsync(), "Id", "Name", division);
+        ViewBag.Positions = new SelectList(await _db.Positions.OrderBy(p => p.Name).ToListAsync(), "Id", "Name", position);
+    }
 }

@@ -1,5 +1,6 @@
 using ErpMetronic.Infrastructure.Identity;
 using ErpMetronic.Infrastructure.Persistence;
+using ErpMetronic.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +29,10 @@ public static class DependencyInjection
                 options.SignIn.RequireConfirmedEmail = false;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddClaimsPrincipalFactory<AppClaimsPrincipalFactory>()
             .AddDefaultTokenProviders();
+
+        services.AddScoped<IStockService, StockService>();
 
         return services;
     }

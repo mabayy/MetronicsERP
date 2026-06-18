@@ -18,6 +18,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 8 | [Deployment & Produksi](08-deployment.md) | Build rilis, konfigurasi, IIS/Docker | 📄 Panduan |
 | 9 | [Roadmap Lanjutan](09-roadmap.md) | Modul Inventory, Purchasing, Sales, Finance | 📄 Rencana |
 | 10 | [Master Menu (Menu Dinamis)](10-master-menu.md) | Sidebar berbasis DB: tambah/edit/hapus/urutkan (drag-drop) | ✅ |
+| 11 | [Manajemen Stok (Inventory)](11-manajemen-stok.md) | Stok masuk/keluar/transfer/penyesuaian + saldo per gudang | ✅ |
 
 ## Cara membaca dokumen ini
 

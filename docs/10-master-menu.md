@@ -91,6 +91,45 @@ public async Task<IActionResult> Reorder([FromBody] ReorderRequest request)
 Untuk memindahkan item **antara level atas dan sub-menu**, gunakan tombol **Edit** lalu ubah
 field "Menu Induk".
 
+## Hak Akses Menu berdasarkan Divisi & Posisi
+
+Selain `RequiredRole`, akses menu dapat dibatasi per **Divisi/Departemen** dan **Posisi/Jabatan**:
+
+- Master data **Divisi** (`DivisionsController`) & **Posisi** (`PositionsController`) — CRUD,
+  ada di grup menu *Administrasi*.
+- Setiap pengguna memiliki `DivisionId` & `PositionId` (dipilih di form Pengguna).
+- Pada form **Master Menu**, admin mencentang divisi/posisi yang boleh mengakses tiap menu
+  (relasi M:N `MenuItemDivisions` & `MenuItemPositions`).
+
+Logika tampil di `SidebarMenuViewComponent` (untuk pengguna **non-admin**):
+
+```text
+Administrator*          → melihat SEMUA menu (untuk pengelolaan)
+RequiredRole di-set     → harus punya klaim tsb, jika tidak: tersembunyi (dipakai menu Administrasi)
+tanpa batasan divisi/posisi → terbuka untuk semua pengguna login
+ada batasan             → tampil bila divisi ATAU posisi pengguna termasuk yang dicentang
+```
+
+> *Status **Administrator** kini berasal dari **Posisi** pengguna yang ditandai
+> `IsAdministrator` (bukan lagi Identity Role). Saat sign-in, `AppClaimsPrincipalFactory`
+> menambahkan klaim role `"Administrator"` sehingga `[Authorize(Roles=...)]`, `User.IsInRole`,
+> dan `RequiredRole` pada menu Administrasi tetap berfungsi tanpa modul Role.
+
+> Kombinasi **OR**: cukup salah satu (divisi atau posisi) cocok agar menu tampil — model
+> "daftar izin" yang fleksibel.
+
+### Verifikasi (teruji)
+Pengguna *Staff* berdivisi **Gudang (WHS)**:
+
+| Menu | Pengaturan | Hasil |
+|------|-----------|-------|
+| Dashboard, Kategori, Pelanggan | tanpa batasan | tampil |
+| Stok Masuk | diizinkan untuk divisi WHS | tampil |
+| Produk | diizinkan hanya untuk divisi SAL | **tersembunyi** |
+| Pengguna, Master Menu, Divisi | `RequiredRole=Administrator` | **tersembunyi** |
+
+Administrator tetap melihat seluruh menu.
+
 ## Aturan & Proteksi
 - Menu **sistem** (`IsSystem = true`) tidak dapat dihapus (hanya dapat dinonaktifkan/diedit/diurutkan).
 - Menghapus menu induk akan menghapus sub-menunya.

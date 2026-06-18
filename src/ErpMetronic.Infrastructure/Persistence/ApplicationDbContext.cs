@@ -20,6 +20,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+    public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<Division> Divisions => Set<Division>();
+    public DbSet<Position> Positions => Set<Position>();
+    public DbSet<MenuItemDivision> MenuItemDivisions => Set<MenuItemDivision>();
+    public DbSet<MenuItemPosition> MenuItemPositions => Set<MenuItemPosition>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -49,6 +55,45 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             .WithMany(m => m.Children)
             .HasForeignKey(m => m.ParentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ProductStock>(e =>
+        {
+            e.HasIndex(x => new { x.ProductId, x.WarehouseId }).IsUnique();
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StockMovement>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.DestinationWarehouse).WithMany().HasForeignKey(x => x.DestinationWarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Division>().HasIndex(x => x.Code).IsUnique();
+        builder.Entity<Position>().HasIndex(x => x.Code).IsUnique();
+
+        // Pengguna → Divisi & Posisi (boleh kosong)
+        builder.Entity<ApplicationUser>()
+            .HasOne(u => u.Division).WithMany().HasForeignKey(u => u.DivisionId).OnDelete(DeleteBehavior.SetNull);
+        builder.Entity<ApplicationUser>()
+            .HasOne(u => u.Position).WithMany().HasForeignKey(u => u.PositionId).OnDelete(DeleteBehavior.SetNull);
+
+        // Hak akses menu per divisi/posisi (join). Hapus menu → grant ikut terhapus;
+        // divisi/posisi dibatasi (Restrict) agar tidak terhapus saat masih dipakai grant.
+        builder.Entity<MenuItemDivision>(e =>
+        {
+            e.HasKey(x => new { x.MenuItemId, x.DivisionId });
+            e.HasOne(x => x.MenuItem).WithMany(m => m.AllowedDivisions).HasForeignKey(x => x.MenuItemId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Division).WithMany().HasForeignKey(x => x.DivisionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<MenuItemPosition>(e =>
+        {
+            e.HasKey(x => new { x.MenuItemId, x.PositionId });
+            e.HasOne(x => x.MenuItem).WithMany(m => m.AllowedPositions).HasForeignKey(x => x.MenuItemId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Position).WithMany().HasForeignKey(x => x.PositionId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         // Ringkaskan nama tabel Identity agar lebih bersih.
         builder.Entity<ApplicationUser>().ToTable("Users");

@@ -1,0 +1,28 @@
+@*
+    Partial bersama: menampilkan saldo stok saat ini saat produk & gudang dipilih.
+    Mendukung form bergudang tunggal (#WarehouseId) maupun transfer (#SourceWarehouseId).
+*@
+<script>
+    (function () {
+        var prod = document.getElementById('ProductId');
+        var wh = document.getElementById('WarehouseId') || document.getElementById('SourceWarehouseId');
+        var box = document.getElementById('balanceBox');
+        var out = document.getElementById('currentBalance');
+        if (!prod || !wh || !box || !out) return;
+
+        async function update() {
+            if (!prod.value || !wh.value) { box.classList.add('d-none'); return; }
+            try {
+                var res = await fetch('@Url.Action("GetBalance", "Stock")?productId=' + prod.value + '&warehouseId=' + wh.value);
+                var data = await res.json();
+                out.textContent = (data.quantity === null || data.quantity === undefined) ? '0' : data.quantity;
+                box.classList.remove('d-none');
+                box.classList.add('d-flex');
+            } catch { box.classList.add('d-none'); }
+        }
+
+        prod.addEventListener('change', update);
+        wh.addEventListener('change', update);
+        update();
+    })();
+</script>

@@ -1,11 +1,12 @@
 namespace ErpMetronic.Infrastructure.Identity;
 
-/// <summary>Konstanta nama role agar konsisten dipakai di seluruh aplikasi.</summary>
+/// <summary>
+/// Klaim hak akses. "Administrator" tidak lagi dikelola sebagai Identity Role,
+/// melainkan diturunkan dari Posisi/Jabatan yang ditandai administrator
+/// (lihat <see cref="AppClaimsPrincipalFactory"/>). Konstanta ini dipakai sebagai
+/// nama klaim role pada [Authorize(Roles = ...)] dan pemeriksaan User.IsInRole.
+/// </summary>
 public static class AppRoles
 {
     public const string Administrator = "Administrator";
-    public const string Manager = "Manager";
-    public const string Staff = "Staff";
-
-    public static readonly string[] All = { Administrator, Manager, Staff };
 }

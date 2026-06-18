@@ -1,14 +1,21 @@
-@model RoleViewModel
-@{ ViewData["Title"] = "Edit Role"; }
+@model Division
+@{ ViewData["Title"] = "Edit Divisi"; }
 
 <div class="card">
-    <div class="card-header">Edit Role</div>
+    <div class="card-header">Edit Divisi</div>
     <div class="card-body">
-        <form asp-action="Edit" method="post">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="CreatedAt" />
+            <input type="hidden" asp-for="CreatedBy" />
             <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label asp-for="Code" class="form-label fw-semibold"></label>
+                    <input asp-for="Code" class="form-control" />
+                    <span asp-validation-for="Code" class="text-danger small"></span>
+                </div>
+                <div class="col-md-8">
                     <label asp-for="Name" class="form-label fw-semibold"></label>
                     <input asp-for="Name" class="form-control" />
                     <span asp-validation-for="Name" class="text-danger small"></span>
@@ -16,7 +23,10 @@
                 <div class="col-12">
                     <label asp-for="Description" class="form-label fw-semibold"></label>
                     <textarea asp-for="Description" class="form-control" rows="2"></textarea>
-                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+                <div class="col-12 form-check ms-2">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Aktif</label>
                 </div>
             </div>
             <div class="mt-4">

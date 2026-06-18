@@ -1,0 +1,58 @@
+@model StockInViewModel
+@{ ViewData["Title"] = "Stok Masuk"; }
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-box-arrow-in-down text-primary me-2"></i> Catat Stok Masuk</div>
+            <div class="card-body">
+                <form asp-action="In" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="ProductId" class="form-label fw-semibold"></label>
+                            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="ProductId">
+                                <option value="">-- Pilih produk --</option>
+                            </select>
+                            <span asp-validation-for="ProductId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MovementDate" class="form-label fw-semibold"></label>
+                            <input asp-for="MovementDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="WarehouseId" class="form-label fw-semibold"></label>
+                            <select asp-for="WarehouseId" asp-items="ViewBag.Warehouses" class="form-select" id="WarehouseId">
+                                <option value="">-- Pilih gudang --</option>
+                            </select>
+                            <span asp-validation-for="WarehouseId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Quantity" class="form-label fw-semibold"></label>
+                            <input asp-for="Quantity" type="number" min="1" class="form-control" />
+                            <span asp-validation-for="Quantity" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-light border align-items-center mb-0 d-none" id="balanceBox">
+                                <i class="bi bi-clipboard-data me-2"></i> Saldo saat ini di gudang ini: <strong class="ms-1" id="currentBalance">-</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Note" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                        <a asp-action="Movements" class="btn btn-light">Riwayat</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="_StockBalanceScript" />
+}

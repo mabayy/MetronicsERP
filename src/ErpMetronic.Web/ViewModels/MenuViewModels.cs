@@ -27,6 +27,12 @@ public class MenuItemViewModel
     [Display(Name = "Batasi untuk Role")]
     public string? RequiredRole { get; set; }
 
+    [Display(Name = "Divisi yang boleh akses")]
+    public List<int> DivisionIds { get; set; } = new();
+
+    [Display(Name = "Posisi yang boleh akses")]
+    public List<int> PositionIds { get; set; } = new();
+
     [Display(Name = "Aktif")]
     public bool IsActive { get; set; } = true;
 

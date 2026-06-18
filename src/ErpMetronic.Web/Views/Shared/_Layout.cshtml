@@ -8,6 +8,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ERP Metronic</title>
+    <script>
+        // Terapkan tema & status sidebar tersimpan sebelum render untuk mencegah kedip (flash).
+        (function () {
+            var t = localStorage.getItem('erp-theme') || 'sapphire';
+            document.documentElement.setAttribute('data-theme', t);
+            if (localStorage.getItem('erp-sidebar') === 'collapsed') {
+                document.documentElement.classList.add('erp-sidebar-collapsed');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/erp-theme.css" asp-append-version="true" />
@@ -17,7 +27,7 @@
     <!-- Sidebar -->
     <aside class="erp-sidebar" id="erpSidebar">
         <div class="erp-brand">
-            <i class="bi bi-box-seam"></i> ERP Metronic
+            <i class="bi bi-box-seam"></i> <span class="brand-label">ERP Metronic</span>
         </div>
         @await Component.InvokeAsync("SidebarMenu")
     </aside>
@@ -27,7 +37,35 @@
         <header class="erp-header">
             <div class="d-flex align-items-center gap-3">
                 <button class="erp-toggle" id="erpToggle"><i class="bi bi-list"></i></button>
+                <button class="erp-collapse-btn btn btn-light btn-sm" id="erpCollapse" title="Ciutkan / lebarkan menu" type="button"><i class="bi bi-list"></i></button>
                 <h1 class="page-title">@ViewData["Title"]</h1>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm" data-bs-toggle="dropdown" title="Ganti tema" type="button">
+                    <i class="bi bi-palette"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow" id="themeMenu">
+                    <li><h6 class="dropdown-header">Tema Warna</h6></li>
+                    <li>
+                        <button type="button" class="dropdown-item theme-option" data-theme-value="sapphire">
+                            <span class="theme-swatches"><span style="background:#111844"></span><span style="background:#4B5694"></span><span style="background:#7288AE"></span><span style="background:#EAE0CF"></span></span>
+                            Sapphire <small class="text-muted">(Safir)</small>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item theme-option" data-theme-value="mocha">
+                            <span class="theme-swatches"><span style="background:#FFF8F0"></span><span style="background:#C08552"></span><span style="background:#8C5A3C"></span><span style="background:#4B2E2B"></span></span>
+                            Mocha <small class="text-muted">(Kopi)</small>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item theme-option" data-theme-value="emerald">
+                            <span class="theme-swatches"><span style="background:#EEEEEE"></span><span style="background:#6FCF97"></span><span style="background:#2FA084"></span><span style="background:#1F6F5F"></span></span>
+                            Emerald <small class="text-muted">(Zamrud)</small>
+                        </button>
+                    </li>
+                </ul>
             </div>
             <div class="dropdown">
                 <a class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown">
@@ -45,6 +83,7 @@
                         </form>
                     </li>
                 </ul>
+            </div>
             </div>
         </header>
 
@@ -75,9 +114,34 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Mobile: buka/tutup sidebar off-canvas
         document.getElementById('erpToggle')?.addEventListener('click', function () {
             document.getElementById('erpSidebar').classList.toggle('show');
         });
+
+        // Desktop: ciutkan/lebarkan sidebar (status disimpan)
+        document.getElementById('erpCollapse')?.addEventListener('click', function () {
+            var collapsed = document.documentElement.classList.toggle('erp-sidebar-collapsed');
+            localStorage.setItem('erp-sidebar', collapsed ? 'collapsed' : 'expanded');
+        });
+
+        // Pengalih tema: simpan pilihan & terapkan langsung tanpa reload.
+        (function () {
+            function markActive(theme) {
+                document.querySelectorAll('.theme-option').forEach(function (b) {
+                    b.classList.toggle('active', b.getAttribute('data-theme-value') === theme);
+                });
+            }
+            markActive(document.documentElement.getAttribute('data-theme') || 'sapphire');
+            document.querySelectorAll('.theme-option').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var theme = this.getAttribute('data-theme-value');
+                    localStorage.setItem('erp-theme', theme);
+                    document.documentElement.setAttribute('data-theme', theme);
+                    markActive(theme);
+                });
+            });
+        })();
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

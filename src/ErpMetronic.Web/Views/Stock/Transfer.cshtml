@@ -1,0 +1,68 @@
+@model StockTransferViewModel
+@{ ViewData["Title"] = "Transfer Stok"; }
+
+<div class="row">
+    <div class="col-lg-9 col-xl-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-arrow-left-right text-primary me-2"></i> Transfer Stok Antar Gudang</div>
+            <div class="card-body">
+                <form asp-action="Transfer" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="ProductId" class="form-label fw-semibold"></label>
+                            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="ProductId">
+                                <option value="">-- Pilih produk --</option>
+                            </select>
+                            <span asp-validation-for="ProductId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MovementDate" class="form-label fw-semibold"></label>
+                            <input asp-for="MovementDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="SourceWarehouseId" class="form-label fw-semibold"></label>
+                            <select asp-for="SourceWarehouseId" asp-items="ViewBag.Warehouses" class="form-select" id="SourceWarehouseId">
+                                <option value="">-- Gudang asal --</option>
+                            </select>
+                            <span asp-validation-for="SourceWarehouseId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end justify-content-center pb-2">
+                            <i class="bi bi-arrow-right fs-4 text-muted"></i>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="DestinationWarehouseId" class="form-label fw-semibold"></label>
+                            <select asp-for="DestinationWarehouseId" asp-items="ViewBag.Warehouses" class="form-select">
+                                <option value="">-- Gudang tujuan --</option>
+                            </select>
+                            <span asp-validation-for="DestinationWarehouseId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Quantity" class="form-label fw-semibold"></label>
+                            <input asp-for="Quantity" type="number" min="1" class="form-control" />
+                            <span asp-validation-for="Quantity" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <div class="alert alert-light border align-items-center mb-0 w-100 d-none" id="balanceBox">
+                                <i class="bi bi-clipboard-data me-2"></i> Saldo gudang asal: <strong class="ms-1" id="currentBalance">-</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Note" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                        <a asp-action="Movements" class="btn btn-light">Riwayat</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="_StockBalanceScript" />
+}

@@ -8,7 +8,9 @@ public class UserListItemViewModel
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public bool IsActive { get; set; }
-    public IList<string> Roles { get; set; } = new List<string>();
+    public string? Division { get; set; }
+    public string? Position { get; set; }
+    public bool IsAdministrator { get; set; }
 }
 
 public class CreateUserViewModel
@@ -27,8 +29,11 @@ public class CreateUserViewModel
     [Compare(nameof(Password), ErrorMessage = "Konfirmasi kata sandi tidak cocok")]
     public string ConfirmPassword { get; set; } = string.Empty;
 
-    [Display(Name = "Peran/Role")]
-    public List<string> SelectedRoles { get; set; } = new();
+    [Display(Name = "Divisi/Departemen")]
+    public int? DivisionId { get; set; }
+
+    [Display(Name = "Posisi/Jabatan")]
+    public int? PositionId { get; set; }
 
     public bool IsActive { get; set; } = true;
 }
@@ -43,22 +48,12 @@ public class EditUserViewModel
     [Required, EmailAddress, Display(Name = "Email")]
     public string Email { get; set; } = string.Empty;
 
-    [Display(Name = "Peran/Role")]
-    public List<string> SelectedRoles { get; set; } = new();
+    [Display(Name = "Divisi/Departemen")]
+    public int? DivisionId { get; set; }
+
+    [Display(Name = "Posisi/Jabatan")]
+    public int? PositionId { get; set; }
 
     [Display(Name = "Aktif")]
     public bool IsActive { get; set; }
-}
-
-public class RoleViewModel
-{
-    public string? Id { get; set; }
-
-    [Required, Display(Name = "Nama Role"), StringLength(80)]
-    public string Name { get; set; } = string.Empty;
-
-    [Display(Name = "Deskripsi"), StringLength(200)]
-    public string? Description { get; set; }
-
-    public int UserCount { get; set; }
 }

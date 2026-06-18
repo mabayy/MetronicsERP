@@ -1,34 +1,134 @@
 /*
  * erp-theme.css — Tema bergaya Metronic 8 (Demo1) di atas Bootstrap 5.
- * Catatan: ini adalah lapisan "Metronic-like" agar aplikasi langsung tampil rapi
- * tanpa file lisensi. Untuk memakai Metronic asli, lihat docs/02-integrasi-metronic.md
- * (cukup ganti referensi CSS/JS di _Layout.cshtml dengan bundle Metronic).
+ *
+ * Mendukung 3 skema warna yang dapat diganti via atribut data-theme pada <html>:
+ *   - data-theme="sapphire"  → Safir  (navy & krem)   : 111844 4B5694 7288AE EAE0CF
+ *   - data-theme="mocha"     → Kopi   (cokelat hangat) : FFF8F0 C08552 8C5A3C 4B2E2B
+ *   - data-theme="emerald"   → Zamrud (hijau segar)    : EEEEEE 6FCF97 2FA084 1F6F5F
+ * Default (tanpa atribut) = Sapphire. Pemilihan disimpan di localStorage.
+ *
+ * Seluruh warna memakai token agar kontras teks/latar terjaga di tiap tema.
  */
 
 :root {
-    --erp-primary: #009ef7;
-    --erp-primary-light: #f1faff;
-    --erp-success: #50cd89;
-    --erp-info: #7239ea;
-    --erp-warning: #ffc700;
-    --erp-danger: #f1416c;
-    --erp-dark: #181c32;
-    --erp-body-bg: #f5f8fa;
-    --erp-sidebar-bg: #1e1e2d;
-    --erp-sidebar-item: #9899ac;
-    --erp-sidebar-active: #ffffff;
-    --erp-sidebar-active-bg: #2a2a3c;
-    --erp-text-muted: #a1a5b7;
-    --erp-border: #eff2f5;
-    --erp-sidebar-width: 265px;
+    /* ukuran layout (tidak berubah antar tema) */
+    --erp-sidebar-expanded: 265px;
+    --erp-sidebar-collapsed-width: 78px;
+    --erp-sidebar-width: var(--erp-sidebar-expanded);
     --erp-header-height: 65px;
+
+    /* status semantik (konsisten di semua tema agar makna warna tetap jelas) */
+    --erp-success: #2e7d57;
+    --erp-danger: #c0395a;
+    --erp-warning: #b7791f;
+
+    /* ---- Tokens default = Sapphire ---- */
+    --erp-primary: #4b5694;
+    --erp-primary-hover: #3a4578;
+    --erp-primary-light: #eef0f9;
+    --erp-on-primary: #ffffff;
+
+    --erp-dark: #111844;
+    --erp-text: #3c4366;
+    --erp-text-muted: #8a90b3;
+    --erp-body-bg: #f5f4ef;
+    --erp-card-bg: #ffffff;
+    --erp-border: #e8e6dd;
+
+    --erp-sidebar-bg: #111844;
+    --erp-sidebar-item: #9aa7d3;
+    --erp-sidebar-active: #eae0cf;
+    --erp-sidebar-active-bg: #2a3163;
+
+    --erp-grad-1: linear-gradient(135deg, #141b46, #2f3a73);
+    --erp-grad-2: linear-gradient(135deg, #34407e, #4d5b97);
+    --erp-grad-3: linear-gradient(135deg, #45528f, #5d6ca6);
+    --erp-grad-4: linear-gradient(135deg, #5161a0, #6075a8);
+    --erp-auth-grad: linear-gradient(135deg, #111844, #2a3163);
+    --erp-badge-primary-bg: #eef0f9;
+    --erp-badge-primary-text: #3a4578;
+}
+
+/* ===================== Tema: Sapphire ===================== */
+[data-theme="sapphire"] {
+    --erp-primary: #4b5694;
+    --erp-primary-hover: #3a4578;
+    --erp-primary-light: #eef0f9;
+    --erp-on-primary: #ffffff;
+    --erp-dark: #111844;
+    --erp-text: #3c4366;
+    --erp-text-muted: #8a90b3;
+    --erp-body-bg: #f5f4ef;
+    --erp-card-bg: #ffffff;
+    --erp-border: #e8e6dd;
+    --erp-sidebar-bg: #111844;
+    --erp-sidebar-item: #9aa7d3;
+    --erp-sidebar-active: #eae0cf;
+    --erp-sidebar-active-bg: #2a3163;
+    --erp-grad-1: linear-gradient(135deg, #141b46, #2f3a73);
+    --erp-grad-2: linear-gradient(135deg, #34407e, #4d5b97);
+    --erp-grad-3: linear-gradient(135deg, #45528f, #5d6ca6);
+    --erp-grad-4: linear-gradient(135deg, #5161a0, #6075a8);
+    --erp-auth-grad: linear-gradient(135deg, #111844, #2a3163);
+    --erp-badge-primary-bg: #eef0f9;
+    --erp-badge-primary-text: #3a4578;
+}
+
+/* ===================== Tema: Mocha ===================== */
+[data-theme="mocha"] {
+    --erp-primary: #8c5a3c;
+    --erp-primary-hover: #6f4630;
+    --erp-primary-light: #f6ece2;
+    --erp-on-primary: #ffffff;
+    --erp-dark: #4b2e2b;
+    --erp-text: #5b4038;
+    --erp-text-muted: #a98e7e;
+    --erp-body-bg: #fff8f0;
+    --erp-card-bg: #fffdfb;
+    --erp-border: #efe4d8;
+    --erp-sidebar-bg: #4b2e2b;
+    --erp-sidebar-item: #cdb6a8;
+    --erp-sidebar-active: #fff8f0;
+    --erp-sidebar-active-bg: #6d4536;
+    --erp-grad-1: linear-gradient(135deg, #3f2724, #4b2e2b);
+    --erp-grad-2: linear-gradient(135deg, #5c3a2d, #7a4d38);
+    --erp-grad-3: linear-gradient(135deg, #7a4d38, #8c5a3c);
+    --erp-grad-4: linear-gradient(135deg, #8c5a3c, #a86f49);
+    --erp-auth-grad: linear-gradient(135deg, #4b2e2b, #6d4536);
+    --erp-badge-primary-bg: #f6ece2;
+    --erp-badge-primary-text: #8c5a3c;
+}
+
+/* ===================== Tema: Emerald ===================== */
+[data-theme="emerald"] {
+    --erp-primary: #1b7a63;
+    --erp-primary-hover: #155f4d;
+    --erp-primary-light: #e6f6ef;
+    --erp-on-primary: #ffffff;
+    --erp-dark: #1f6f5f;
+    --erp-text: #2f4a43;
+    --erp-text-muted: #7ba294;
+    --erp-body-bg: #f0f4f2;
+    --erp-card-bg: #ffffff;
+    --erp-border: #e0eae6;
+    --erp-sidebar-bg: #1f6f5f;
+    --erp-sidebar-item: #b6ddd0;
+    --erp-sidebar-active: #ffffff;
+    --erp-sidebar-active-bg: #2fa084;
+    --erp-grad-1: linear-gradient(135deg, #16604f, #1f6f5f);
+    --erp-grad-2: linear-gradient(135deg, #1f6f5f, #2b8a72);
+    --erp-grad-3: linear-gradient(135deg, #1d7a63, #2fa084);
+    --erp-grad-4: linear-gradient(135deg, #228a70, #2fa084);
+    --erp-auth-grad: linear-gradient(135deg, #1f6f5f, #2fa084);
+    --erp-badge-primary-bg: #e6f6ef;
+    --erp-badge-primary-text: #176a55;
 }
 
 body {
     background-color: var(--erp-body-bg);
     font-family: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 0.95rem;
-    color: #5e6278;
+    color: var(--erp-text);
 }
 
 /* ===================== Layout shell ===================== */
@@ -42,7 +142,8 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 1030;
-    transition: transform .3s ease;
+    transition: width .25s ease, transform .3s ease;
+    overflow: hidden;
 }
 
 .erp-sidebar .erp-brand {
@@ -50,14 +151,14 @@ body {
     display: flex;
     align-items: center;
     padding: 0 25px;
-    color: #fff;
+    color: var(--erp-sidebar-active);
     font-size: 1.2rem;
     font-weight: 700;
-    border-bottom: 1px solid rgba(255, 255, 255, .05);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 
 .erp-brand .bi {
-    color: var(--erp-primary);
+    color: var(--erp-sidebar-active);
     margin-right: 10px;
     font-size: 1.5rem;
 }
@@ -71,7 +172,8 @@ body {
 }
 
 .erp-menu .menu-heading {
-    color: var(--erp-text-muted);
+    color: var(--erp-sidebar-item);
+    opacity: .75;
     text-transform: uppercase;
     font-size: .75rem;
     font-weight: 600;
@@ -100,7 +202,7 @@ body {
 
 .erp-menu a:hover {
     color: var(--erp-sidebar-active);
-    background-color: rgba(255, 255, 255, .03);
+    background-color: rgba(255, 255, 255, .06);
 }
 
 .erp-menu a.active {
@@ -113,16 +215,23 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: margin-left .25s ease;
+}
+
+.erp-collapse-btn {
+    display: none;
+    border: none;
+    color: var(--erp-dark);
 }
 
 .erp-header {
     height: var(--erp-header-height);
-    background: #fff;
+    background: var(--erp-card-bg);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 30px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .04);
     position: sticky;
     top: 0;
     z-index: 1020;
@@ -159,7 +268,8 @@ body {
 .card {
     border: none;
     border-radius: 12px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, .03);
+    background: var(--erp-card-bg);
+    box-shadow: 0 0 30px rgba(0, 0, 0, .04);
 }
 
 .card .card-header {
@@ -179,22 +289,31 @@ body {
     color: #fff;
 }
 .stat-card .stat-value { font-size: 1.9rem; font-weight: 700; }
-.stat-card .stat-label { opacity: .85; }
-.bg-grad-primary { background: linear-gradient(135deg, #009ef7, #4dbbf9); }
-.bg-grad-success { background: linear-gradient(135deg, #50cd89, #7ddaa6); }
-.bg-grad-warning { background: linear-gradient(135deg, #ffc700, #ffd84d); }
-.bg-grad-info    { background: linear-gradient(135deg, #7239ea, #9b6ff0); }
+.stat-card .stat-label { opacity: .9; }
+.bg-grad-primary { background: var(--erp-grad-1); }
+.bg-grad-success { background: var(--erp-grad-2); }
+.bg-grad-warning { background: var(--erp-grad-4); }
+.bg-grad-info    { background: var(--erp-grad-3); }
 
 /* ===================== Buttons & misc ===================== */
 .btn-primary {
     background-color: var(--erp-primary);
     border-color: var(--erp-primary);
+    color: var(--erp-on-primary);
 }
-.btn-primary:hover { background-color: #0089d6; border-color: #0089d6; }
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--erp-primary-hover);
+    border-color: var(--erp-primary-hover);
+    color: var(--erp-on-primary);
+}
 .text-primary { color: var(--erp-primary) !important; }
+a { color: var(--erp-primary); }
+a:hover { color: var(--erp-primary-hover); }
 
+.table { color: var(--erp-text); }
 .table > thead {
-    background-color: #f9f9f9;
+    background-color: rgba(0, 0, 0, .02);
     text-transform: uppercase;
     font-size: .8rem;
     letter-spacing: .4px;
@@ -202,9 +321,26 @@ body {
 }
 .table > :not(caption) > * > * { padding: .9rem .75rem; }
 
-.badge-light-success { background: #e8fff3; color: #50cd89; }
-.badge-light-danger  { background: #fff5f8; color: #f1416c; }
-.badge-light-primary { background: #f1faff; color: #009ef7; }
+.badge-light-success { background: #e7f4ee; color: #2e7d57; }
+.badge-light-danger  { background: #fbecf0; color: #c0395a; }
+.badge-light-warning { background: #fbf2e0; color: #9a6700; }
+.badge-light-primary { background: var(--erp-badge-primary-bg); color: var(--erp-badge-primary-text); }
+
+/* ===================== Theme switcher (header) ===================== */
+.theme-swatches {
+    display: inline-flex;
+    gap: 3px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+.theme-swatches span {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1px solid rgba(0, 0, 0, .1);
+}
+.theme-option.active { background-color: var(--erp-primary-light); font-weight: 600; }
 
 /* ===================== Auth pages ===================== */
 .auth-wrapper {
@@ -212,7 +348,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e1e2d, #2a2a40);
+    background: var(--erp-auth-grad);
     padding: 20px;
 }
 .auth-card {
@@ -224,10 +360,49 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
 }
 
-/* ===================== Responsive ===================== */
+/* ===================== Sidebar collapse (desktop) ===================== */
+@media (min-width: 992px) {
+    .erp-collapse-btn { display: inline-flex; align-items: center; }
+
+    /* Saat ciut: lebar sidebar menyusut → margin konten ikut menyesuaikan via variabel */
+    .erp-sidebar-collapsed { --erp-sidebar-width: var(--erp-sidebar-collapsed-width); }
+
+    .erp-sidebar-collapsed .brand-label,
+    .erp-sidebar-collapsed .menu-label { display: none; }
+
+    .erp-sidebar-collapsed .erp-brand { justify-content: center; padding: 0; }
+    .erp-sidebar-collapsed .erp-brand .bi { margin-right: 0; }
+
+    /* Heading grup menjadi garis pemisah tipis saat ciut */
+    .erp-sidebar-collapsed .menu-heading {
+        height: 1px; padding: 0; margin: 12px 18px; overflow: hidden;
+        background: rgba(255, 255, 255, .1);
+    }
+
+    .erp-sidebar-collapsed .erp-menu a { justify-content: center; padding: 11px 0; margin: 2px 12px; }
+    .erp-sidebar-collapsed .erp-menu a .bi { width: auto; }
+
+    /* Hover saat ciut: melebar sementara (flyout) tanpa menggeser konten utama */
+    .erp-sidebar-collapsed .erp-sidebar:hover {
+        width: var(--erp-sidebar-expanded);
+        box-shadow: 8px 0 28px rgba(0, 0, 0, .2);
+    }
+    .erp-sidebar-collapsed .erp-sidebar:hover .brand-label,
+    .erp-sidebar-collapsed .erp-sidebar:hover .menu-label { display: inline; }
+    .erp-sidebar-collapsed .erp-sidebar:hover .erp-brand { justify-content: flex-start; padding: 0 25px; }
+    .erp-sidebar-collapsed .erp-sidebar:hover .erp-brand .bi { margin-right: 10px; }
+    .erp-sidebar-collapsed .erp-sidebar:hover .menu-heading {
+        height: auto; padding: 16px 25px 6px; margin: 0; background: transparent;
+    }
+    .erp-sidebar-collapsed .erp-sidebar:hover .erp-menu a { justify-content: flex-start; padding: 10px 25px; }
+}
+
+/* ===================== Responsive (mobile) ===================== */
 @media (max-width: 991.98px) {
     .erp-sidebar { transform: translateX(-100%); }
     .erp-sidebar.show { transform: translateX(0); }
     .erp-main { margin-left: 0; }
     .erp-toggle { display: inline-block; }
+    /* Tombol ciut desktop disembunyikan di mobile (pakai off-canvas) */
+    .erp-collapse-btn { display: none; }
 }
