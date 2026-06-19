@@ -297,6 +297,20 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
+        // 12b-4. Menu Pengadaan: Purchase Requisition & RFQ (di grup Pembelian, idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "PurchaseRequisitions"))
+        {
+            var purchasingGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Pembelian" && m.ParentId == null);
+            if (purchasingGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == purchasingGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Purchase Requisition", Icon = "bi-clipboard-plus", Controller = "PurchaseRequisitions", Action = "Index", ParentId = purchasingGroup.Id, SortOrder = maxChild + 1, IsSystem = true },
+                    new MenuItem { Title = "Request for Quotation", Icon = "bi-chat-left-text", Controller = "RequestForQuotations", Action = "Index", ParentId = purchasingGroup.Id, SortOrder = maxChild + 2, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

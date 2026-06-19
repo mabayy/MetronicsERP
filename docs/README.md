@@ -23,6 +23,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 13 | [Purchasing (Pembelian)](13-purchasing.md) | Purchase Order → penerimaan → stok masuk otomatis | ✅ |
 | 14 | [Document Numbering](14-document-numbering.md) | Penomoran dokumen dapat dikustomisasi (prefix/format/reset) | ✅ |
 | 15 | [Sales (Penjualan)](15-sales.md) | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) | ✅ |
+| 16 | [Purchase Requisition & RFQ](16-pr-rfq.md) | Pengadaan awal: PR (approval) → RFQ (penawaran/pemenang) | ✅ |
 
 ## Cara membaca dokumen ini
 

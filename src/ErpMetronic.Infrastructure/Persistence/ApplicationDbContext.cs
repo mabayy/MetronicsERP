@@ -43,6 +43,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
     public DbSet<SalesInvoiceLine> SalesInvoiceLines => Set<SalesInvoiceLine>();
     public DbSet<SalesPayment> SalesPayments => Set<SalesPayment>();
+    public DbSet<PurchaseRequisition> PurchaseRequisitions => Set<PurchaseRequisition>();
+    public DbSet<PurchaseRequisitionLine> PurchaseRequisitionLines => Set<PurchaseRequisitionLine>();
+    public DbSet<RequestForQuotation> RequestForQuotations => Set<RequestForQuotation>();
+    public DbSet<RfqLine> RfqLines => Set<RfqLine>();
+    public DbSet<RfqQuote> RfqQuotes => Set<RfqQuote>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -165,6 +170,32 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         {
             e.HasIndex(x => x.ReferenceNumber);
             e.HasOne(x => x.SalesInvoice).WithMany(p => p.Payments).HasForeignKey(x => x.SalesInvoiceId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PurchaseRequisition>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+        });
+        builder.Entity<PurchaseRequisitionLine>(e =>
+        {
+            e.HasOne(x => x.PurchaseRequisition).WithMany(p => p.Lines).HasForeignKey(x => x.PurchaseRequisitionId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<RequestForQuotation>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.PurchaseRequisition).WithMany().HasForeignKey(x => x.PurchaseRequisitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<RfqLine>(e =>
+        {
+            e.HasOne(x => x.RequestForQuotation).WithMany(p => p.Lines).HasForeignKey(x => x.RequestForQuotationId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<RfqQuote>(e =>
+        {
+            e.HasOne(x => x.RequestForQuotation).WithMany(p => p.Quotes).HasForeignKey(x => x.RequestForQuotationId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Supplier).WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<DeliveryOrder>(e =>

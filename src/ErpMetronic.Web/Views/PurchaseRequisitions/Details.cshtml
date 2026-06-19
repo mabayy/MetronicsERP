@@ -1,0 +1,109 @@
+@using ErpMetronic.Domain.Enums
+@model PurchaseRequisition
+@{
+    ViewData["Title"] = "PR " + Model.ReferenceNumber;
+    var rfqs = ViewBag.Rfqs as List<RequestForQuotation> ?? new();
+    (string Label, string Css) St(PurchaseRequisitionStatus s) => s switch
+    {
+        PurchaseRequisitionStatus.Draft => ("Draft", "badge-light-warning"),
+        PurchaseRequisitionStatus.Submitted => ("Diajukan", "badge-light-primary"),
+        PurchaseRequisitionStatus.Approved => ("Disetujui", "badge-light-success"),
+        PurchaseRequisitionStatus.Rejected => ("Ditolak", "badge-light-danger"),
+        _ => (s.ToString(), "badge-light-primary")
+    };
+    var st = St(Model.Status);
+}
+
+<div class="card mb-3">
+    <div class="card-header justify-content-between">
+        <span>Purchase Requisition @Model.ReferenceNumber</span>
+        <span class="@st.Css px-2 py-1 rounded">@st.Label</span>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-3">
+            <dt class="col-sm-3">Tanggal</dt><dd class="col-sm-9">@Model.RequestDate.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Diminta Oleh</dt><dd class="col-sm-9">@Model.RequestedBy</dd>
+            <dt class="col-sm-3">Divisi/Departemen</dt><dd class="col-sm-9">@(Model.Department ?? "—")</dd>
+            <dt class="col-sm-3">Catatan</dt><dd class="col-sm-9">@Model.Note</dd>
+            @if (Model.Status == PurchaseRequisitionStatus.Approved)
+            {
+                <dt class="col-sm-3">Disetujui Oleh</dt><dd class="col-sm-9">@Model.ApprovedBy @(Model.ApprovedAt.HasValue ? "(" + Model.ApprovedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") + ")" : "")</dd>
+            }
+            @if (Model.Status == PurchaseRequisitionStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+            {
+                <dt class="col-sm-3 text-danger">Alasan Ditolak</dt><dd class="col-sm-9 text-danger">@Model.RejectionReason</dd>
+            }
+        </dl>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            @if (Model.Status == PurchaseRequisitionStatus.Draft)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-light btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                <form asp-action="Submit" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Ajukan PR ini?');">
+                    <button class="btn btn-primary btn-sm"><i class="bi bi-send"></i> Ajukan</button>
+                </form>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Hapus PR ini?');">
+                    <button class="btn btn-light btn-sm text-danger"><i class="bi bi-trash"></i></button>
+                </form>
+            }
+            @if (Model.Status == PurchaseRequisitionStatus.Submitted)
+            {
+                <form asp-action="Approve" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Setujui PR ini?');">
+                    <button class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Setujui</button>
+                </form>
+                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
+                    <input name="reason" class="form-control form-control-sm" placeholder="Alasan penolakan" style="width:220px" />
+                    <button class="btn btn-light btn-sm text-danger"><i class="bi bi-x-circle"></i> Tolak</button>
+                </form>
+            }
+            @if (Model.Status == PurchaseRequisitionStatus.Approved)
+            {
+                <a asp-controller="RequestForQuotations" asp-action="Create" asp-route-prId="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-chat-left-text"></i> Buat RFQ</a>
+            }
+            <a asp-action="Index" class="btn btn-light btn-sm">Kembali</a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Item Permintaan</div>
+    <div class="card-body p-0">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Produk</th><th class="text-end">Jumlah</th><th class="text-end">Estimasi Harga</th><th class="text-end">Subtotal</th><th>Catatan</th></tr></thead>
+            <tbody>
+            @foreach (var l in Model.Lines)
+            {
+                <tr>
+                    <td>@l.Product?.Sku — @l.Product?.Name</td>
+                    <td class="text-end">@l.Quantity.ToString("N0")</td>
+                    <td class="text-end">@l.EstimatedPrice.ToString("N2")</td>
+                    <td class="text-end">@((l.Quantity * l.EstimatedPrice).ToString("N2"))</td>
+                    <td class="text-muted small">@l.Note</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+                <tr class="table-light"><td colspan="3" class="text-end fw-bold">Estimasi Total</td><td class="text-end fw-bold">@Model.Lines.Sum(l => l.Quantity * l.EstimatedPrice).ToString("N2")</td><td></td></tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">RFQ Terkait</div>
+    <div class="card-body p-0">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>No. RFQ</th><th>Tanggal</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!rfqs.Any()) { <tr><td colspan="3" class="text-center text-muted py-3">Belum ada RFQ</td></tr> }
+            @foreach (var r in rfqs)
+            {
+                <tr>
+                    <td class="fw-semibold">@r.ReferenceNumber</td>
+                    <td>@r.RfqDate.ToString("dd/MM/yyyy")</td>
+                    <td class="text-end"><a asp-controller="RequestForQuotations" asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

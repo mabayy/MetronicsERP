@@ -16,6 +16,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Sidebar expand/collapse | ✅ | Ciutkan jadi rail ikon (flyout saat hover), status tersimpan |
 | Manajemen Stok (Inventory) | ✅ | Stok masuk/keluar/transfer/penyesuaian, saldo per gudang, **kartu stok**, **nilai persediaan** |
 | Penerimaan & Pengeluaran | ✅ | Dokumen penerimaan (auto stok masuk) & pengiriman (auto stok keluar) terintegrasi stok |
+| Pengadaan awal (PR & RFQ) | ✅ | Purchase Requisition (approval) → Request for Quotation (penawaran & pemenang) |
 | Pembelian (Purchasing) | ✅ | PO (edit saat Draft) → konfirmasi → penerimaan (auto stok masuk), multi-currency |
 | Faktur & Pembayaran Pembelian | ✅ | Faktur dari PO dengan 3-way matching + pembayaran hutang (status Lunas) |
 | Penjualan (Sales) | ✅ | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) |

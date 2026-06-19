@@ -1,0 +1,78 @@
+@model RfqCreateViewModel
+@{
+    ViewData["Title"] = "Request for Quotation Baru";
+    var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-cart-plus text-primary me-2"></i> Buat Request for Quotation</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+            <input asp-for="PurchaseRequisitionId" type="hidden" />
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label asp-for="RfqDate" class="form-label fw-semibold"></label>
+                    <input asp-for="RfqDate" type="date" class="form-control" />
+                    <span asp-validation-for="RfqDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-9">
+                    <label asp-for="Note" class="form-label fw-semibold"></label>
+                    <input asp-for="Note" class="form-control" />
+                </div>
+            </div>
+
+            <h6 class="fw-semibold">Detail Item</h6>
+            <table class="table align-middle" id="linesTable">
+                <thead><tr><th style="width:70%">Produk</th><th class="text-end">Jumlah</th><th></th></tr></thead>
+                <tbody id="linesBody"></tbody>
+            </table>
+            <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan RFQ (Draft)</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+
+            <template id="lineTemplate">
+                <tr class="line-row">
+                    <td>
+                        <select name="Lines[__I__].ProductId" class="form-select form-select-sm">
+                            <option value="">-- Pilih produk --</option>
+                            @foreach (var p in products)
+                            {
+                                <option value="@p.Id">@p.Display</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input name="Lines[__I__].Quantity" type="number" min="1" value="1" class="form-control form-control-sm text-end" /></td>
+                    <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                </tr>
+            </template>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const body = document.getElementById('linesBody');
+        const tpl = document.getElementById('lineTemplate').innerHTML;
+        function reindex() {
+            body.querySelectorAll('.line-row').forEach(function (row, i) {
+                row.querySelectorAll('[name]').forEach(function (el) {
+                    el.name = el.name.replace(/Lines\[\d+\]/, 'Lines[' + i + ']').replace(/Lines\[__I__\]/, 'Lines[' + i + ']');
+                });
+            });
+        }
+        function addLine() {
+            body.insertAdjacentHTML('beforeend', tpl.replace(/__I__/g, body.children.length));
+            reindex();
+        }
+        document.getElementById('addLine').addEventListener('click', addLine);
+        body.addEventListener('click', function (e) {
+            if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); }
+        });
+        addLine();
+    </script>
+}

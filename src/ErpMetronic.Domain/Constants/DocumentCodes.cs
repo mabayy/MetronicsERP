@@ -18,6 +18,8 @@ public static class DocumentCodes
     public const string SalesOrder = "SO";
     public const string SalesInvoice = "SINV";
     public const string SalesPayment = "SPAY";
+    public const string PurchaseRequisition = "PR";
+    public const string RequestForQuotation = "RFQ";
 
     /// <summary>Kode bawaan beserta nama default (untuk seeding).</summary>
     public static readonly (string Code, string Name)[] BuiltIns =
@@ -33,6 +35,8 @@ public static class DocumentCodes
         (PurchasePayment, "Pembayaran Pembelian"),
         (SalesOrder, "Sales Order"),
         (SalesInvoice, "Faktur Penjualan"),
-        (SalesPayment, "Pembayaran Penjualan")
+        (SalesPayment, "Pembayaran Penjualan"),
+        (PurchaseRequisition, "Purchase Requisition"),
+        (RequestForQuotation, "Request for Quotation")
     };
 }

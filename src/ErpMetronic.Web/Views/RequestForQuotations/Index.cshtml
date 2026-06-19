@@ -1,0 +1,44 @@
+@using ErpMetronic.Domain.Enums
+@model List<RequestForQuotation>
+@{ ViewData["Title"] = "Request for Quotation"; }
+
+@functions {
+    (string Label, string Css) Status(RequestForQuotationStatus s) => s switch
+    {
+        RequestForQuotationStatus.Draft => ("Draft", "badge-light-warning"),
+        RequestForQuotationStatus.Sent => ("Terkirim", "badge-light-primary"),
+        RequestForQuotationStatus.Closed => ("Ditutup", "badge-light-success"),
+        _ => (s.ToString(), "badge-light-primary")
+    };
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Request for Quotation</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> RFQ Baru</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. RFQ</th><th>Tanggal</th><th>Dari PR</th><th>Status</th><th class="text-end">Item</th><th class="text-end">Penawaran</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada request for quotation</td></tr>
+            }
+            @foreach (var r in Model)
+            {
+                var st = Status(r.Status);
+                <tr>
+                    <td class="fw-semibold">@r.ReferenceNumber</td>
+                    <td>@r.RfqDate.ToString("dd/MM/yyyy")</td>
+                    <td><span class="text-muted small">@r.PurchaseRequisition?.ReferenceNumber</span></td>
+                    <td><span class="@st.Css px-2 py-1 rounded">@st.Label</span></td>
+                    <td class="text-end">@r.Lines.Count</td>
+                    <td class="text-end">@r.Quotes.Count</td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
