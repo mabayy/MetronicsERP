@@ -4,6 +4,7 @@ using ErpMetronic.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErpMetronic.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619034715_AddDocumentCodes")]
+    partial class AddDocumentCodes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -211,9 +214,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
-                    b.Property<int?>("SalesOrderId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -228,8 +228,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("ReferenceNumber");
-
-                    b.HasIndex("SalesOrderId");
 
                     b.HasIndex("WarehouseId");
 
@@ -775,113 +773,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                     b.ToTable("ProductStocks");
                 });
 
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseInvoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("InvoiceDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<decimal>("PaidAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReferenceNumber")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
-
-                    b.HasIndex("PurchaseOrderId");
-
-                    b.HasIndex("ReferenceNumber");
-
-                    b.HasIndex("SupplierId");
-
-                    b.ToTable("PurchaseInvoices");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseInvoiceLine", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PurchaseInvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("PurchaseInvoiceId");
-
-                    b.ToTable("PurchaseInvoiceLines");
-                });
-
             modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseOrder", b =>
                 {
                     b.Property<int>("Id")
@@ -987,328 +878,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                     b.HasIndex("PurchaseOrderId");
 
                     b.ToTable("PurchaseOrderItems");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchasePayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Method")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PurchaseInvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReferenceNumber")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PurchaseInvoiceId");
-
-                    b.HasIndex("ReferenceNumber");
-
-                    b.ToTable("PurchasePayments");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesInvoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("InvoiceDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<decimal>("PaidAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ReferenceNumber")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<int>("SalesOrderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("ReferenceNumber");
-
-                    b.HasIndex("SalesOrderId");
-
-                    b.ToTable("SalesInvoices");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesInvoiceLine", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SalesInvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("SalesInvoiceId");
-
-                    b.ToTable("SalesInvoiceLines");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesOrder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ReferenceNumber")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("WarehouseId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("ReferenceNumber");
-
-                    b.HasIndex("WarehouseId");
-
-                    b.ToTable("SalesOrders");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesOrderItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DeliveredQuantity")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SalesOrderId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("SalesOrderId");
-
-                    b.ToTable("SalesOrderItems");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesPayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Method")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ReferenceNumber")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<int>("SalesInvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReferenceNumber");
-
-                    b.HasIndex("SalesInvoiceId");
-
-                    b.ToTable("SalesPayments");
                 });
 
             modelBuilder.Entity("ErpMetronic.Domain.Entities.StockMovement", b =>
@@ -1746,11 +1315,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ErpMetronic.Domain.Entities.SalesOrder", "SalesOrder")
-                        .WithMany()
-                        .HasForeignKey("SalesOrderId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("ErpMetronic.Domain.Entities.Warehouse", "Warehouse")
                         .WithMany()
                         .HasForeignKey("WarehouseId")
@@ -1758,8 +1322,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
-
-                    b.Navigation("SalesOrder");
 
                     b.Navigation("Warehouse");
                 });
@@ -1932,51 +1494,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                     b.Navigation("Warehouse");
                 });
 
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseInvoice", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ErpMetronic.Domain.Entities.PurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ErpMetronic.Domain.Entities.Supplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Currency");
-
-                    b.Navigation("PurchaseOrder");
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseInvoiceLine", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ErpMetronic.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
-                        .WithMany("Lines")
-                        .HasForeignKey("PurchaseInvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("PurchaseInvoice");
-                });
-
             modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseOrder", b =>
                 {
                     b.HasOne("ErpMetronic.Domain.Entities.Currency", "Currency")
@@ -2020,118 +1537,6 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("PurchaseOrder");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchasePayment", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
-                        .WithMany("Payments")
-                        .HasForeignKey("PurchaseInvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PurchaseInvoice");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesInvoice", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ErpMetronic.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ErpMetronic.Domain.Entities.SalesOrder", "SalesOrder")
-                        .WithMany()
-                        .HasForeignKey("SalesOrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Currency");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("SalesOrder");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesInvoiceLine", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ErpMetronic.Domain.Entities.SalesInvoice", "SalesInvoice")
-                        .WithMany("Lines")
-                        .HasForeignKey("SalesInvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("SalesInvoice");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesOrder", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ErpMetronic.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ErpMetronic.Domain.Entities.Warehouse", "Warehouse")
-                        .WithMany()
-                        .HasForeignKey("WarehouseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Currency");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Warehouse");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesOrderItem", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ErpMetronic.Domain.Entities.SalesOrder", "SalesOrder")
-                        .WithMany("Items")
-                        .HasForeignKey("SalesOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("SalesOrder");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesPayment", b =>
-                {
-                    b.HasOne("ErpMetronic.Domain.Entities.SalesInvoice", "SalesInvoice")
-                        .WithMany("Payments")
-                        .HasForeignKey("SalesInvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SalesInvoice");
                 });
 
             modelBuilder.Entity("ErpMetronic.Domain.Entities.StockMovement", b =>
@@ -2257,26 +1662,7 @@ namespace ErpMetronic.Infrastructure.Persistence.Migrations
                     b.Navigation("Children");
                 });
 
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseInvoice", b =>
-                {
-                    b.Navigation("Lines");
-
-                    b.Navigation("Payments");
-                });
-
             modelBuilder.Entity("ErpMetronic.Domain.Entities.PurchaseOrder", b =>
-                {
-                    b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesInvoice", b =>
-                {
-                    b.Navigation("Lines");
-
-                    b.Navigation("Payments");
-                });
-
-            modelBuilder.Entity("ErpMetronic.Domain.Entities.SalesOrder", b =>
                 {
                     b.Navigation("Items");
                 });

@@ -1,0 +1,80 @@
+@using ErpMetronic.Domain.Enums
+@model DocumentNumberSequence
+@{ ViewData["Title"] = "Edit Penomoran — " + Model.Code; }
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card">
+            <div class="card-header">
+                Konfigurasi Penomoran: @Model.Code
+                @if (Model.IsSystem) { <span class="badge-light-primary px-2 rounded ms-2">Sistem</span> }
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="IsSystem" />
+                    <input type="hidden" asp-for="LastResetYear" />
+                    <input type="hidden" asp-for="LastResetMonth" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Code" class="form-label fw-semibold">Kode</label>
+                            <input asp-for="Code" class="form-control text-uppercase" readonly />
+                            <div class="form-text">Kode tidak dapat diubah.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="Name" class="form-label fw-semibold">Nama</label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="Prefix" class="form-label fw-semibold">Prefix</label>
+                            <input asp-for="Prefix" class="form-control" />
+                        </div>
+                        <div class="col-md-7">
+                            <label asp-for="Format" class="form-label fw-semibold">Format</label>
+                            <input asp-for="Format" class="form-control" />
+                            <span asp-validation-for="Format" class="text-danger small"></span>
+                            <div class="form-text">Token: <code>{PREFIX}</code> <code>{YYYY}</code> <code>{YY}</code> <code>{MM}</code> <code>{DD}</code> <code>{SEQ}</code> (wajib).</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Padding" class="form-label fw-semibold">Padding</label>
+                            <input asp-for="Padding" type="number" min="1" max="10" class="form-control" />
+                            <span asp-validation-for="Padding" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NextNumber" class="form-label fw-semibold">No. Berikutnya</label>
+                            <input asp-for="NextNumber" type="number" min="1" class="form-control" />
+                            <span asp-validation-for="NextNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="ResetPeriod" class="form-label fw-semibold">Reset Nomor</label>
+                            <select asp-for="ResetPeriod" class="form-select">
+                                <option value="@((int)NumberResetPeriod.Never)">Tidak pernah</option>
+                                <option value="@((int)NumberResetPeriod.Yearly)">Tahunan</option>
+                                <option value="@((int)NumberResetPeriod.Monthly)">Bulanan</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-light border d-flex align-items-center mb-0">
+                                <i class="bi bi-eye me-2"></i> Contoh nomor (hari ini): <strong class="ms-1">@ViewBag.Preview</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 form-check ms-2">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                        <a asp-action="Index" class="btn btn-light">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

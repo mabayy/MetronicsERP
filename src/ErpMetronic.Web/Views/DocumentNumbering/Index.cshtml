@@ -1,0 +1,62 @@
+@using ErpMetronic.Domain.Enums
+@model List<DocumentNumberSequence>
+@{
+    ViewData["Title"] = "Penomoran Dokumen";
+    var preview = ViewBag.Preview as Dictionary<int, string> ?? new();
+    string ResetLabel(NumberResetPeriod r) => r switch
+    {
+        NumberResetPeriod.Never => "Tidak pernah",
+        NumberResetPeriod.Yearly => "Tahunan",
+        NumberResetPeriod.Monthly => "Bulanan",
+        _ => r.ToString()
+    };
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Konfigurasi Penomoran Dokumen</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Kode Dokumen</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>Kode</th><th>Nama</th><th>Format</th><th class="text-center">Padding</th><th class="text-center">No. Berikutnya</th><th>Reset</th><th>Contoh</th><th>Status</th><th class="text-end">Aksi</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>
+                        <span class="badge-light-primary px-2 py-1 rounded">@s.Code</span>
+                        @if (s.IsSystem) { <span class="text-muted small d-block">sistem</span> }
+                    </td>
+                    <td class="fw-semibold text-dark">@s.Name</td>
+                    <td><code>@s.Format</code><div class="text-muted small">prefix: @(string.IsNullOrEmpty(s.Prefix) ? "—" : s.Prefix)</div></td>
+                    <td class="text-center">@s.Padding</td>
+                    <td class="text-center">@s.NextNumber</td>
+                    <td>@ResetLabel(s.ResetPeriod)</td>
+                    <td><span class="badge-light-success px-2 py-1 rounded">@(preview.TryGetValue(s.Id, out var p) ? p : "")</span></td>
+                    <td>
+                        @if (s.IsActive) { <span class="badge-light-success px-2 py-1 rounded">Aktif</span> }
+                        else { <span class="badge-light-danger px-2 py-1 rounded">Nonaktif</span> }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                        @if (!s.IsSystem)
+                        {
+                            <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus kode dokumen ini?');">
+                                <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="text-muted small mt-3">
+    <i class="bi bi-info-circle"></i> Token format: <code>{PREFIX}</code> <code>{YYYY}</code>
+    <code>{YY}</code> <code>{MM}</code> <code>{DD}</code> <code>{SEQ}</code> (wajib). Kode bawaan
+    sistem tidak dapat dihapus; Anda bebas menambah kode dokumen sendiri.
+</p>

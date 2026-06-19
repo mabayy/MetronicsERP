@@ -34,6 +34,7 @@ public static class DependencyInjection
 
         services.AddScoped<IStockService, StockService>();
         services.AddScoped<ICurrencyService, CurrencyService>();
+        services.AddScoped<IDocumentNumberService, DocumentNumberService>();
 
         return services;
     }

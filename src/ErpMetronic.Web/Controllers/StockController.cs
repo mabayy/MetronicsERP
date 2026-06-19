@@ -14,11 +14,13 @@ public class StockController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IStockService _stock;
+    private readonly ICurrencyService _currency;
 
-    public StockController(ApplicationDbContext db, IStockService stock)
+    public StockController(ApplicationDbContext db, IStockService stock, ICurrencyService currency)
     {
         _db = db;
         _stock = stock;
+        _currency = currency;
     }
 
     // ---------- Riwayat & Saldo ----------
@@ -164,4 +166,130 @@ public class StockController : Controller
         var warehouses = await _db.Warehouses.OrderBy(w => w.Name).ToListAsync();
         return new SelectList(warehouses, "Id", "Name", selected);
     }
+
+    // ---------- Kartu Stok (Stock Card) ----------
+
+    public async Task<IActionResult> Card(int? productId, int? warehouseId, DateTime? from, DateTime? to)
+    {
+        ViewBag.Products = await ProductSelectAsync(productId);
+        ViewBag.Warehouses = await WarehouseSelectAsync(warehouseId);
+        ViewBag.ProductId = productId;
+        ViewBag.WarehouseId = warehouseId;
+        ViewBag.From = from;
+        ViewBag.To = to;
+
+        if (productId is null)
+            return View(new List<StockCardRow>());
+
+        var movements = await _db.StockMovements
+            .Where(m => m.ProductId == productId)
+            .Include(m => m.Warehouse).Include(m => m.DestinationWarehouse)
+            .OrderBy(m => m.MovementDate).ThenBy(m => m.Id)
+            .ToListAsync();
+
+        // Pengaruh tiap pergerakan terhadap saldo pada lingkup terpilih (total / per gudang)
+        int Delta(Domain.Entities.StockMovement m) => m.Type switch
+        {
+            MovementType.StockIn => warehouseId is null || m.WarehouseId == warehouseId ? m.Quantity : 0,
+            MovementType.StockOut => warehouseId is null || m.WarehouseId == warehouseId ? -m.Quantity : 0,
+            MovementType.Adjustment => warehouseId is null || m.WarehouseId == warehouseId ? m.Quantity : 0,
+            MovementType.Transfer => warehouseId is null
+                ? 0
+                : (m.WarehouseId == warehouseId ? -m.Quantity : (m.DestinationWarehouseId == warehouseId ? m.Quantity : 0)),
+            _ => 0
+        };
+
+        var opening = from.HasValue ? movements.Where(m => m.MovementDate < from.Value).Sum(Delta) : 0;
+        var running = opening;
+        var rows = new List<StockCardRow>();
+        foreach (var m in movements)
+        {
+            if (from.HasValue && m.MovementDate < from.Value) continue;
+            if (to.HasValue && m.MovementDate > to.Value) continue;
+            var d = Delta(m);
+            if (d == 0) continue; // tidak memengaruhi lingkup ini
+            running += d;
+            rows.Add(new StockCardRow
+            {
+                Date = m.MovementDate,
+                Reference = m.ReferenceNumber,
+                Type = m.Type,
+                In = d > 0 ? d : 0,
+                Out = d < 0 ? -d : 0,
+                Balance = running,
+                Note = m.Note,
+                Warehouse = warehouseId is null && m.Type == MovementType.Transfer ? null : m.Warehouse?.Name
+            });
+        }
+
+        ViewBag.Opening = opening;
+        ViewBag.Closing = running;
+        return View(rows);
+    }
+
+    // ---------- Nilai Persediaan (Inventory Valuation) ----------
+
+    public async Task<IActionResult> Valuation(int? warehouseId)
+    {
+        var query = _db.ProductStocks
+            .Include(s => s.Product).ThenInclude(p => p!.Currency)
+            .Include(s => s.Warehouse)
+            .Where(s => s.Quantity != 0)
+            .AsQueryable();
+        if (warehouseId.HasValue) query = query.Where(s => s.WarehouseId == warehouseId);
+
+        var stocks = await query.OrderBy(s => s.Product!.Name).ThenBy(s => s.Warehouse!.Name).ToListAsync();
+        var baseCurrency = await _currency.GetBaseCurrencyAsync();
+
+        var rows = new List<InventoryValuationRow>();
+        decimal grandTotal = 0;
+        foreach (var s in stocks)
+        {
+            var unitCost = s.Product!.PurchasePrice;
+            decimal? unitCostBase = unitCost;
+            if (baseCurrency is not null && s.Product.CurrencyId is int cid && cid != baseCurrency.Id)
+                unitCostBase = await _currency.ConvertAsync(unitCost, cid, baseCurrency.Id, DateTime.Today);
+
+            var value = unitCostBase.HasValue ? unitCostBase.Value * s.Quantity : (decimal?)null;
+            if (value.HasValue) grandTotal += value.Value;
+
+            rows.Add(new InventoryValuationRow
+            {
+                Sku = s.Product.Sku,
+                ProductName = s.Product.Name,
+                Warehouse = s.Warehouse!.Name,
+                Quantity = s.Quantity,
+                UnitCostBase = unitCostBase,
+                Value = value
+            });
+        }
+
+        ViewBag.Warehouses = await WarehouseSelectAsync(warehouseId);
+        ViewBag.WarehouseId = warehouseId;
+        ViewBag.BaseCurrency = baseCurrency;
+        ViewBag.GrandTotal = grandTotal;
+        return View(rows);
+    }
+}
+
+public class StockCardRow
+{
+    public DateTime Date { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public MovementType Type { get; set; }
+    public int In { get; set; }
+    public int Out { get; set; }
+    public int Balance { get; set; }
+    public string? Note { get; set; }
+    public string? Warehouse { get; set; }
+}
+
+public class InventoryValuationRow
+{
+    public string Sku { get; set; } = string.Empty;
+    public string ProductName { get; set; } = string.Empty;
+    public string Warehouse { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal? UnitCostBase { get; set; }
+    public decimal? Value { get; set; }
 }

@@ -1,0 +1,100 @@
+@model SalesOrderCreateViewModel
+@{
+    ViewData["Title"] = "Sales Order Baru";
+    var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-cart-plus text-primary me-2"></i> Buat Sales Order</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label asp-for="CustomerId" class="form-label fw-semibold"></label>
+                    <select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select"><option value="">-- Pilih pelanggan --</option></select>
+                    <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="WarehouseId" class="form-label fw-semibold"></label>
+                    <select asp-for="WarehouseId" asp-items="ViewBag.Warehouses" class="form-select"><option value="">-- Pilih gudang --</option></select>
+                    <span asp-validation-for="WarehouseId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="CurrencyId" class="form-label fw-semibold"></label>
+                    <select asp-for="CurrencyId" asp-items="ViewBag.Currencies" class="form-select"><option value="">-</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="OrderDate" class="form-label fw-semibold"></label>
+                    <input asp-for="OrderDate" type="date" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Note" class="form-label fw-semibold"></label>
+                    <input asp-for="Note" class="form-control" />
+                </div>
+            </div>
+
+            <h6 class="fw-semibold">Detail Item</h6>
+            <table class="table align-middle" id="linesTable">
+                <thead><tr><th style="width:50%">Produk</th><th class="text-end">Jumlah</th><th class="text-end">Harga Satuan</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+                <tbody id="linesBody"></tbody>
+            </table>
+            <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan SO (Draft)</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+
+            <template id="lineTemplate">
+                <tr class="line-row">
+                    <td>
+                        <select name="Items[__I__].ProductId" class="form-select form-select-sm">
+                            <option value="">-- Pilih produk --</option>
+                            @foreach (var p in products)
+                            {
+                                <option value="@p.Id">@p.Display</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input name="Items[__I__].Quantity" type="number" min="1" value="1" class="form-control form-control-sm text-end qty" /></td>
+                    <td><input name="Items[__I__].UnitPrice" type="number" min="0" step="0.01" value="0" class="form-control form-control-sm text-end price" /></td>
+                    <td class="text-end subtotal">0</td>
+                    <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                </tr>
+            </template>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const body = document.getElementById('linesBody');
+        const tpl = document.getElementById('lineTemplate').innerHTML;
+        function reindex() {
+            body.querySelectorAll('.line-row').forEach(function (row, i) {
+                row.querySelectorAll('[name]').forEach(function (el) {
+                    el.name = el.name.replace(/Items\[\d+\]/, 'Items[' + i + ']').replace(/Items\[__I__\]/, 'Items[' + i + ']');
+                });
+            });
+        }
+        function recalc(row) {
+            var q = parseFloat(row.querySelector('.qty').value) || 0;
+            var p = parseFloat(row.querySelector('.price').value) || 0;
+            row.querySelector('.subtotal').textContent = (q * p).toLocaleString('id-ID', { minimumFractionDigits: 2 });
+        }
+        function addLine() {
+            body.insertAdjacentHTML('beforeend', tpl.replace(/__I__/g, body.children.length));
+            reindex();
+        }
+        document.getElementById('addLine').addEventListener('click', addLine);
+        body.addEventListener('click', function (e) {
+            if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); }
+        });
+        body.addEventListener('input', function (e) {
+            if (e.target.classList.contains('qty') || e.target.classList.contains('price')) recalc(e.target.closest('.line-row'));
+        });
+        addLine();
+    </script>
+}

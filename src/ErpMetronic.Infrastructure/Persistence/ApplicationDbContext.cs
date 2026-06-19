@@ -28,6 +28,21 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<MenuItemPosition> MenuItemPositions => Set<MenuItemPosition>();
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+    public DbSet<GoodsReceipt> GoodsReceipts => Set<GoodsReceipt>();
+    public DbSet<GoodsReceiptLine> GoodsReceiptLines => Set<GoodsReceiptLine>();
+    public DbSet<DeliveryOrder> DeliveryOrders => Set<DeliveryOrder>();
+    public DbSet<DeliveryOrderLine> DeliveryOrderLines => Set<DeliveryOrderLine>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderItem> PurchaseOrderItems => Set<PurchaseOrderItem>();
+    public DbSet<DocumentNumberSequence> DocumentNumberSequences => Set<DocumentNumberSequence>();
+    public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
+    public DbSet<PurchaseInvoiceLine> PurchaseInvoiceLines => Set<PurchaseInvoiceLine>();
+    public DbSet<PurchasePayment> PurchasePayments => Set<PurchasePayment>();
+    public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
+    public DbSet<SalesOrderItem> SalesOrderItems => Set<SalesOrderItem>();
+    public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
+    public DbSet<SalesInvoiceLine> SalesInvoiceLines => Set<SalesInvoiceLine>();
+    public DbSet<SalesPayment> SalesPayments => Set<SalesPayment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -70,6 +85,98 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             e.HasIndex(x => new { x.CurrencyId, x.EffectiveDate }).IsUnique();
             e.HasOne(x => x.Currency).WithMany(c => c.ExchangeRates)
                 .HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<GoodsReceipt>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Supplier).WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<GoodsReceiptLine>(e =>
+        {
+            e.HasOne(x => x.GoodsReceipt).WithMany(g => g.Lines).HasForeignKey(x => x.GoodsReceiptId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<GoodsReceipt>()
+            .HasOne(g => g.PurchaseOrder).WithMany().HasForeignKey(g => g.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PurchaseOrder>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Supplier).WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<PurchaseOrderItem>(e =>
+        {
+            e.HasOne(x => x.PurchaseOrder).WithMany(p => p.Items).HasForeignKey(x => x.PurchaseOrderId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<DocumentNumberSequence>().HasIndex(x => x.Code).IsUnique();
+
+        builder.Entity<PurchaseInvoice>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Supplier).WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.PurchaseOrder).WithMany().HasForeignKey(x => x.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<PurchaseInvoiceLine>(e =>
+        {
+            e.HasOne(x => x.PurchaseInvoice).WithMany(p => p.Lines).HasForeignKey(x => x.PurchaseInvoiceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<PurchasePayment>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.PurchaseInvoice).WithMany(p => p.Payments).HasForeignKey(x => x.PurchaseInvoiceId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<DeliveryOrder>()
+            .HasOne(d => d.SalesOrder).WithMany().HasForeignKey(d => d.SalesOrderId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<SalesOrder>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SalesOrderItem>(e =>
+        {
+            e.HasOne(x => x.SalesOrder).WithMany(p => p.Items).HasForeignKey(x => x.SalesOrderId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SalesInvoice>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.SalesOrder).WithMany().HasForeignKey(x => x.SalesOrderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SalesInvoiceLine>(e =>
+        {
+            e.HasOne(x => x.SalesInvoice).WithMany(p => p.Lines).HasForeignKey(x => x.SalesInvoiceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SalesPayment>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.SalesInvoice).WithMany(p => p.Payments).HasForeignKey(x => x.SalesInvoiceId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<DeliveryOrder>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<DeliveryOrderLine>(e =>
+        {
+            e.HasOne(x => x.DeliveryOrder).WithMany(d => d.Lines).HasForeignKey(x => x.DeliveryOrderId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<MenuItem>()

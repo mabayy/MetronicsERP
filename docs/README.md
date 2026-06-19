@@ -20,6 +20,9 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 10 | [Master Menu (Menu Dinamis)](10-master-menu.md) | Sidebar berbasis DB: tambah/edit/hapus/urutkan (drag-drop) | ✅ |
 | 11 | [Manajemen Stok (Inventory)](11-manajemen-stok.md) | Stok masuk/keluar/transfer/penyesuaian + saldo per gudang | ✅ |
 | 12 | [Currency Management (Multi-Currency)](12-currency-management.md) | Mata uang dasar, kurs ber-tanggal, konversi + integrasi produk | ✅ |
+| 13 | [Purchasing (Pembelian)](13-purchasing.md) | Purchase Order → penerimaan → stok masuk otomatis | ✅ |
+| 14 | [Document Numbering](14-document-numbering.md) | Penomoran dokumen dapat dikustomisasi (prefix/format/reset) | ✅ |
+| 15 | [Sales (Penjualan)](15-sales.md) | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) | ✅ |
 
 ## Cara membaca dokumen ini
 

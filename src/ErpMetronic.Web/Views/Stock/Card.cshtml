@@ -1,0 +1,90 @@
+@using ErpMetronic.Domain.Enums
+@model List<ErpMetronic.Web.Controllers.StockCardRow>
+@{
+    ViewData["Title"] = "Kartu Stok";
+    var hasProduct = ViewBag.ProductId != null;
+}
+
+@functions {
+    string TypeLabel(MovementType t) => t switch
+    {
+        MovementType.StockIn => "Masuk",
+        MovementType.StockOut => "Keluar",
+        MovementType.Transfer => "Transfer",
+        MovementType.Adjustment => "Penyesuaian",
+        _ => "-"
+    };
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-card-list text-primary me-2"></i> Kartu Stok per Produk</div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold mb-1">Produk</label>
+                <select name="productId" asp-items="ViewBag.Products" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">-- Pilih produk --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold mb-1">Gudang</label>
+                <select name="warehouseId" asp-items="ViewBag.Warehouses" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Semua gudang (total)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold mb-1">Dari</label>
+                <input type="date" name="from" value="@(((DateTime?)ViewBag.From)?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold mb-1">Sampai</label>
+                <input type="date" name="to" value="@(((DateTime?)ViewBag.To)?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Tampilkan</button></div>
+        </form>
+
+        @if (!hasProduct)
+        {
+            <div class="text-center text-muted py-4">Pilih produk untuk menampilkan kartu stok.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr><th>Tanggal</th><th>No. Referensi</th><th>Jenis</th><th>Gudang</th><th class="text-end">Masuk</th><th class="text-end">Keluar</th><th class="text-end">Saldo</th><th>Catatan</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-light">
+                            <td colspan="6" class="fw-semibold">Saldo Awal</td>
+                            <td class="text-end fw-semibold">@(((int)ViewBag.Opening).ToString("N0"))</td>
+                            <td></td>
+                        </tr>
+                        @if (!Model.Any())
+                        {
+                            <tr><td colspan="8" class="text-center text-muted py-3">Tidak ada pergerakan pada rentang ini</td></tr>
+                        }
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>@r.Date.ToString("dd/MM/yyyy")</td>
+                                <td class="fw-semibold">@r.Reference</td>
+                                <td>@TypeLabel(r.Type)</td>
+                                <td>@r.Warehouse</td>
+                                <td class="text-end text-success">@(r.In > 0 ? "+" + r.In.ToString("N0") : "")</td>
+                                <td class="text-end text-danger">@(r.Out > 0 ? "-" + r.Out.ToString("N0") : "")</td>
+                                <td class="text-end fw-semibold">@r.Balance.ToString("N0")</td>
+                                <td class="text-muted small">@r.Note</td>
+                            </tr>
+                        }
+                        <tr class="table-light">
+                            <td colspan="6" class="fw-semibold">Saldo Akhir</td>
+                            <td class="text-end fw-semibold">@(((int)ViewBag.Closing).ToString("N0"))</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -5,20 +5,20 @@ lanjutan yang dapat dibangun di atasnya, mengikuti pola arsitektur yang sama.
 
 ## Modul yang Direncanakan
 
-### 1. Inventory (Persediaan)
-- Entitas: `StockMovement` (in/out/adjustment), `StockOpname`.
+### 1. Inventory (Persediaan) — ✅ Selesai (lihat [Tahap 11](11-manajemen-stok.md))
+- Entitas: `StockMovement` (in/out/transfer/adjustment), `ProductStock`.
 - Relasi ke `Product` & `Warehouse`.
-- Kartu stok (stock card), stok per gudang, nilai persediaan.
+- Kartu stok (stock card), saldo per gudang, nilai persediaan.
 
-### 2. Purchasing (Pembelian)
+### 2. Purchasing (Pembelian) — ✅ Selesai (lihat [Tahap 13](13-purchasing.md))
 - Entitas: `PurchaseOrder`, `PurchaseOrderItem`, `GoodsReceipt`.
-- Alur: PO → Penerimaan barang → update stok otomatis (memicu `StockMovement`).
-- Relasi ke `Supplier` & `Product`.
+- Alur: PO → Konfirmasi → Penerimaan barang → update stok otomatis (memicu `StockMovement`).
+- Relasi ke `Supplier` & `Product`; multi-currency.
 
-### 3. Sales (Penjualan)
-- Entitas: `SalesOrder`, `SalesOrderItem`, `Invoice`, `Payment`.
-- Alur: SO → pengiriman (kurangi stok) → Invoice → Pembayaran.
-- Relasi ke `Customer` & `Product`.
+### 3. Sales (Penjualan) — ✅ Selesai (lihat [Tahap 15](15-sales.md))
+- Entitas: `SalesOrder`, `SalesOrderItem`, `SalesInvoice`, `SalesPayment` (+ `DeliveryOrder`).
+- Alur: SO → Konfirmasi → Pengiriman (kurangi stok) → Faktur (3-way) → Pembayaran (piutang).
+- Relasi ke `Customer` & `Product`; multi-currency.
 
 ### 4. Finance / Akuntansi Dasar
 - Entitas: `ChartOfAccount`, `JournalEntry`, `JournalLine`.

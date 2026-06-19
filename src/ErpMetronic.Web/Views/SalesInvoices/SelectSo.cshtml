@@ -1,0 +1,27 @@
+@model List<SalesOrder>
+@{ ViewData["Title"] = "Pilih SO untuk Difaktur"; }
+
+<div class="card">
+    <div class="card-header">Sales Order yang Dapat Difaktur</div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. SO</th><th>Tanggal</th><th>Pelanggan</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="4" class="text-center text-muted py-4">Tidak ada SO dengan barang terkirim yang belum difaktur</td></tr>
+            }
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@p.ReferenceNumber</td>
+                    <td>@p.OrderDate.ToString("dd/MM/yyyy")</td>
+                    <td>@p.Customer?.Name</td>
+                    <td class="text-end"><a asp-action="Create" asp-route-soId="@p.Id" class="btn btn-sm btn-primary"><i class="bi bi-receipt"></i> Buat Faktur</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="mt-3"><a asp-action="Index" class="btn btn-light">Kembali</a></div>

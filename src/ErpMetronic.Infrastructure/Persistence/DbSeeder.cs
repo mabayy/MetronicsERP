@@ -96,6 +96,22 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
+        // 5b. Contoh Pemasok & Pelanggan (agar PO/penjualan langsung bisa dicoba)
+        if (!await context.Suppliers.AnyAsync())
+        {
+            context.Suppliers.AddRange(
+                new Supplier { Code = "SUP-001", Name = "PT Sumber Makmur", ContactPerson = "Andi", Phone = "021-555100", Email = "sales@sumbermakmur.co.id" },
+                new Supplier { Code = "SUP-002", Name = "CV Mitra Sentosa", ContactPerson = "Budi", Phone = "021-555200" });
+            await context.SaveChangesAsync();
+        }
+        if (!await context.Customers.AnyAsync())
+        {
+            context.Customers.AddRange(
+                new Customer { Code = "CUST-001", Name = "Toko Sejahtera", Phone = "021-777100", City = "Jakarta" },
+                new Customer { Code = "CUST-002", Name = "PT Ritel Nusantara", Phone = "021-777200", City = "Bandung" });
+            await context.SaveChangesAsync();
+        }
+
         // 6. Alokasi saldo stok awal: tempatkan StockQuantity tiap produk di gudang pertama
         if (!await context.ProductStocks.AnyAsync())
         {
@@ -225,6 +241,131 @@ public static class DbSeeder
                 new MenuItem { Title = "Mata Uang", Icon = "bi-currency-exchange", Controller = "Currencies", Action = "Index", ParentId = finance.Id, SortOrder = 1, RequiredRole = AppRoles.Administrator, IsSystem = true },
                 new MenuItem { Title = "Kurs / Exchange Rate", Icon = "bi-graph-up-arrow", Controller = "ExchangeRates", Action = "Index", ParentId = finance.Id, SortOrder = 2, RequiredRole = AppRoles.Administrator, IsSystem = true });
             await context.SaveChangesAsync();
+        }
+
+        // 12. Menu inventory lanjutan: penerimaan, pengeluaran, kartu stok, nilai persediaan (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "GoodsReceipts"))
+        {
+            var inventoryGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Manajemen Stok" && m.ParentId == null);
+            if (inventoryGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == inventoryGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Penerimaan Barang", Icon = "bi-arrow-down-square", Controller = "GoodsReceipts", Action = "Index", ParentId = inventoryGroup.Id, SortOrder = maxChild + 1, IsSystem = true },
+                    new MenuItem { Title = "Pengeluaran Barang", Icon = "bi-arrow-up-square", Controller = "DeliveryOrders", Action = "Index", ParentId = inventoryGroup.Id, SortOrder = maxChild + 2, IsSystem = true },
+                    new MenuItem { Title = "Kartu Stok", Icon = "bi-card-list", Controller = "Stock", Action = "Card", ParentId = inventoryGroup.Id, SortOrder = maxChild + 3, IsSystem = true },
+                    new MenuItem { Title = "Nilai Persediaan", Icon = "bi-cash-stack", Controller = "Stock", Action = "Valuation", ParentId = inventoryGroup.Id, SortOrder = maxChild + 4, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
+        // 12b. Menu Pembelian → Purchase Order (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "PurchaseOrders"))
+        {
+            var maxOrder = await context.MenuItems.Where(m => m.ParentId == null).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+            var purchasing = new MenuItem { Title = "Pembelian", Icon = "bi-cart", SortOrder = maxOrder + 1, IsSystem = true };
+            context.MenuItems.Add(purchasing);
+            await context.SaveChangesAsync();
+
+            context.MenuItems.Add(new MenuItem { Title = "Purchase Order", Icon = "bi-cart-plus", Controller = "PurchaseOrders", Action = "Index", ParentId = purchasing.Id, SortOrder = 1, IsSystem = true });
+            await context.SaveChangesAsync();
+        }
+
+        // 12b-2. Menu Faktur Pembelian (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "PurchaseInvoices"))
+        {
+            var purchasingGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Pembelian" && m.ParentId == null);
+            if (purchasingGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == purchasingGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Faktur Pembelian", Icon = "bi-receipt", Controller = "PurchaseInvoices", Action = "Index", ParentId = purchasingGroup.Id, SortOrder = maxChild + 1, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
+        // 12b-3. Menu Penjualan → Sales Order & Faktur Penjualan (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "SalesOrders"))
+        {
+            var maxOrder = await context.MenuItems.Where(m => m.ParentId == null).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+            var sales = new MenuItem { Title = "Penjualan", Icon = "bi-shop", SortOrder = maxOrder + 1, IsSystem = true };
+            context.MenuItems.Add(sales);
+            await context.SaveChangesAsync();
+
+            context.MenuItems.AddRange(
+                new MenuItem { Title = "Sales Order", Icon = "bi-bag-plus", Controller = "SalesOrders", Action = "Index", ParentId = sales.Id, SortOrder = 1, IsSystem = true },
+                new MenuItem { Title = "Faktur Penjualan", Icon = "bi-receipt-cutoff", Controller = "SalesInvoices", Action = "Index", ParentId = sales.Id, SortOrder = 2, IsSystem = true });
+            await context.SaveChangesAsync();
+        }
+
+        // 12c. Penomoran dokumen bawaan (idempoten per kode)
+        foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
+        {
+            if (!await context.DocumentNumberSequences.AnyAsync(s => s.Code == code))
+            {
+                context.DocumentNumberSequences.Add(new DocumentNumberSequence
+                {
+                    Code = code,
+                    Name = name,
+                    Prefix = code,
+                    Format = "{PREFIX}-{YYYY}{MM}-{SEQ}",
+                    Padding = 4,
+                    NextNumber = 1,
+                    ResetPeriod = Domain.Enums.NumberResetPeriod.Monthly,
+                    IsSystem = true
+                });
+            }
+        }
+        await context.SaveChangesAsync();
+
+        // 12d. Menu admin: Penomoran Dokumen (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "DocumentNumbering"))
+        {
+            var adminGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Administrasi" && m.ParentId == null);
+            if (adminGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == adminGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Penomoran Dokumen", Icon = "bi-123", Controller = "DocumentNumbering", Action = "Index", ParentId = adminGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
+        // 13. Backfill "saldo awal" sebagai pergerakan stok (sekali jalan) agar Kartu Stok
+        //     rekonsiliasi dengan saldo ProductStock yang dulu di-set langsung tanpa jejak.
+        if (!await context.StockMovements.AnyAsync(m => m.ReferenceNumber.StartsWith("OPN")))
+        {
+            var stocks = await context.ProductStocks.ToListAsync();
+            var moves = await context.StockMovements.ToListAsync();
+            var openings = new List<StockMovement>();
+            foreach (var st in stocks)
+            {
+                var net = moves.Where(m => m.ProductId == st.ProductId).Sum(m => m.Type switch
+                {
+                    Domain.Enums.MovementType.StockIn => m.WarehouseId == st.WarehouseId ? m.Quantity : 0,
+                    Domain.Enums.MovementType.StockOut => m.WarehouseId == st.WarehouseId ? -m.Quantity : 0,
+                    Domain.Enums.MovementType.Adjustment => m.WarehouseId == st.WarehouseId ? m.Quantity : 0,
+                    Domain.Enums.MovementType.Transfer => m.WarehouseId == st.WarehouseId ? -m.Quantity
+                        : (m.DestinationWarehouseId == st.WarehouseId ? m.Quantity : 0),
+                    _ => 0
+                });
+
+                var opening = st.Quantity - net;
+                if (opening == 0) continue;
+                openings.Add(new StockMovement
+                {
+                    ReferenceNumber = $"OPN-{st.ProductId}-{st.WarehouseId}",
+                    MovementDate = new DateTime(2026, 1, 1),
+                    Type = opening > 0 ? Domain.Enums.MovementType.StockIn : Domain.Enums.MovementType.StockOut,
+                    ProductId = st.ProductId,
+                    WarehouseId = st.WarehouseId,
+                    Quantity = Math.Abs(opening),
+                    Note = "Saldo awal sistem"
+                });
+            }
+            if (openings.Count > 0)
+            {
+                context.StockMovements.AddRange(openings);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

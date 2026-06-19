@@ -1,0 +1,47 @@
+@using ErpMetronic.Domain.Enums
+@model List<SalesInvoice>
+@{ ViewData["Title"] = "Faktur Penjualan"; }
+
+@functions {
+    (string Label, string Css) St(SalesInvoiceStatus s) => s switch
+    {
+        SalesInvoiceStatus.Unpaid => ("Belum Dibayar", "badge-light-danger"),
+        SalesInvoiceStatus.PartiallyPaid => ("Dibayar Sebagian", "badge-light-warning"),
+        SalesInvoiceStatus.Paid => ("Lunas", "badge-light-success"),
+        _ => (s.ToString(), "badge-light-primary")
+    };
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Faktur Penjualan</span>
+        <a asp-action="SelectSo" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Faktur dari SO</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. Faktur</th><th>Tanggal</th><th>Pelanggan</th><th>SO</th><th class="text-end">Total</th><th class="text-end">Dibayar</th><th class="text-end">Sisa</th><th>Status</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="9" class="text-center text-muted py-4">Belum ada faktur</td></tr>
+            }
+            @foreach (var i in Model)
+            {
+                var st = St(i.Status);
+                var cur = i.Currency?.Code;
+                <tr>
+                    <td class="fw-semibold">@i.ReferenceNumber</td>
+                    <td>@i.InvoiceDate.ToString("dd/MM/yyyy")</td>
+                    <td>@i.Customer?.Name</td>
+                    <td class="text-muted small">@i.SalesOrder?.ReferenceNumber</td>
+                    <td class="text-end">@cur @i.Total.ToString("N2")</td>
+                    <td class="text-end">@i.PaidAmount.ToString("N2")</td>
+                    <td class="text-end fw-semibold">@i.Outstanding.ToString("N2")</td>
+                    <td><span class="@st.Css px-2 py-1 rounded">@st.Label</span></td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@i.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

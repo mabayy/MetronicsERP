@@ -1,0 +1,47 @@
+@using ErpMetronic.Domain.Enums
+@model List<PurchaseOrder>
+@{ ViewData["Title"] = "Purchase Order"; }
+
+@functions {
+    (string Label, string Css) Status(PurchaseOrderStatus s) => s switch
+    {
+        PurchaseOrderStatus.Draft => ("Draft", "badge-light-warning"),
+        PurchaseOrderStatus.Ordered => ("Dipesan", "badge-light-primary"),
+        PurchaseOrderStatus.PartiallyReceived => ("Diterima Sebagian", "badge-light-warning"),
+        PurchaseOrderStatus.Received => ("Diterima", "badge-light-success"),
+        PurchaseOrderStatus.Cancelled => ("Dibatalkan", "badge-light-danger"),
+        _ => (s.ToString(), "badge-light-primary")
+    };
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Purchase Order</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> PO Baru</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. PO</th><th>Tanggal</th><th>Pemasok</th><th>Status</th><th class="text-end">Item</th><th class="text-end">Total</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada purchase order</td></tr>
+            }
+            @foreach (var p in Model)
+            {
+                var st = Status(p.Status);
+                var total = p.Items.Sum(i => i.Quantity * i.UnitPrice);
+                <tr>
+                    <td class="fw-semibold">@p.ReferenceNumber</td>
+                    <td>@p.OrderDate.ToString("dd/MM/yyyy")</td>
+                    <td>@p.Supplier?.Name</td>
+                    <td><span class="@st.Css px-2 py-1 rounded">@st.Label</span></td>
+                    <td class="text-end">@p.Items.Count</td>
+                    <td class="text-end">@(p.Currency?.Code) @total.ToString("N2")</td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -14,7 +14,12 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Master Menu (menu dinamis) | ✅ | Sidebar dari DB: tambah/edit/hapus/urutkan via drag-and-drop |
 | Tema warna (3 skema) | ✅ | Sapphire / Mocha / Emerald — ganti via header, tersimpan di browser |
 | Sidebar expand/collapse | ✅ | Ciutkan jadi rail ikon (flyout saat hover), status tersimpan |
-| Manajemen Stok (Inventory) | ✅ | Stok masuk, keluar, transfer antar gudang, penyesuaian + saldo per gudang |
+| Manajemen Stok (Inventory) | ✅ | Stok masuk/keluar/transfer/penyesuaian, saldo per gudang, **kartu stok**, **nilai persediaan** |
+| Penerimaan & Pengeluaran | ✅ | Dokumen penerimaan (auto stok masuk) & pengiriman (auto stok keluar) terintegrasi stok |
+| Pembelian (Purchasing) | ✅ | PO (edit saat Draft) → konfirmasi → penerimaan (auto stok masuk), multi-currency |
+| Faktur & Pembayaran Pembelian | ✅ | Faktur dari PO dengan 3-way matching + pembayaran hutang (status Lunas) |
+| Penjualan (Sales) | ✅ | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) |
+| Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
 | Master Data — Produk | ✅ | CRUD + pencarian + relasi kategori/satuan |

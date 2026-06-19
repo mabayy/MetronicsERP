@@ -92,7 +92,47 @@ Skenario produk PRD-0001 (saldo awal WH-01 = 100):
 
 Empat pergerakan tercatat dengan nomor referensi; semua halaman Stock mengembalikan **200**.
 
+## Fitur Lanjutan (sudah diimplementasikan)
+
+### Kartu Stok (Stock Card) — `Stock/Card`
+Riwayat pergerakan **per produk** dengan **saldo berjalan** (running balance): kolom Masuk,
+Keluar, Saldo, plus **Saldo Awal** & **Saldo Akhir**. Bisa difilter per gudang (atau total
+semua gudang) dan rentang tanggal. Pengaruh tiap pergerakan dihitung sesuai jenis & lingkup
+gudang (mis. transfer hanya memengaruhi saldo bila lingkup = gudang asal/tujuan).
+
+> **Rekonsiliasi saldo awal**: stok awal hasil seeding dulu di-set langsung ke `ProductStock`
+> tanpa jejak pergerakan. Seeder menambahkan pergerakan **"Saldo awal sistem"** (referensi
+> `OPN-*`) sekali jalan agar Kartu Stok cocok dengan saldo `ProductStock` (Saldo Akhir = saldo nyata).
+
+### Nilai Persediaan (Inventory Valuation) — `Stock/Valuation`
+Laporan **qty × harga beli** per produk per gudang, dengan harga dikonversi ke **mata uang dasar**
+(memakai `CurrencyService`, lihat [Tahap 12](12-currency-management.md)) dan **total nilai persediaan**.
+
+### Integrasi Pembelian & Penjualan (auto-stok)
+Dokumen header+baris yang **langsung memposting** pergerakan stok saat dibuat (dalam transaksi):
+
+| Modul | Controller | Efek |
+|-------|-----------|------|
+| **Penerimaan Barang** (dari pemasok) | `GoodsReceiptsController` | tiap baris → **Stok Masuk** ke gudang tujuan (`GR-yyyyMMdd-####`) |
+| **Pengeluaran/Pengiriman** (ke pelanggan) | `DeliveryOrdersController` | tiap baris → **Stok Keluar** dari gudang sumber, **divalidasi saldo** (`DO-yyyyMMdd-####`) |
+
+Posting memakai `IStockService` (`StockInAsync`/`StockOutAsync`) di dalam transaksi DB; bila ada
+baris pengiriman melebihi saldo, **seluruh dokumen dibatalkan** (rollback). Form memakai editor
+baris dinamis (tambah/hapus baris via JS). Dokumen bersifat **immutable** (koreksi via dokumen
+lawan atau Penyesuaian). Pergerakan diberi catatan `Penerimaan {ref}` / `Pengiriman {ref}`
+sehingga tampil di **Kartu Stok** & Riwayat.
+
+### Hasil / Verifikasi (teruji end-to-end)
+| Skenario (PRD-0001 @ WH-01, saldo 100) | Hasil |
+|----------------------------------------|-------|
+| Penerimaan +30 | saldo 130 |
+| Pengeluaran −10 | saldo 120 |
+| Pengeluaran 9999 (saldo 120) | **ditolak** "stok tidak mencukupi", rollback, saldo tetap |
+| Kartu Stok p1 | Saldo Awal (OPN +100) → +30 → −10 = **Saldo Akhir 120** (= ProductStock) |
+| Nilai Persediaan | menampilkan nilai per item + **total** dalam mata uang dasar |
+
+> Catatan: Penerimaan butuh data **Pemasok** dan Pengiriman butuh **Pelanggan** (master data).
+
 ## Pengembangan Lanjutan
-- Kartu stok (stock card) per produk, nilai persediaan (qty × harga).
-- Integrasi ke modul Pembelian (penerimaan → otomatis Stok Masuk) & Penjualan
-  (pengiriman → otomatis Stok Keluar) — lihat [Roadmap](09-roadmap.md).
+- Pembelian/Penjualan penuh (PO → penerimaan; SO → pengiriman → invoice) — lihat [Roadmap](09-roadmap.md).
+- Metode penilaian persediaan (FIFO/Average) & kartu stok berbasis biaya.

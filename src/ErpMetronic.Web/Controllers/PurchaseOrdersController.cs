@@ -1,0 +1,278 @@
+using ErpMetronic.Domain.Entities;
+using ErpMetronic.Domain.Enums;
+using ErpMetronic.Infrastructure.Persistence;
+using ErpMetronic.Infrastructure.Services;
+using ErpMetronic.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+
+namespace ErpMetronic.Web.Controllers;
+
+/// <summary>Pembelian: Purchase Order → Penerimaan barang (auto Stok Masuk).</summary>
+[Authorize]
+public class PurchaseOrdersController : Controller
+{
+    private readonly ApplicationDbContext _db;
+    private readonly IStockService _stock;
+    private readonly IDocumentNumberService _docNumber;
+
+    public PurchaseOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber)
+    {
+        _db = db;
+        _stock = stock;
+        _docNumber = docNumber;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var list = await _db.PurchaseOrders
+            .Include(p => p.Supplier).Include(p => p.Currency).Include(p => p.Items)
+            .OrderByDescending(p => p.OrderDate).ThenByDescending(p => p.Id)
+            .Take(300).ToListAsync();
+        return View(list);
+    }
+
+    public async Task<IActionResult> Create()
+    {
+        await PopulateAsync();
+        return View(new PurchaseOrderCreateViewModel());
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(PurchaseOrderCreateViewModel model)
+    {
+        var items = model.Items.Where(i => i.ProductId > 0 && i.Quantity > 0).ToList();
+        if (items.Count == 0)
+            ModelState.AddModelError(string.Empty, "Minimal satu baris produk dengan jumlah > 0.");
+
+        if (!ModelState.IsValid)
+        {
+            await PopulateAsync();
+            return View(model);
+        }
+
+        var po = new PurchaseOrder
+        {
+            ReferenceNumber = await _docNumber.NextAsync(Domain.Constants.DocumentCodes.PurchaseOrder, model.OrderDate),
+            OrderDate = model.OrderDate,
+            SupplierId = model.SupplierId,
+            WarehouseId = model.WarehouseId,
+            CurrencyId = model.CurrencyId,
+            Status = PurchaseOrderStatus.Draft,
+            Note = model.Note,
+            CreatedBy = User.Identity?.Name,
+            Items = items.Select(i => new PurchaseOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList()
+        };
+        _db.PurchaseOrders.Add(po);
+        await _db.SaveChangesAsync();
+        TempData["Success"] = $"Purchase Order {po.ReferenceNumber} dibuat (Draft).";
+        return RedirectToAction(nameof(Details), new { id = po.Id });
+    }
+
+    // Edit hanya saat Draft
+    public async Task<IActionResult> Edit(int id)
+    {
+        var po = await LoadAsync(id);
+        if (po is null) return NotFound();
+        if (po.Status != PurchaseOrderStatus.Draft)
+        {
+            TempData["Error"] = "Hanya PO berstatus Draft yang dapat diubah.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        await PopulateAsync();
+        ViewBag.PurchaseOrderId = po.Id;
+        ViewBag.ReferenceNumber = po.ReferenceNumber;
+        return View(new PurchaseOrderCreateViewModel
+        {
+            SupplierId = po.SupplierId,
+            WarehouseId = po.WarehouseId,
+            CurrencyId = po.CurrencyId,
+            OrderDate = po.OrderDate,
+            Note = po.Note,
+            Items = po.Items.Select(i => new PurchaseLineInput { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList()
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, PurchaseOrderCreateViewModel model)
+    {
+        var po = await _db.PurchaseOrders.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id);
+        if (po is null) return NotFound();
+        if (po.Status != PurchaseOrderStatus.Draft)
+        {
+            TempData["Error"] = "Hanya PO berstatus Draft yang dapat diubah.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var items = model.Items.Where(i => i.ProductId > 0 && i.Quantity > 0).ToList();
+        if (items.Count == 0)
+            ModelState.AddModelError(string.Empty, "Minimal satu baris produk dengan jumlah > 0.");
+
+        if (!ModelState.IsValid)
+        {
+            await PopulateAsync();
+            ViewBag.PurchaseOrderId = po.Id;
+            ViewBag.ReferenceNumber = po.ReferenceNumber;
+            return View(model);
+        }
+
+        po.SupplierId = model.SupplierId;
+        po.WarehouseId = model.WarehouseId;
+        po.CurrencyId = model.CurrencyId;
+        po.OrderDate = model.OrderDate;
+        po.Note = model.Note;
+        po.UpdatedAt = DateTime.UtcNow;
+        po.UpdatedBy = User.Identity?.Name;
+
+        // Ganti seluruh item (PO masih Draft, belum ada penerimaan)
+        _db.PurchaseOrderItems.RemoveRange(po.Items);
+        po.Items = items.Select(i => new PurchaseOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList();
+
+        await _db.SaveChangesAsync();
+        TempData["Success"] = $"Purchase Order {po.ReferenceNumber} diperbarui.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    public async Task<IActionResult> Details(int id)
+    {
+        var po = await LoadAsync(id);
+        if (po is null) return NotFound();
+        ViewBag.Receipts = await _db.GoodsReceipts
+            .Where(g => g.PurchaseOrderId == id).Include(g => g.Warehouse)
+            .OrderBy(g => g.Id).ToListAsync();
+        return View(po);
+    }
+
+    // Draft → Ordered
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirm(int id)
+    {
+        var po = await _db.PurchaseOrders.FindAsync(id);
+        if (po is null) return NotFound();
+        if (po.Status != PurchaseOrderStatus.Draft)
+        {
+            TempData["Error"] = "Hanya PO berstatus Draft yang dapat dikonfirmasi.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        po.Status = PurchaseOrderStatus.Ordered;
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "PO dikonfirmasi (Ordered) — siap menerima barang.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // Batal (selama belum ada penerimaan)
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var po = await _db.PurchaseOrders.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id);
+        if (po is null) return NotFound();
+
+        if (po.Status is PurchaseOrderStatus.Received or PurchaseOrderStatus.Cancelled
+            || po.Items.Any(i => i.ReceivedQuantity > 0))
+        {
+            TempData["Error"] = "PO yang sudah menerima barang atau selesai/batal tidak dapat dibatalkan.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        po.Status = PurchaseOrderStatus.Cancelled;
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "PO dibatalkan.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // Form penerimaan: tampilkan baris yang masih outstanding
+    public async Task<IActionResult> Receive(int id)
+    {
+        var po = await LoadAsync(id);
+        if (po is null) return NotFound();
+        if (po.Status is not (PurchaseOrderStatus.Ordered or PurchaseOrderStatus.PartiallyReceived))
+        {
+            TempData["Error"] = "Penerimaan hanya untuk PO berstatus Ordered / Diterima Sebagian.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        return View(po);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Receive(ReceivePoViewModel model)
+    {
+        var po = await LoadAsync(model.PurchaseOrderId);
+        if (po is null) return NotFound();
+        if (po.Status is not (PurchaseOrderStatus.Ordered or PurchaseOrderStatus.PartiallyReceived))
+        {
+            TempData["Error"] = "PO tidak dalam status yang dapat menerima barang.";
+            return RedirectToAction(nameof(Details), new { id = po.Id });
+        }
+
+        // Validasi: jumlah terima per item tidak melebihi outstanding
+        var toReceive = new List<(PurchaseOrderItem Item, int Qty)>();
+        foreach (var line in model.Lines)
+        {
+            var item = po.Items.FirstOrDefault(i => i.Id == line.ItemId);
+            if (item is null || line.ReceiveQuantity <= 0) continue;
+            if (line.ReceiveQuantity > item.OutstandingQuantity)
+            {
+                ModelState.AddModelError(string.Empty, $"Jumlah terima '{item.Product?.Name}' melebihi sisa ({item.OutstandingQuantity}).");
+                continue;
+            }
+            toReceive.Add((item, line.ReceiveQuantity));
+        }
+
+        if (toReceive.Count == 0 && ModelState.ErrorCount == 0)
+            ModelState.AddModelError(string.Empty, "Tidak ada jumlah yang diterima.");
+
+        if (!ModelState.IsValid)
+            return View(po);
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+
+        var receipt = new GoodsReceipt
+        {
+            ReferenceNumber = await _docNumber.NextAsync(Domain.Constants.DocumentCodes.GoodsReceipt, model.ReceiptDate),
+            ReceiptDate = model.ReceiptDate,
+            SupplierId = po.SupplierId,
+            WarehouseId = po.WarehouseId,
+            PurchaseOrderId = po.Id,
+            Note = $"Penerimaan PO {po.ReferenceNumber}",
+            CreatedBy = User.Identity?.Name,
+            Lines = toReceive.Select(t => new GoodsReceiptLine { ProductId = t.Item.ProductId, Quantity = t.Qty, UnitCost = t.Item.UnitPrice }).ToList()
+        };
+        _db.GoodsReceipts.Add(receipt);
+        await _db.SaveChangesAsync();
+
+        foreach (var (item, qty) in toReceive)
+        {
+            await _stock.StockInAsync(item.ProductId, po.WarehouseId, qty, model.ReceiptDate,
+                $"Penerimaan {receipt.ReferenceNumber} (PO {po.ReferenceNumber})", User.Identity?.Name);
+            item.ReceivedQuantity += qty;
+        }
+
+        // Perbarui status PO
+        po.Status = po.Items.All(i => i.ReceivedQuantity >= i.Quantity)
+            ? PurchaseOrderStatus.Received
+            : PurchaseOrderStatus.PartiallyReceived;
+
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
+        TempData["Success"] = $"Barang diterima ({receipt.ReferenceNumber}) & stok bertambah. Status PO: {po.Status}.";
+        return RedirectToAction(nameof(Details), new { id = po.Id });
+    }
+
+    // ---- helpers ----
+    private Task<PurchaseOrder?> LoadAsync(int id) =>
+        _db.PurchaseOrders
+            .Include(p => p.Supplier).Include(p => p.Warehouse).Include(p => p.Currency)
+            .Include(p => p.Items).ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+    private async Task PopulateAsync()
+    {
+        ViewBag.Suppliers = new SelectList(await _db.Suppliers.Where(s => s.IsActive).OrderBy(s => s.Name).ToListAsync(), "Id", "Name");
+        ViewBag.Warehouses = new SelectList(await _db.Warehouses.OrderBy(w => w.Name).ToListAsync(), "Id", "Name");
+        ViewBag.Currencies = new SelectList(await _db.Currencies.Where(c => c.IsActive).OrderByDescending(c => c.IsBaseCurrency).ThenBy(c => c.Code)
+            .Select(c => new { c.Id, Display = c.Code + " — " + c.Name }).ToListAsync(), "Id", "Display");
+        ViewBag.Products = await _db.Products.OrderBy(p => p.Name)
+            .Select(p => new { p.Id, Display = p.Sku + " — " + p.Name }).ToListAsync();
+    }
+}

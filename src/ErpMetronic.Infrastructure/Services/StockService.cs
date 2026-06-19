@@ -8,7 +8,13 @@ namespace ErpMetronic.Infrastructure.Services;
 public class StockService : IStockService
 {
     private readonly ApplicationDbContext _db;
-    public StockService(ApplicationDbContext db) => _db = db;
+    private readonly IDocumentNumberService _docNumber;
+
+    public StockService(ApplicationDbContext db, IDocumentNumberService docNumber)
+    {
+        _db = db;
+        _docNumber = docNumber;
+    }
 
     public async Task<int> GetBalanceAsync(int productId, int warehouseId)
         => await _db.ProductStocks
@@ -25,7 +31,7 @@ public class StockService : IStockService
         stock.Quantity += quantity;
         await AdjustProductTotalAsync(productId, quantity);
 
-        var movement = BuildMovement(MovementType.StockIn, productId, warehouseId, null, quantity, date, note, user);
+        var movement = await BuildMovementAsync(MovementType.StockIn, productId, warehouseId, null, quantity, date, note, user);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
@@ -43,7 +49,7 @@ public class StockService : IStockService
         stock.Quantity -= quantity;
         await AdjustProductTotalAsync(productId, -quantity);
 
-        var movement = BuildMovement(MovementType.StockOut, productId, warehouseId, null, quantity, date, note, user);
+        var movement = await BuildMovementAsync(MovementType.StockOut, productId, warehouseId, null, quantity, date, note, user);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
@@ -65,7 +71,7 @@ public class StockService : IStockService
         dest.Quantity += quantity;
         // Total stok produk tidak berubah pada transfer.
 
-        var movement = BuildMovement(MovementType.Transfer, productId, sourceWarehouseId, destinationWarehouseId, quantity, date, note, user);
+        var movement = await BuildMovementAsync(MovementType.Transfer, productId, sourceWarehouseId, destinationWarehouseId, quantity, date, note, user);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
@@ -83,7 +89,7 @@ public class StockService : IStockService
         stock.Quantity = countedQuantity;
         await AdjustProductTotalAsync(productId, variance);
 
-        var movement = BuildMovement(MovementType.Adjustment, productId, warehouseId, null, variance, date, note, user);
+        var movement = await BuildMovementAsync(MovementType.Adjustment, productId, warehouseId, null, variance, date, note, user);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
@@ -112,10 +118,19 @@ public class StockService : IStockService
         product.StockQuantity += delta;
     }
 
-    private StockMovement BuildMovement(MovementType type, int productId, int warehouseId, int? destWarehouseId, int quantity, DateTime date, string? note, string? user)
-        => new()
+    private async Task<StockMovement> BuildMovementAsync(MovementType type, int productId, int warehouseId, int? destWarehouseId, int quantity, DateTime date, string? note, string? user)
+    {
+        var docCode = type switch
         {
-            ReferenceNumber = GenerateReference(type, date),
+            MovementType.StockIn => Domain.Constants.DocumentCodes.StockIn,
+            MovementType.StockOut => Domain.Constants.DocumentCodes.StockOut,
+            MovementType.Transfer => Domain.Constants.DocumentCodes.StockTransfer,
+            MovementType.Adjustment => Domain.Constants.DocumentCodes.StockAdjustment,
+            _ => Domain.Constants.DocumentCodes.StockIn
+        };
+        return new StockMovement
+        {
+            ReferenceNumber = await _docNumber.NextAsync(docCode, date),
             MovementDate = date,
             Type = type,
             ProductId = productId,
@@ -125,19 +140,5 @@ public class StockService : IStockService
             Note = note,
             CreatedBy = user
         };
-
-    private string GenerateReference(MovementType type, DateTime date)
-    {
-        var prefix = type switch
-        {
-            MovementType.StockIn => "IN",
-            MovementType.StockOut => "OUT",
-            MovementType.Transfer => "TRF",
-            MovementType.Adjustment => "ADJ",
-            _ => "MOV"
-        };
-        var dateStr = date.ToString("yyyyMMdd");
-        var count = _db.StockMovements.Count(m => m.Type == type && m.MovementDate.Date == date.Date);
-        return $"{prefix}-{dateStr}-{(count + 1):D4}";
     }
 }

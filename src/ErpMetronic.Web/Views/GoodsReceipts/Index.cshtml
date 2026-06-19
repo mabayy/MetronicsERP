@@ -1,0 +1,32 @@
+@model List<GoodsReceipt>
+@{ ViewData["Title"] = "Penerimaan Barang"; }
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Penerimaan Barang</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Penerimaan Baru</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. Referensi</th><th>Tanggal</th><th>Pemasok</th><th>Gudang</th><th class="text-end">Item</th><th class="text-end">Total Qty</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada penerimaan</td></tr>
+            }
+            @foreach (var g in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@g.ReferenceNumber</td>
+                    <td>@g.ReceiptDate.ToString("dd/MM/yyyy")</td>
+                    <td>@g.Supplier?.Name</td>
+                    <td>@g.Warehouse?.Name</td>
+                    <td class="text-end">@g.Lines.Count</td>
+                    <td class="text-end">@g.Lines.Sum(l => l.Quantity).ToString("N0")</td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@g.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,60 @@
+@model PurchaseOrder
+@{
+    ViewData["Title"] = "Terima Barang — PO " + Model.ReferenceNumber;
+    var outstanding = Model.Items.Where(i => i.OutstandingQuantity > 0).ToList();
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-box-arrow-in-down text-primary me-2"></i> Terima Barang PO @Model.ReferenceNumber</div>
+    <div class="card-body">
+        <form asp-action="Receive" method="post">
+            <input type="hidden" name="PurchaseOrderId" value="@Model.Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Tanggal Terima</label>
+                    <input name="ReceiptDate" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Gudang Tujuan</label>
+                    <input class="form-control" value="@Model.Warehouse?.Name" disabled />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Pemasok</label>
+                    <input class="form-control" value="@Model.Supplier?.Name" disabled />
+                </div>
+            </div>
+
+            <table class="table align-middle">
+                <thead><tr><th>Produk</th><th class="text-end">Dipesan</th><th class="text-end">Sudah Diterima</th><th class="text-end">Sisa</th><th class="text-end" style="width:160px">Terima Sekarang</th></tr></thead>
+                <tbody>
+                @for (int idx = 0; idx < outstanding.Count; idx++)
+                {
+                    var i = outstanding[idx];
+                    <tr>
+                        <td>
+                            @i.Product?.Sku — @i.Product?.Name
+                            <input type="hidden" name="Lines[@idx].ItemId" value="@i.Id" />
+                        </td>
+                        <td class="text-end">@i.Quantity.ToString("N0")</td>
+                        <td class="text-end">@i.ReceivedQuantity.ToString("N0")</td>
+                        <td class="text-end fw-semibold">@i.OutstandingQuantity.ToString("N0")</td>
+                        <td>
+                            <input name="Lines[@idx].ReceiveQuantity" type="number" min="0" max="@i.OutstandingQuantity" value="@i.OutstandingQuantity" class="form-control form-control-sm text-end" />
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <p class="text-muted small"><i class="bi bi-info-circle"></i> Jumlah terima tidak boleh melebihi sisa. Penerimaan akan menambah stok di gudang tujuan secara otomatis.</p>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Proses Penerimaan</button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

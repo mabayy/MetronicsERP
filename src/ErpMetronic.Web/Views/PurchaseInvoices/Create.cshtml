@@ -1,0 +1,62 @@
+@model PurchaseInvoiceCreateViewModel
+@{
+    ViewData["Title"] = "Buat Faktur Pembelian";
+    var po = ViewBag.PurchaseOrder as PurchaseOrder;
+    var invoiceable = ViewBag.Invoiceable as Dictionary<int, int> ?? new();
+    var names = po?.Items.ToDictionary(i => i.ProductId, i => (i.Product?.Sku + " — " + i.Product?.Name)) ?? new();
+    var cur = po?.Currency?.Code;
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-receipt text-primary me-2"></i> Faktur dari PO @po?.ReferenceNumber — @po?.Supplier?.Name</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <input type="hidden" asp-for="PurchaseOrderId" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label asp-for="InvoiceDate" class="form-label fw-semibold"></label>
+                    <input asp-for="InvoiceDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="Note" class="form-label fw-semibold"></label>
+                    <input asp-for="Note" class="form-control" />
+                </div>
+            </div>
+
+            <div class="alert alert-light border small mb-3">
+                <i class="bi bi-info-circle"></i> <strong>3-way matching:</strong> jumlah yang dapat difaktur =
+                jumlah <strong>diterima</strong> dikurangi yang <strong>sudah difaktur</strong>. Anda boleh memfaktur kurang dari itu.
+            </div>
+
+            <table class="table align-middle">
+                <thead><tr><th style="width:50%">Produk</th><th class="text-end">Maks Difaktur</th><th class="text-end" style="width:140px">Jumlah</th><th class="text-end" style="width:160px">Harga Satuan</th></tr></thead>
+                <tbody>
+                @for (int i = 0; i < Model.Lines.Count; i++)
+                {
+                    var l = Model.Lines[i];
+                    var max = invoiceable.TryGetValue(l.ProductId, out var q) ? q : 0;
+                    <tr>
+                        <td>
+                            @(names.TryGetValue(l.ProductId, out var nm) ? nm : ("#" + l.ProductId))
+                            <input type="hidden" name="Lines[@i].ProductId" value="@l.ProductId" />
+                        </td>
+                        <td class="text-end fw-semibold">@max</td>
+                        <td><input name="Lines[@i].Quantity" type="number" min="0" max="@max" value="@l.Quantity" class="form-control form-control-sm text-end" /></td>
+                        <td><input name="Lines[@i].UnitPrice" type="number" min="0" step="0.01" value="@l.UnitPrice" class="form-control form-control-sm text-end" /></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <p class="text-muted small">Mata uang: @(cur ?? "—"). Set jumlah 0 untuk baris yang belum ingin difaktur.</p>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Faktur</button>
+                <a asp-action="SelectPo" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
