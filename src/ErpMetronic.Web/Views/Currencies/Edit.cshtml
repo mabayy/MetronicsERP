@@ -1,0 +1,48 @@
+@model Currency
+@{ ViewData["Title"] = "Edit Mata Uang"; }
+
+<div class="card">
+    <div class="card-header">
+        Edit Mata Uang
+        @if (Model.IsBaseCurrency) { <span class="badge-light-success px-2 rounded ms-2"><i class="bi bi-star-fill"></i> Mata uang dasar</span> }
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Code" class="form-label fw-semibold"></label>
+                    <input asp-for="Code" class="form-control text-uppercase" maxlength="3" />
+                    <span asp-validation-for="Code" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Symbol" class="form-label fw-semibold"></label>
+                    <input asp-for="Symbol" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DecimalPlaces" class="form-label fw-semibold"></label>
+                    <input asp-for="DecimalPlaces" type="number" min="0" max="6" class="form-control" />
+                    <span asp-validation-for="DecimalPlaces" class="text-danger small"></span>
+                </div>
+                <div class="col-12 form-check ms-2">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                    @if (Model.IsBaseCurrency) { <span class="text-muted small ms-2">(mata uang dasar tidak dapat dinonaktifkan)</span> }
+                </div>
+                <span asp-validation-for="IsActive" class="text-danger small"></span>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Perbarui</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

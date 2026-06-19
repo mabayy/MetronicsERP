@@ -50,19 +50,22 @@
                     <li>
                         <button type="button" class="dropdown-item theme-option" data-theme-value="sapphire">
                             <span class="theme-swatches"><span style="background:#111844"></span><span style="background:#4B5694"></span><span style="background:#7288AE"></span><span style="background:#EAE0CF"></span></span>
-                            Sapphire <small class="text-muted">(Safir)</small>
+                                <span class="theme-name">Sapphire</span>
+                                <small class="text-muted">(Safir)</small>
                         </button>
                     </li>
                     <li>
                         <button type="button" class="dropdown-item theme-option" data-theme-value="mocha">
                             <span class="theme-swatches"><span style="background:#FFF8F0"></span><span style="background:#C08552"></span><span style="background:#8C5A3C"></span><span style="background:#4B2E2B"></span></span>
-                            Mocha <small class="text-muted">(Kopi)</small>
+                                <span class="theme-name">Mocha</span>
+                                <small class="text-muted">(Kopi)</small>
                         </button>
                     </li>
                     <li>
                         <button type="button" class="dropdown-item theme-option" data-theme-value="emerald">
                             <span class="theme-swatches"><span style="background:#EEEEEE"></span><span style="background:#6FCF97"></span><span style="background:#2FA084"></span><span style="background:#1F6F5F"></span></span>
-                            Emerald <small class="text-muted">(Zamrud)</small>
+                                <span class="theme-name">Emerald</span>
+                                <small class="text-muted">(Zamrud)</small>
                         </button>
                     </li>
                 </ul>
@@ -123,6 +126,14 @@
         document.getElementById('erpCollapse')?.addEventListener('click', function () {
             var collapsed = document.documentElement.classList.toggle('erp-sidebar-collapsed');
             localStorage.setItem('erp-sidebar', collapsed ? 'collapsed' : 'expanded');
+        });
+
+        // Menu induk: klik untuk ciutkan/lebarkan sub-menu (accordion)
+        document.querySelectorAll('.erp-menu .menu-parent').forEach(function (parent) {
+            parent.addEventListener('click', function (e) {
+                e.preventDefault();
+                this.closest('.menu-group').classList.toggle('open');
+            });
         });
 
         // Pengalih tema: simpan pilihan & terapkan langsung tanpa reload.

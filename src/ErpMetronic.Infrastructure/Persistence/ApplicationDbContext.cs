@@ -26,6 +26,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<MenuItemDivision> MenuItemDivisions => Set<MenuItemDivision>();
     public DbSet<MenuItemPosition> MenuItemPositions => Set<MenuItemPosition>();
+    public DbSet<Currency> Currencies => Set<Currency>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -49,6 +51,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             .WithMany(u => u.Products)
             .HasForeignKey(p => p.UnitOfMeasureId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Product>()
+            .HasOne(p => p.Currency)
+            .WithMany()
+            .HasForeignKey(p => p.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Currency>().HasIndex(c => c.Code).IsUnique();
+        // Hanya satu mata uang dasar (indeks unik terfilter di SQL Server).
+        builder.Entity<Currency>()
+            .HasIndex(c => c.IsBaseCurrency)
+            .IsUnique()
+            .HasFilter("[IsBaseCurrency] = 1");
+
+        builder.Entity<ExchangeRate>(e =>
+        {
+            e.HasIndex(x => new { x.CurrencyId, x.EffectiveDate }).IsUnique();
+            e.HasOne(x => x.Currency).WithMany(c => c.ExchangeRates)
+                .HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Cascade);
+        });
 
         builder.Entity<MenuItem>()
             .HasOne(m => m.Parent)

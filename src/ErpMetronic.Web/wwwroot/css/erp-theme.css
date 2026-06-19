@@ -210,6 +210,28 @@ body {
     background-color: var(--erp-sidebar-active-bg);
 }
 
+/* ---- Menu induk yang bisa diciutkan (accordion) ---- */
+.menu-parent { cursor: pointer; }
+.menu-parent .menu-caret {
+    margin-left: auto;
+    font-size: .75rem;
+    transition: transform .2s ease;
+    opacity: .7;
+}
+.menu-group.open > .menu-parent .menu-caret { transform: rotate(180deg); }
+.menu-group.open > .menu-parent { color: var(--erp-sidebar-active); }
+
+.menu-sub {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .25s ease;
+}
+.menu-group.open > .menu-sub { max-height: 1000px; }
+.menu-sub > li > a { padding-left: 52px; }
+
 .erp-main {
     margin-left: var(--erp-sidebar-width);
     min-height: 100vh;
@@ -340,6 +362,10 @@ a:hover { color: var(--erp-primary-hover); }
     display: inline-block;
     border: 1px solid rgba(0, 0, 0, .1);
 }
+.theme-option {
+    color: #212529 !important; /* warna gelap */
+    font-weight: 500;
+}
 .theme-option.active { background-color: var(--erp-primary-light); font-weight: 600; }
 
 /* ===================== Auth pages ===================== */
@@ -381,6 +407,11 @@ a:hover { color: var(--erp-primary-hover); }
 
     .erp-sidebar-collapsed .erp-menu a { justify-content: center; padding: 11px 0; margin: 2px 12px; }
     .erp-sidebar-collapsed .erp-menu a .bi { width: auto; }
+
+    /* Rail (ciut): caret disembunyikan & seluruh ikon submenu ditampilkan */
+    .erp-sidebar-collapsed .menu-caret { display: none; }
+    .erp-sidebar-collapsed .menu-sub { max-height: none; }
+    .erp-sidebar-collapsed .menu-sub > li > a { padding-left: 0; }
 
     /* Hover saat ciut: melebar sementara (flyout) tanpa menggeser konten utama */
     .erp-sidebar-collapsed .erp-sidebar:hover {

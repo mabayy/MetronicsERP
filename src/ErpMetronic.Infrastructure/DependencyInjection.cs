@@ -33,6 +33,7 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.AddScoped<IStockService, StockService>();
+        services.AddScoped<ICurrencyService, CurrencyService>();
 
         return services;
     }

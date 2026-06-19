@@ -2,7 +2,28 @@
 @model List<MenuNode>
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-    string ActiveClass(string? c) => !string.IsNullOrEmpty(c) && string.Equals(currentController, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    // Hitung jumlah menu per controller. Jika satu controller dipakai banyak menu
+    // (mis. "Stock"), penanda aktif harus mencocokkan action juga—bukan controller saja.
+    var allItems = Model.SelectMany(n => new[] { n.Item }.Concat(n.Children)).ToList();
+    var controllerCounts = allItems
+        .Where(m => !string.IsNullOrEmpty(m.Controller))
+        .GroupBy(m => m.Controller!, StringComparer.OrdinalIgnoreCase)
+        .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+
+    bool IsActive(ErpMetronic.Domain.Entities.MenuItem m)
+    {
+        if (string.IsNullOrEmpty(m.Controller)) return false;
+        if (!string.Equals(currentController, m.Controller, StringComparison.OrdinalIgnoreCase)) return false;
+
+        if (controllerCounts.TryGetValue(m.Controller!, out var count) && count > 1)
+        {
+            var itemAction = string.IsNullOrEmpty(m.Action) ? "Index" : m.Action!;
+            return string.Equals(currentAction, itemAction, StringComparison.OrdinalIgnoreCase);
+        }
+        return true;
+    }
 }
 
 @functions {
@@ -20,20 +41,29 @@
     {
         if (node.Children.Count > 0)
         {
-            <li class="menu-heading"><span class="menu-label">@node.Item.Title</span></li>
-            foreach (var child in node.Children)
-            {
-                <li>
-                    <a class="@ActiveClass(child.Controller)" href="@Href(child, Url)" title="@child.Title">
-                        <i class="bi @(child.Icon ?? "bi-dot")"></i> <span class="menu-label">@child.Title</span>
-                    </a>
-                </li>
-            }
+            var groupActive = node.Children.Any(IsActive);
+            <li class="menu-group @(groupActive ? "open" : "")">
+                <a href="#" class="menu-parent" role="button" aria-expanded="@(groupActive ? "true" : "false")">
+                    <i class="bi @(node.Item.Icon ?? "bi-dot")"></i>
+                    <span class="menu-label">@node.Item.Title</span>
+                    <i class="bi bi-chevron-down menu-caret"></i>
+                </a>
+                <ul class="menu-sub">
+                    @foreach (var child in node.Children)
+                    {
+                        <li>
+                            <a class="@(IsActive(child) ? "active" : "")" href="@Href(child, Url)" title="@child.Title">
+                                <i class="bi @(child.Icon ?? "bi-dot")"></i> <span class="menu-label">@child.Title</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </li>
         }
         else
         {
             <li>
-                <a class="@ActiveClass(node.Item.Controller)" href="@Href(node.Item, Url)" title="@node.Item.Title">
+                <a class="@(IsActive(node.Item) ? "active" : "")" href="@Href(node.Item, Url)" title="@node.Item.Title">
                     <i class="bi @(node.Item.Icon ?? "bi-dot")"></i> <span class="menu-label">@node.Item.Title</span>
                 </a>
             </li>

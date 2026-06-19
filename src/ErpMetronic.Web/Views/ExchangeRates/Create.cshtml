@@ -1,0 +1,43 @@
+@model ExchangeRate
+@{ ViewData["Title"] = "Tambah Kurs"; }
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Form Kurs Baru</div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CurrencyId" class="form-label fw-semibold">Mata Uang</label>
+                            <select asp-for="CurrencyId" asp-items="ViewBag.Currencies" class="form-select">
+                                <option value="">-- Pilih mata uang --</option>
+                            </select>
+                            <span asp-validation-for="CurrencyId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EffectiveDate" class="form-label fw-semibold">Berlaku Sejak</label>
+                            <input asp-for="EffectiveDate" type="date" class="form-control" />
+                            <span asp-validation-for="EffectiveDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Rate" class="form-label fw-semibold">Kurs (ke mata uang dasar)</label>
+                            <input asp-for="Rate" type="number" step="0.000001" min="0" class="form-control" />
+                            <span asp-validation-for="Rate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small"><i class="bi bi-info-circle"></i> Isi jumlah unit mata uang dasar untuk 1 unit mata uang ini (mis. 1 USD = 16000 → isi 16000). Mata uang dasar tidak perlu kurs.</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                        <a asp-action="Index" class="btn btn-light">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

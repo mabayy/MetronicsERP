@@ -1,5 +1,12 @@
 @model Product
-@{ ViewData["Title"] = "Detail Produk"; }
+@{
+    ViewData["Title"] = "Detail Produk";
+    var baseCur = ViewBag.BaseCurrency as Currency;
+    var sellInBase = ViewBag.SellingInBase as decimal?;
+    var buyInBase = ViewBag.PurchaseInBase as decimal?;
+    var dp = Model.Currency?.DecimalPlaces ?? 2;
+    var sym = Model.Currency?.Symbol ?? Model.Currency?.Code;
+}
 
 <div class="card">
     <div class="card-header justify-content-between">
@@ -24,11 +31,23 @@
             <dt class="col-sm-3">Satuan</dt>
             <dd class="col-sm-9">@Model.UnitOfMeasure?.Name</dd>
 
+            <dt class="col-sm-3">Mata Uang</dt>
+            <dd class="col-sm-9">
+                @if (Model.Currency != null) { <span class="badge-light-primary px-2 py-1 rounded">@Model.Currency.Code</span> <span class="ms-1">@Model.Currency.Name</span> }
+                else { <span class="text-muted">—</span> }
+            </dd>
+
             <dt class="col-sm-3">Harga Beli</dt>
-            <dd class="col-sm-9">@Model.PurchasePrice.ToString("N0")</dd>
+            <dd class="col-sm-9">
+                @sym @Model.PurchasePrice.ToString("N" + dp)
+                @if (buyInBase.HasValue) { <span class="text-muted small ms-2">≈ @baseCur?.Symbol @buyInBase.Value.ToString("N" + (baseCur?.DecimalPlaces ?? 2)) @baseCur?.Code</span> }
+            </dd>
 
             <dt class="col-sm-3">Harga Jual</dt>
-            <dd class="col-sm-9">@Model.SellingPrice.ToString("N0")</dd>
+            <dd class="col-sm-9">
+                @sym @Model.SellingPrice.ToString("N" + dp)
+                @if (sellInBase.HasValue) { <span class="text-muted small ms-2">≈ @baseCur?.Symbol @sellInBase.Value.ToString("N" + (baseCur?.DecimalPlaces ?? 2)) @baseCur?.Code</span> }
+            </dd>
 
             <dt class="col-sm-3">Stok</dt>
             <dd class="col-sm-9">

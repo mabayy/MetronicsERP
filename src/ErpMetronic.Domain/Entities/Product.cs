@@ -30,4 +30,8 @@ public class Product : BaseEntity
 
     public int UnitOfMeasureId { get; set; }
     public UnitOfMeasure? UnitOfMeasure { get; set; }
+
+    /// <summary>Mata uang harga produk. Bila kosong, dianggap memakai mata uang dasar.</summary>
+    public int? CurrencyId { get; set; }
+    public Currency? Currency { get; set; }
 }

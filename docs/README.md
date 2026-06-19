@@ -19,6 +19,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 9 | [Roadmap Lanjutan](09-roadmap.md) | Modul Inventory, Purchasing, Sales, Finance | 📄 Rencana |
 | 10 | [Master Menu (Menu Dinamis)](10-master-menu.md) | Sidebar berbasis DB: tambah/edit/hapus/urutkan (drag-drop) | ✅ |
 | 11 | [Manajemen Stok (Inventory)](11-manajemen-stok.md) | Stok masuk/keluar/transfer/penyesuaian + saldo per gudang | ✅ |
+| 12 | [Currency Management (Multi-Currency)](12-currency-management.md) | Mata uang dasar, kurs ber-tanggal, konversi + integrasi produk | ✅ |
 
 ## Cara membaca dokumen ini
 

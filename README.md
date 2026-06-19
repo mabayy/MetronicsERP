@@ -15,6 +15,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Tema warna (3 skema) | ✅ | Sapphire / Mocha / Emerald — ganti via header, tersimpan di browser |
 | Sidebar expand/collapse | ✅ | Ciutkan jadi rail ikon (flyout saat hover), status tersimpan |
 | Manajemen Stok (Inventory) | ✅ | Stok masuk, keluar, transfer antar gudang, penyesuaian + saldo per gudang |
+| Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
 | Master Data — Produk | ✅ | CRUD + pencarian + relasi kategori/satuan |
 | Master Data — Kategori | ✅ | CRUD |

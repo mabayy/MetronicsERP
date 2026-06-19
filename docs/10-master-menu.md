@@ -39,6 +39,19 @@ Hierarki **satu tingkat**: item tanpa `ParentId` adalah level atas; bila memilik
 sebagai **header grup** (tidak dapat diklik). Bila tidak punya anak namun punya
 `Controller`/`Url`, ia menjadi **tautan langsung**.
 
+## Menu Induk Collapsible & Penanda Aktif
+
+- Menu induk (grup) dirender sebagai tombol **collapse/expand** (accordion) dengan ikon caret;
+  klik untuk menciutkan/melebarkan sub-menunya. Grup yang memuat halaman aktif **otomatis
+  terbuka** saat halaman dimuat.
+- **Penanda aktif** memperhitungkan *action*, bukan hanya *controller*. Bila satu controller
+  dipakai banyak menu (mis. semua item Manajemen Stok memakai controller `Stock`), hanya item
+  yang action-nya cocok dengan halaman saat ini yang disorot — memperbaiki bug "semua item
+  menyala". Untuk controller yang hanya dipakai satu menu, controller match sudah cukup
+  (sehingga halaman Create/Edit tetap menyorot menu induknya).
+- Pada mode sidebar **ciut (rail)**, caret disembunyikan dan ikon sub-menu tetap tampil;
+  label muncul saat hover (flyout).
+
 ## Render Sidebar (ViewComponent)
 
 `_Layout.cshtml` memanggil:

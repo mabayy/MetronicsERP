@@ -39,12 +39,19 @@
                     </select>
                     <span asp-validation-for="UnitOfMeasureId" class="text-danger small"></span>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label asp-for="CurrencyId" class="form-label fw-semibold">Mata Uang Harga</label>
+                    <select asp-for="CurrencyId" asp-items="ViewBag.Currencies" class="form-select">
+                        <option value="">-- Pilih mata uang --</option>
+                    </select>
+                    <span asp-validation-for="CurrencyId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
                     <label asp-for="PurchasePrice" class="form-label fw-semibold"></label>
                     <input asp-for="PurchasePrice" class="form-control" />
                     <span asp-validation-for="PurchasePrice" class="text-danger small"></span>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label asp-for="SellingPrice" class="form-label fw-semibold"></label>
                     <input asp-for="SellingPrice" class="form-control" />
                     <span asp-validation-for="SellingPrice" class="text-danger small"></span>

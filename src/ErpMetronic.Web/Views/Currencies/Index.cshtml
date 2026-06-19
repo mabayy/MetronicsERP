@@ -1,0 +1,65 @@
+@model List<Currency>
+@{
+    ViewData["Title"] = "Mata Uang";
+    var rates = ViewBag.LatestRates as Dictionary<int, decimal> ?? new();
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Mata Uang</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Mata Uang</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>Kode</th><th>Nama</th><th>Simbol</th><th class="text-center">Desimal</th><th class="text-end">Kurs Terkini (ke dasar)</th><th>Status</th><th class="text-end">Aksi</th></tr>
+            </thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada data</td></tr>
+            }
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>
+                        <span class="badge-light-primary px-2 py-1 rounded">@c.Code</span>
+                        @if (c.IsBaseCurrency) { <span class="badge-light-success px-2 py-1 rounded ms-1"><i class="bi bi-star-fill"></i> Dasar</span> }
+                    </td>
+                    <td class="fw-semibold text-dark">@c.Name</td>
+                    <td>@c.Symbol</td>
+                    <td class="text-center">@c.DecimalPlaces</td>
+                    <td class="text-end">
+                        @if (c.IsBaseCurrency) { <span class="text-muted">1,00 (acuan)</span> }
+                        else if (rates.TryGetValue(c.Id, out var r)) { @r.ToString("N4") }
+                        else { <span class="badge-light-danger px-2 py-1 rounded">belum ada kurs</span> }
+                    </td>
+                    <td>
+                        @if (c.IsActive) { <span class="badge-light-success px-2 py-1 rounded">Aktif</span> }
+                        else { <span class="badge-light-danger px-2 py-1 rounded">Nonaktif</span> }
+                    </td>
+                    <td class="text-end">
+                        @if (!c.IsBaseCurrency)
+                        {
+                            <form asp-action="SetBase" asp-route-id="@c.Id" method="post" class="d-inline" onsubmit="return confirm('Jadikan @c.Code sebagai mata uang dasar? Mata uang dasar lama akan dicabut.');">
+                                <button type="submit" class="btn btn-sm btn-light" title="Jadikan mata uang dasar"><i class="bi bi-star"></i></button>
+                            </form>
+                        }
+                        <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                        @if (!c.IsBaseCurrency)
+                        {
+                            <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus mata uang ini? Seluruh kursnya juga akan terhapus.');">
+                                <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="text-muted small mt-3">
+    <i class="bi bi-info-circle"></i> Tepat satu mata uang berperan sebagai <strong>mata uang dasar</strong>
+    (kurs = 1). Kurs mata uang lain dikelola di menu <strong>Kurs / Exchange Rate</strong>.
+</p>

@@ -1,0 +1,45 @@
+@model Currency
+@{ ViewData["Title"] = "Tambah Mata Uang"; }
+
+<div class="card">
+    <div class="card-header">Form Mata Uang Baru</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Code" class="form-label fw-semibold"></label>
+                    <input asp-for="Code" class="form-control text-uppercase" maxlength="3" placeholder="USD" />
+                    <span asp-validation-for="Code" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" placeholder="US Dollar" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Symbol" class="form-label fw-semibold"></label>
+                    <input asp-for="Symbol" class="form-control" placeholder="$" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DecimalPlaces" class="form-label fw-semibold"></label>
+                    <input asp-for="DecimalPlaces" type="number" min="0" max="6" class="form-control" />
+                    <span asp-validation-for="DecimalPlaces" class="text-danger small"></span>
+                </div>
+                <div class="col-12 form-check ms-2">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                </div>
+                <div class="col-12">
+                    <span class="text-muted small"><i class="bi bi-info-circle"></i> Status <strong>mata uang dasar</strong> diatur lewat tombol "Jadikan Dasar" pada daftar. Mata uang pertama otomatis menjadi dasar.</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

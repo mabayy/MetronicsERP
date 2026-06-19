@@ -184,5 +184,47 @@ public static class DbSeeder
                 await context.SaveChangesAsync();
             }
         }
+
+        // 10. Mata uang (multi-currency) + kurs awal
+        if (!await context.Currencies.AnyAsync())
+        {
+            var idr = new Currency { Code = "IDR", Name = "Rupiah", Symbol = "Rp", DecimalPlaces = 0, IsBaseCurrency = true };
+            var usd = new Currency { Code = "USD", Name = "US Dollar", Symbol = "$", DecimalPlaces = 2 };
+            var eur = new Currency { Code = "EUR", Name = "Euro", Symbol = "€", DecimalPlaces = 2 };
+            context.Currencies.AddRange(idr, usd, eur);
+            await context.SaveChangesAsync();
+
+            var effective = new DateTime(2026, 1, 1);
+            context.ExchangeRates.AddRange(
+                new ExchangeRate { CurrencyId = usd.Id, Rate = 16000m, EffectiveDate = effective },
+                new ExchangeRate { CurrencyId = eur.Id, Rate = 17500m, EffectiveDate = effective });
+            await context.SaveChangesAsync();
+        }
+
+        // Tetapkan mata uang dasar pada produk yang belum punya mata uang
+        var baseCurrency = await context.Currencies.FirstOrDefaultAsync(c => c.IsBaseCurrency);
+        if (baseCurrency is not null)
+        {
+            var productsNoCurrency = await context.Products.Where(p => p.CurrencyId == null).ToListAsync();
+            if (productsNoCurrency.Count > 0)
+            {
+                foreach (var p in productsNoCurrency) p.CurrencyId = baseCurrency.Id;
+                await context.SaveChangesAsync();
+            }
+        }
+
+        // 11. Menu Keuangan (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "Currencies"))
+        {
+            var maxOrder = await context.MenuItems.Where(m => m.ParentId == null).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+            var finance = new MenuItem { Title = "Keuangan", Icon = "bi-cash-coin", SortOrder = maxOrder + 1, RequiredRole = AppRoles.Administrator, IsSystem = true };
+            context.MenuItems.Add(finance);
+            await context.SaveChangesAsync();
+
+            context.MenuItems.AddRange(
+                new MenuItem { Title = "Mata Uang", Icon = "bi-currency-exchange", Controller = "Currencies", Action = "Index", ParentId = finance.Id, SortOrder = 1, RequiredRole = AppRoles.Administrator, IsSystem = true },
+                new MenuItem { Title = "Kurs / Exchange Rate", Icon = "bi-graph-up-arrow", Controller = "ExchangeRates", Action = "Index", ParentId = finance.Id, SortOrder = 2, RequiredRole = AppRoles.Administrator, IsSystem = true });
+            await context.SaveChangesAsync();
+        }
     }
 }

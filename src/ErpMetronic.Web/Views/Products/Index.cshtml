@@ -1,5 +1,9 @@
 @model List<Product>
-@{ ViewData["Title"] = "Produk"; }
+@{
+    ViewData["Title"] = "Produk";
+    var baseCur = ViewBag.BaseCurrency as Currency;
+    var baseEq = ViewBag.BaseEquivalent as Dictionary<int, decimal?> ?? new();
+}
 
 <div class="card">
     <div class="card-header justify-content-between">
@@ -27,7 +31,17 @@
                     <td class="fw-semibold text-dark">@p.Name</td>
                     <td>@p.Category?.Name</td>
                     <td>@p.UnitOfMeasure?.Name</td>
-                    <td class="text-end">@p.SellingPrice.ToString("N0")</td>
+                    <td class="text-end">
+                        <span class="text-muted small">@(p.Currency?.Symbol ?? p.Currency?.Code)</span>
+                        @p.SellingPrice.ToString("N" + (p.Currency?.DecimalPlaces ?? 2))
+                        @if (baseEq.TryGetValue(p.Id, out var eq))
+                        {
+                            <div class="text-muted small">
+                                @if (eq.HasValue) { <text>≈ @baseCur?.Symbol @eq.Value.ToString("N" + (baseCur?.DecimalPlaces ?? 2))</text> }
+                                else { <span class="text-danger">kurs belum ada</span> }
+                            </div>
+                        }
+                    </td>
                     <td class="text-center">
                         @if (p.StockQuantity <= p.ReorderLevel) { <span class="badge-light-danger px-2 py-1 rounded">@p.StockQuantity</span> }
                         else { <span class="badge-light-success px-2 py-1 rounded">@p.StockQuantity</span> }
