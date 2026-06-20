@@ -24,6 +24,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Retur Jual & Beli | ✅ | Retur penjualan (stok masuk) / pembelian (stok keluar) + jurnal otomatis |
 | Umur Piutang & Hutang | ✅ | Laporan aging AR/AP per mitra (ember 0–30/31–60/61–90/>90) |
 | Finance (Akuntansi) | ✅ | Bagan akun → jurnal double-entry → buku besar → neraca saldo, posting otomatis pembelian/penjualan |
+| Pajak (PPN & PPh) | ✅ | Master pajak, PPN per baris + PPh withholding (gaya SAP B1/Odoo), posting jurnal otomatis |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -92,6 +93,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 17. [Finance (Akuntansi)](docs/17-finance.md)
 18. [Retur & Umur Piutang/Hutang](docs/18-retur-aging.md)
 19. [Copy To / Copy From (Pembelian)](docs/19-copy-document.md)
+20. [Sistem Pajak (PPN & PPh)](docs/20-pajak-ppn-pph.md)
 
 ## 🧰 Tech Stack
 

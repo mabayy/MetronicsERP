@@ -17,12 +17,14 @@ public class SalesInvoicesController : Controller
     private readonly ApplicationDbContext _db;
     private readonly IDocumentNumberService _docNumber;
     private readonly IJournalService _journal;
+    private readonly ITaxService _tax;
 
-    public SalesInvoicesController(ApplicationDbContext db, IDocumentNumberService docNumber, IJournalService journal)
+    public SalesInvoicesController(ApplicationDbContext db, IDocumentNumberService docNumber, IJournalService journal, ITaxService tax)
     {
         _db = db;
         _docNumber = docNumber;
         _journal = journal;
+        _tax = tax;
     }
 
     public async Task<IActionResult> Index()
@@ -61,11 +63,13 @@ public class SalesInvoicesController : Controller
 
         ViewBag.SalesOrder = so;
         ViewBag.Invoiceable = invoiceable;
+        await PopulateTaxesAsync();
         var model = new SalesInvoiceCreateViewModel
         {
             SalesOrderId = so.Id,
+            WithholdingTaxId = so.WithholdingTaxId, // bawa PPh dari SO
             Lines = so.Items.Where(i => invoiceable.TryGetValue(i.ProductId, out var q) && q > 0)
-                .Select(i => new SalesInvLineInput { ProductId = i.ProductId, Quantity = invoiceable[i.ProductId], UnitPrice = i.UnitPrice }).ToList()
+                .Select(i => new SalesInvLineInput { ProductId = i.ProductId, Quantity = invoiceable[i.ProductId], UnitPrice = i.UnitPrice, TaxId = i.TaxId }).ToList()
         };
         return View(model);
     }
@@ -94,7 +98,27 @@ public class SalesInvoicesController : Controller
         {
             ViewBag.SalesOrder = so;
             ViewBag.Invoiceable = invoiceable;
+            await PopulateTaxesAsync();
             return View(model);
+        }
+
+        // Hitung snapshot PPN per baris & PPh per dokumen
+        var taxes = await _tax.GetByIdsAsync(lines.Select(l => l.TaxId).Append(model.WithholdingTaxId));
+        var invLines = lines.Select(l =>
+        {
+            var sil = new SalesInvoiceLine { ProductId = l.ProductId, Quantity = l.Quantity, UnitPrice = l.UnitPrice };
+            if (l.TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == TaxKind.ValueAdded)
+            {
+                sil.TaxId = tx.Id; sil.TaxRate = tx.Rate;
+                sil.TaxAmount = Math.Round(sil.Quantity * sil.UnitPrice * tx.Rate / 100m, 2);
+            }
+            return sil;
+        }).ToList();
+        var dpp = invLines.Sum(x => x.Quantity * x.UnitPrice);
+        int? whtId = null; decimal whtRate = 0, whtAmount = 0;
+        if (model.WithholdingTaxId is int wid && taxes.TryGetValue(wid, out var wtx) && wtx.Kind == TaxKind.Withholding)
+        {
+            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = Math.Round(dpp * wtx.Rate / 100m, 2);
         }
 
         var invoice = new SalesInvoice
@@ -106,8 +130,11 @@ public class SalesInvoicesController : Controller
             CurrencyId = so.CurrencyId,
             Status = SalesInvoiceStatus.Unpaid,
             Note = model.Note,
+            WithholdingTaxId = whtId,
+            WithholdingRate = whtRate,
+            WithholdingAmount = whtAmount,
             CreatedBy = User.Identity?.Name,
-            Lines = lines.Select(l => new SalesInvoiceLine { ProductId = l.ProductId, Quantity = l.Quantity, UnitPrice = l.UnitPrice }).ToList()
+            Lines = invLines
         };
         _db.SalesInvoices.Add(invoice);
         await _db.SaveChangesAsync();
@@ -143,8 +170,9 @@ public class SalesInvoicesController : Controller
     public async Task<IActionResult> Details(int id)
     {
         var inv = await _db.SalesInvoices
-            .Include(i => i.Customer).Include(i => i.SalesOrder).Include(i => i.Currency)
+            .Include(i => i.Customer).Include(i => i.SalesOrder).Include(i => i.Currency).Include(i => i.WithholdingTax)
             .Include(i => i.Lines).ThenInclude(l => l.Product)
+            .Include(i => i.Lines).ThenInclude(l => l.Tax)
             .Include(i => i.Payments)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (inv is null) return NotFound();
@@ -206,6 +234,12 @@ public class SalesInvoicesController : Controller
         foreach (var kv in delivered)
             result[kv.Key] = kv.Value - (invoiced.TryGetValue(kv.Key, out var inv) ? inv : 0);
         return result;
+    }
+
+    private async Task PopulateTaxesAsync()
+    {
+        ViewBag.VatTaxes = await _tax.GetVatTaxesAsync(Domain.Enums.TaxApplicability.Sales);
+        ViewBag.WhtTaxes = await _tax.GetWithholdingTaxesAsync(Domain.Enums.TaxApplicability.Sales);
     }
 
     private Task<SalesOrder?> LoadSoAsync(int id) =>

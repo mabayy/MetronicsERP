@@ -34,7 +34,7 @@
             <div class="card-header">Item Faktur</div>
             <div class="card-body p-0">
                 <table class="table align-middle mb-0">
-                    <thead><tr><th>Produk</th><th class="text-end">Jumlah</th><th class="text-end">Harga</th><th class="text-end">Subtotal</th></tr></thead>
+                    <thead><tr><th>Produk</th><th class="text-end">Jumlah</th><th class="text-end">Harga</th><th>PPN</th><th class="text-end">Subtotal</th></tr></thead>
                     <tbody>
                     @foreach (var l in Model.Lines)
                     {
@@ -42,14 +42,21 @@
                             <td>@l.Product?.Sku — @l.Product?.Name</td>
                             <td class="text-end">@l.Quantity.ToString("N0")</td>
                             <td class="text-end">@l.UnitPrice.ToString("N2")</td>
+                            <td><span class="text-muted small">@(l.Tax?.Code ?? "—")</span> <span class="text-end">@l.TaxAmount.ToString("N2")</span></td>
                             <td class="text-end">@((l.Quantity * l.UnitPrice).ToString("N2"))</td>
                         </tr>
                     }
                     </tbody>
                     <tfoot>
-                        <tr class="table-light"><td colspan="3" class="text-end fw-bold">Total</td><td class="text-end fw-bold">@cur @Model.Total.ToString("N2")</td></tr>
-                        <tr><td colspan="3" class="text-end">Dibayar</td><td class="text-end">@Model.PaidAmount.ToString("N2")</td></tr>
-                        <tr><td colspan="3" class="text-end fw-bold">Sisa Tagihan</td><td class="text-end fw-bold text-danger">@cur @Model.Outstanding.ToString("N2")</td></tr>
+                        <tr><td colspan="4" class="text-end fw-semibold">DPP</td><td class="text-end">@cur @Model.Subtotal.ToString("N2")</td></tr>
+                        <tr><td colspan="4" class="text-end fw-semibold">PPN</td><td class="text-end">@cur @Model.TaxTotal.ToString("N2")</td></tr>
+                        @if (Model.WithholdingAmount > 0)
+                        {
+                            <tr><td colspan="4" class="text-end fw-semibold text-danger">PPh @(Model.WithholdingTax?.Code)</td><td class="text-end text-danger">−@cur @Model.WithholdingAmount.ToString("N2")</td></tr>
+                        }
+                        <tr class="table-light"><td colspan="4" class="text-end fw-bold">Total</td><td class="text-end fw-bold">@cur @Model.Total.ToString("N2")</td></tr>
+                        <tr><td colspan="4" class="text-end">Dibayar</td><td class="text-end">@Model.PaidAmount.ToString("N2")</td></tr>
+                        <tr><td colspan="4" class="text-end fw-bold">Sisa Tagihan</td><td class="text-end fw-bold text-danger">@cur @Model.Outstanding.ToString("N2")</td></tr>
                     </tfoot>
                 </table>
             </div>

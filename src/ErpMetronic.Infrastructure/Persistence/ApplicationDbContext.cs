@@ -48,6 +48,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<RequestForQuotation> RequestForQuotations => Set<RequestForQuotation>();
     public DbSet<RfqLine> RfqLines => Set<RfqLine>();
     public DbSet<RfqQuote> RfqQuotes => Set<RfqQuote>();
+    public DbSet<Tax> Taxes => Set<Tax>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -227,6 +228,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             e.HasOne(x => x.PurchaseReturn).WithMany(p => p.Lines).HasForeignKey(x => x.PurchaseReturnId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        builder.Entity<Tax>().HasIndex(x => x.Code).IsUnique();
+
+        // Relasi pajak: PPN per baris & PPh (withholding) per header. Semua Restrict
+        // agar pajak yang masih dipakai dokumen tidak bisa terhapus.
+        builder.Entity<PurchaseOrderItem>().HasOne(x => x.Tax).WithMany().HasForeignKey(x => x.TaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PurchaseOrder>().HasOne(x => x.WithholdingTax).WithMany().HasForeignKey(x => x.WithholdingTaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesOrderItem>().HasOne(x => x.Tax).WithMany().HasForeignKey(x => x.TaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesOrder>().HasOne(x => x.WithholdingTax).WithMany().HasForeignKey(x => x.WithholdingTaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PurchaseInvoiceLine>().HasOne(x => x.Tax).WithMany().HasForeignKey(x => x.TaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PurchaseInvoice>().HasOne(x => x.WithholdingTax).WithMany().HasForeignKey(x => x.WithholdingTaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesInvoiceLine>().HasOne(x => x.Tax).WithMany().HasForeignKey(x => x.TaxId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesInvoice>().HasOne(x => x.WithholdingTax).WithMany().HasForeignKey(x => x.WithholdingTaxId).OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<ChartOfAccount>().HasIndex(x => x.Code).IsUnique();
         builder.Entity<JournalEntry>(e => e.HasIndex(x => x.ReferenceNumber));

@@ -18,12 +18,14 @@ public class SalesOrdersController : Controller
     private readonly ApplicationDbContext _db;
     private readonly IStockService _stock;
     private readonly IDocumentNumberService _docNumber;
+    private readonly ITaxService _tax;
 
-    public SalesOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber)
+    public SalesOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber, ITaxService tax)
     {
         _db = db;
         _stock = stock;
         _docNumber = docNumber;
+        _tax = tax;
     }
 
     public async Task<IActionResult> Index()
@@ -48,6 +50,7 @@ public class SalesOrdersController : Controller
         if (items.Count == 0) ModelState.AddModelError(string.Empty, "Minimal satu baris produk dengan jumlah > 0.");
         if (!ModelState.IsValid) { await PopulateAsync(); return View(model); }
 
+        var (taxedItems, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.WithholdingTaxId);
         var so = new SalesOrder
         {
             ReferenceNumber = await _docNumber.NextAsync(DocumentCodes.SalesOrder, model.OrderDate),
@@ -57,8 +60,11 @@ public class SalesOrdersController : Controller
             CurrencyId = model.CurrencyId,
             Status = SalesOrderStatus.Draft,
             Note = model.Note,
+            WithholdingTaxId = whtId,
+            WithholdingRate = whtRate,
+            WithholdingAmount = whtAmount,
             CreatedBy = User.Identity?.Name,
-            Items = items.Select(i => new SalesOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList()
+            Items = taxedItems
         };
         _db.SalesOrders.Add(so);
         await _db.SaveChangesAsync();
@@ -85,7 +91,8 @@ public class SalesOrdersController : Controller
             CurrencyId = so.CurrencyId,
             OrderDate = so.OrderDate,
             Note = so.Note,
-            Items = so.Items.Select(i => new SalesLineInput { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList()
+            WithholdingTaxId = so.WithholdingTaxId,
+            Items = so.Items.Select(i => new SalesLineInput { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice, TaxId = i.TaxId }).ToList()
         });
     }
 
@@ -116,7 +123,9 @@ public class SalesOrdersController : Controller
         so.UpdatedAt = DateTime.UtcNow;
         so.UpdatedBy = User.Identity?.Name;
         _db.SalesOrderItems.RemoveRange(so.Items);
-        so.Items = items.Select(i => new SalesOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList();
+        var (taxedItems, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.WithholdingTaxId);
+        so.Items = taxedItems;
+        so.WithholdingTaxId = whtId; so.WithholdingRate = whtRate; so.WithholdingAmount = whtAmount;
         await _db.SaveChangesAsync();
         TempData["Success"] = $"Sales Order {so.ReferenceNumber} diperbarui.";
         return RedirectToAction(nameof(Details), new { id });
@@ -238,10 +247,36 @@ public class SalesOrdersController : Controller
         return RedirectToAction(nameof(Details), new { id = so.Id });
     }
 
+    // Hitung snapshot PPN per baris & PPh (withholding) per dokumen.
+    private async Task<(List<SalesOrderItem> Items, int? WhtId, decimal WhtRate, decimal WhtAmount)>
+        BuildTaxedItemsAsync(List<SalesLineInput> inputs, int? withholdingTaxId)
+    {
+        var taxes = await _tax.GetByIdsAsync(inputs.Select(i => i.TaxId).Append(withholdingTaxId));
+        var items = inputs.Select(i =>
+        {
+            var soi = new SalesOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice };
+            if (i.TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == TaxKind.ValueAdded)
+            {
+                soi.TaxId = tx.Id; soi.TaxRate = tx.Rate;
+                soi.TaxAmount = Math.Round(soi.Quantity * soi.UnitPrice * tx.Rate / 100m, 2);
+            }
+            return soi;
+        }).ToList();
+
+        var dpp = items.Sum(x => x.Quantity * x.UnitPrice);
+        int? whtId = null; decimal whtRate = 0, whtAmount = 0;
+        if (withholdingTaxId is int wid && taxes.TryGetValue(wid, out var wtx) && wtx.Kind == TaxKind.Withholding)
+        {
+            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = Math.Round(dpp * wtx.Rate / 100m, 2);
+        }
+        return (items, whtId, whtRate, whtAmount);
+    }
+
     private Task<SalesOrder?> LoadAsync(int id) =>
         _db.SalesOrders
-            .Include(p => p.Customer).Include(p => p.Warehouse).Include(p => p.Currency)
+            .Include(p => p.Customer).Include(p => p.Warehouse).Include(p => p.Currency).Include(p => p.WithholdingTax)
             .Include(p => p.Items).ThenInclude(i => i.Product)
+            .Include(p => p.Items).ThenInclude(i => i.Tax)
             .FirstOrDefaultAsync(p => p.Id == id);
 
     private async Task PopulateAsync()
@@ -252,5 +287,7 @@ public class SalesOrdersController : Controller
             .Select(c => new { c.Id, Display = c.Code + " — " + c.Name }).ToListAsync(), "Id", "Display");
         ViewBag.Products = await _db.Products.OrderBy(p => p.Name)
             .Select(p => new { p.Id, Display = p.Sku + " — " + p.Name }).ToListAsync();
+        ViewBag.VatTaxes = await _tax.GetVatTaxesAsync(Domain.Enums.TaxApplicability.Sales);
+        ViewBag.WhtTaxes = await _tax.GetWithholdingTaxesAsync(Domain.Enums.TaxApplicability.Sales);
     }
 }

@@ -12,6 +12,9 @@ public class PurchaseInvoiceCreateViewModel
     [Display(Name = "Catatan"), StringLength(300)]
     public string? Note { get; set; }
 
+    [Display(Name = "PPh dipotong")]
+    public int? WithholdingTaxId { get; set; }
+
     public List<InvoiceLineInput> Lines { get; set; } = new();
 }
 
@@ -20,6 +23,7 @@ public class InvoiceLineInput
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public int? TaxId { get; set; }
 }
 
 public class PurchasePaymentViewModel

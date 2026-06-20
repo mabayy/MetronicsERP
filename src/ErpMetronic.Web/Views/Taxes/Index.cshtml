@@ -1,0 +1,74 @@
+@using ErpMetronic.Domain.Enums
+@model List<ErpMetronic.Domain.Entities.Tax>
+@{ ViewData["Title"] = "Master Pajak"; }
+
+@functions {
+    string AppliesLabel(TaxApplicability a) => a switch
+    {
+        TaxApplicability.Sales => "Penjualan",
+        TaxApplicability.Purchase => "Pembelian",
+        TaxApplicability.Both => "Keduanya",
+        _ => a.ToString()
+    };
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Master Pajak (PPN / PPh)</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Pajak Baru</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr>
+                <th>Kode</th>
+                <th>Nama</th>
+                <th class="text-end">Tarif</th>
+                <th>Jenis</th>
+                <th>Berlaku</th>
+                <th>Akun</th>
+                <th>Status</th>
+                <th class="text-end">Aksi</th>
+            </tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="8" class="text-center text-muted py-4">Belum ada data</td></tr>
+            }
+            @foreach (var t in Model)
+            {
+                <tr>
+                    <td>
+                        <span class="badge-light-primary px-2 py-1 rounded">@t.Code</span>
+                        @if (t.IsSystem) { <span class="text-muted small ms-1">sistem</span> }
+                    </td>
+                    <td class="fw-semibold text-dark">@t.Name</td>
+                    <td class="text-end">@t.Rate.ToString("0.##")%</td>
+                    <td>
+                        @if (t.Kind == TaxKind.ValueAdded) { <span class="badge-light-primary px-2 py-1 rounded">PPN</span> }
+                        else { <span class="badge-light-warning px-2 py-1 rounded">PPh</span> }
+                    </td>
+                    <td>@AppliesLabel(t.AppliesTo)</td>
+                    <td><span class="text-muted">@t.AccountCode</span></td>
+                    <td>
+                        @if (t.IsActive) { <span class="badge-light-success px-2 py-1 rounded">Aktif</span> }
+                        else { <span class="badge-light-danger px-2 py-1 rounded">Nonaktif</span> }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Edit" asp-route-id="@t.Id" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                        @if (!t.IsSystem)
+                        {
+                            <form asp-action="Delete" asp-route-id="@t.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus pajak ini?');">
+                                <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="btn btn-sm btn-light text-muted disabled"><i class="bi bi-lock"></i></span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -11,7 +11,11 @@ public static class AccountCodes
     public const string Cash = "1100";              // Kas/Bank
     public const string AccountsReceivable = "1200"; // Piutang Usaha
     public const string Inventory = "1300";          // Persediaan
+    public const string InputVat = "1310";           // PPN Masukan (pajak dibayar, aset)
+    public const string PrepaidWht = "1320";         // PPh Dibayar Dimuka (dipotong pelanggan, aset)
     public const string AccountsPayable = "2100";    // Hutang Usaha
+    public const string OutputVat = "2110";          // PPN Keluaran (pajak terutang)
+    public const string WhtPayable = "2130";         // Hutang PPh (dipotong dari pemasok)
     public const string Capital = "3100";            // Modal
     public const string SalesRevenue = "4100";       // Pendapatan Penjualan
     public const string PurchaseExpense = "5100";    // Pembelian/HPP
@@ -22,7 +26,11 @@ public static class AccountCodes
         (Cash, "Kas/Bank", AccountType.Asset),
         (AccountsReceivable, "Piutang Usaha", AccountType.Asset),
         (Inventory, "Persediaan", AccountType.Asset),
+        (InputVat, "PPN Masukan", AccountType.Asset),
+        (PrepaidWht, "PPh Dibayar Dimuka", AccountType.Asset),
         (AccountsPayable, "Hutang Usaha", AccountType.Liability),
+        (OutputVat, "PPN Keluaran", AccountType.Liability),
+        (WhtPayable, "Hutang PPh", AccountType.Liability),
         (Capital, "Modal", AccountType.Equity),
         (SalesRevenue, "Pendapatan Penjualan", AccountType.Revenue),
         (PurchaseExpense, "Pembelian", AccountType.Expense)

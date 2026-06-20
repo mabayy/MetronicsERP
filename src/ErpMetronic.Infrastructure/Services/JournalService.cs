@@ -60,13 +60,18 @@ public class JournalService : IJournalService
 
     public async Task PostPurchaseInvoiceAsync(PurchaseInvoice invoice, string? user)
     {
-        var amount = await ToBaseAsync(invoice.Total, invoice.CurrencyId, invoice.InvoiceDate);
-        // Dr Persediaan, Cr Hutang Usaha
+        var dpp = await ToBaseAsync(invoice.Subtotal, invoice.CurrencyId, invoice.InvoiceDate);
+        var vat = await ToBaseAsync(invoice.TaxTotal, invoice.CurrencyId, invoice.InvoiceDate);
+        var wht = await ToBaseAsync(invoice.WithholdingAmount, invoice.CurrencyId, invoice.InvoiceDate);
+        var payable = dpp + vat - wht;
+        // Dr Persediaan (DPP), Dr PPN Masukan, Cr Hutang PPh, Cr Hutang Usaha (neto)
         await PostAsync(invoice.InvoiceDate, $"Faktur Pembelian {invoice.ReferenceNumber}",
             "PurchaseInvoice", invoice.Id, new[]
             {
-                (AccountCodes.Inventory, amount, 0m),
-                (AccountCodes.AccountsPayable, 0m, amount)
+                (AccountCodes.Inventory, dpp, 0m),
+                (AccountCodes.InputVat, vat, 0m),
+                (AccountCodes.WhtPayable, 0m, wht),
+                (AccountCodes.AccountsPayable, 0m, payable)
             }, user);
     }
 
@@ -84,13 +89,18 @@ public class JournalService : IJournalService
 
     public async Task PostSalesInvoiceAsync(SalesInvoice invoice, string? user)
     {
-        var amount = await ToBaseAsync(invoice.Total, invoice.CurrencyId, invoice.InvoiceDate);
-        // Dr Piutang Usaha, Cr Pendapatan Penjualan
+        var dpp = await ToBaseAsync(invoice.Subtotal, invoice.CurrencyId, invoice.InvoiceDate);
+        var vat = await ToBaseAsync(invoice.TaxTotal, invoice.CurrencyId, invoice.InvoiceDate);
+        var wht = await ToBaseAsync(invoice.WithholdingAmount, invoice.CurrencyId, invoice.InvoiceDate);
+        var receivable = dpp + vat - wht;
+        // Dr Piutang Usaha (neto), Dr PPh Dibayar Dimuka, Cr Pendapatan, Cr PPN Keluaran
         await PostAsync(invoice.InvoiceDate, $"Faktur Penjualan {invoice.ReferenceNumber}",
             "SalesInvoice", invoice.Id, new[]
             {
-                (AccountCodes.AccountsReceivable, amount, 0m),
-                (AccountCodes.SalesRevenue, 0m, amount)
+                (AccountCodes.AccountsReceivable, receivable, 0m),
+                (AccountCodes.PrepaidWht, wht, 0m),
+                (AccountCodes.SalesRevenue, 0m, dpp),
+                (AccountCodes.OutputVat, 0m, vat)
             }, user);
     }
 

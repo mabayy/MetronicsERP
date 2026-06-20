@@ -33,11 +33,29 @@ public class SalesInvoice : BaseEntity
     [StringLength(300)]
     public string? Note { get; set; }
 
+    // ----- PPh dipotong pelanggan (withholding) tingkat dokumen -----
+    public int? WithholdingTaxId { get; set; }
+    public Tax? WithholdingTax { get; set; }
+
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal WithholdingRate { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal WithholdingAmount { get; set; }
+
     public ICollection<SalesInvoiceLine> Lines { get; set; } = new List<SalesInvoiceLine>();
     public ICollection<SalesPayment> Payments { get; set; } = new List<SalesPayment>();
 
+    /// <summary>DPP = jumlah baris sebelum pajak.</summary>
     [NotMapped]
-    public decimal Total => Lines?.Sum(l => l.Quantity * l.UnitPrice) ?? 0;
+    public decimal Subtotal => Lines?.Sum(l => l.Quantity * l.UnitPrice) ?? 0;
+
+    [NotMapped]
+    public decimal TaxTotal => Lines?.Sum(l => l.TaxAmount) ?? 0;
+
+    /// <summary>Nilai tertagih = DPP + PPN − PPh dipotong pelanggan.</summary>
+    [NotMapped]
+    public decimal Total => Subtotal + TaxTotal - WithholdingAmount;
 
     [NotMapped]
     public decimal Outstanding => Total - PaidAmount;
@@ -55,6 +73,22 @@ public class SalesInvoiceLine : BaseEntity
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal UnitPrice { get; set; }
+
+    // ----- PPN per baris (snapshot) -----
+    public int? TaxId { get; set; }
+    public Tax? Tax { get; set; }
+
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal TaxRate { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal TaxAmount { get; set; }
+
+    [NotMapped]
+    public decimal LineSubtotal => Quantity * UnitPrice;
+
+    [NotMapped]
+    public decimal LineTotal => LineSubtotal + TaxAmount;
 }
 
 public class SalesPayment : BaseEntity

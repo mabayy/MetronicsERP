@@ -357,6 +357,32 @@ public static class DbSeeder
             }
         }
 
+        // 12b-7. Master Pajak bawaan: PPN (VAT) Masukan/Keluaran & PPh 23 (idempoten per kode)
+        var defaultTaxes = new[]
+        {
+            ("PPN-OUT", "PPN Keluaran 11%", 11m, Domain.Enums.TaxKind.ValueAdded, Domain.Enums.TaxApplicability.Sales, Domain.Constants.AccountCodes.OutputVat),
+            ("PPN-IN", "PPN Masukan 11%", 11m, Domain.Enums.TaxKind.ValueAdded, Domain.Enums.TaxApplicability.Purchase, Domain.Constants.AccountCodes.InputVat),
+            ("PPH23", "PPh Pasal 23 (2%)", 2m, Domain.Enums.TaxKind.Withholding, Domain.Enums.TaxApplicability.Both, Domain.Constants.AccountCodes.WhtPayable)
+        };
+        foreach (var (code, name, rate, kind, applies, account) in defaultTaxes)
+        {
+            if (!await context.Taxes.AnyAsync(t => t.Code == code))
+                context.Taxes.Add(new Tax { Code = code, Name = name, Rate = rate, Kind = kind, AppliesTo = applies, AccountCode = account, IsActive = true, IsSystem = true });
+        }
+        await context.SaveChangesAsync();
+
+        // 12b-8. Menu Keuangan → Pajak (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "Taxes"))
+        {
+            var financeGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Keuangan" && m.ParentId == null);
+            if (financeGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == financeGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Pajak", Icon = "bi-percent", Controller = "Taxes", Action = "Index", ParentId = financeGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

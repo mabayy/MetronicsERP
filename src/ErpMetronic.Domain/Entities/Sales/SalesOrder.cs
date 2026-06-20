@@ -31,7 +31,26 @@ public class SalesOrder : BaseEntity
     [StringLength(300)]
     public string? Note { get; set; }
 
+    // ----- PPh dipotong pelanggan (estimasi) tingkat dokumen -----
+    public int? WithholdingTaxId { get; set; }
+    public Tax? WithholdingTax { get; set; }
+
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal WithholdingRate { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal WithholdingAmount { get; set; }
+
     public ICollection<SalesOrderItem> Items { get; set; } = new List<SalesOrderItem>();
+
+    [NotMapped]
+    public decimal Subtotal => Items?.Sum(i => i.Quantity * i.UnitPrice) ?? 0;
+
+    [NotMapped]
+    public decimal TaxTotal => Items?.Sum(i => i.TaxAmount) ?? 0;
+
+    [NotMapped]
+    public decimal GrandTotal => Subtotal + TaxTotal - WithholdingAmount;
 }
 
 public class SalesOrderItem : BaseEntity
@@ -50,6 +69,19 @@ public class SalesOrderItem : BaseEntity
     /// <summary>Akumulasi jumlah yang sudah dikirim (≤ Quantity).</summary>
     public int DeliveredQuantity { get; set; }
 
+    // ----- PPN per baris (snapshot) -----
+    public int? TaxId { get; set; }
+    public Tax? Tax { get; set; }
+
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal TaxRate { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal TaxAmount { get; set; }
+
     [NotMapped]
     public int OutstandingQuantity => Quantity - DeliveredQuantity;
+
+    [NotMapped]
+    public decimal LineSubtotal => Quantity * UnitPrice;
 }

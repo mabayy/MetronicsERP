@@ -1,8 +1,11 @@
+@using ErpMetronic.Domain.Entities
 @model PurchaseOrderCreateViewModel
 @{
     ViewData["Title"] = "Edit PO " + (ViewBag.ReferenceNumber as string);
     var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
     var poId = (int)ViewBag.PurchaseOrderId;
+    var vatTaxes = ViewBag.VatTaxes as IEnumerable<Tax> ?? Enumerable.Empty<Tax>();
+    var whtTaxes = ViewBag.WhtTaxes as IEnumerable<Tax> ?? Enumerable.Empty<Tax>();
 }
 
 <div class="card">
@@ -37,7 +40,15 @@
 
             <h6 class="fw-semibold">Detail Item</h6>
             <table class="table align-middle" id="linesTable">
-                <thead><tr><th style="width:50%">Produk</th><th class="text-end">Jumlah</th><th class="text-end">Harga Satuan</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+                <thead><tr>
+                    <th style="width:34%">Produk</th>
+                    <th class="text-end">Jumlah</th>
+                    <th class="text-end">Harga Satuan</th>
+                    <th style="width:16%">PPN</th>
+                    <th class="text-end">DPP</th>
+                    <th class="text-end">PPN Rp</th>
+                    <th></th>
+                </tr></thead>
                 <tbody id="linesBody">
                 @for (int i = 0; i < Model.Items.Count; i++)
                 {
@@ -54,13 +65,45 @@
                         </td>
                         <td><input name="Items[@i].Quantity" type="number" min="1" value="@it.Quantity" class="form-control form-control-sm text-end qty" /></td>
                         <td><input name="Items[@i].UnitPrice" type="number" min="0" step="0.01" value="@it.UnitPrice" class="form-control form-control-sm text-end price" /></td>
+                        <td>
+                            <select name="Items[@i].TaxId" class="form-select form-select-sm tax">
+                                <option value="" data-rate="0">Tanpa PPN</option>
+                                @foreach (var t in vatTaxes)
+                                {
+                                    <option value="@t.Id" data-rate="@t.Rate" selected="@(t.Id == it.TaxId)">@t.Code (@t.Rate.ToString("0.##")%)</option>
+                                }
+                            </select>
+                        </td>
                         <td class="text-end subtotal">0</td>
+                        <td class="text-end linevat text-muted">0</td>
                         <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
                     </tr>
                 }
                 </tbody>
             </table>
             <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+
+            <div class="row mt-4">
+                <div class="col-md-5">
+                    <label asp-for="WithholdingTaxId" class="form-label fw-semibold"></label>
+                    <select asp-for="WithholdingTaxId" class="form-select" id="whtSelect">
+                        <option value="" data-rate="0">Tanpa PPh</option>
+                        @foreach (var t in whtTaxes)
+                        {
+                            <option value="@t.Id" data-rate="@t.Rate">@t.Code — @t.Name (@t.Rate.ToString("0.##")%)</option>
+                        }
+                    </select>
+                    <span class="text-muted small">PPh dipotong dari nilai dibayar (atas DPP).</span>
+                </div>
+                <div class="col-md-7">
+                    <table class="table table-sm mb-0">
+                        <tr><td class="text-end fw-semibold">DPP (Subtotal)</td><td class="text-end" style="width:180px"><span id="sumDpp">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold">PPN</td><td class="text-end"><span id="sumVat">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold text-danger">PPh dipotong</td><td class="text-end text-danger">−<span id="sumWht">0</span></td></tr>
+                        <tr class="table-light"><td class="text-end fw-bold">Total</td><td class="text-end fw-bold"><span id="sumTotal">0</span></td></tr>
+                    </table>
+                </div>
+            </div>
 
             <div class="mt-4">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Perubahan</button>
@@ -80,7 +123,17 @@
                     </td>
                     <td><input name="Items[__I__].Quantity" type="number" min="1" value="1" class="form-control form-control-sm text-end qty" /></td>
                     <td><input name="Items[__I__].UnitPrice" type="number" min="0" step="0.01" value="0" class="form-control form-control-sm text-end price" /></td>
+                    <td>
+                        <select name="Items[__I__].TaxId" class="form-select form-select-sm tax">
+                            <option value="" data-rate="0">Tanpa PPN</option>
+                            @foreach (var t in vatTaxes)
+                            {
+                                <option value="@t.Id" data-rate="@t.Rate">@t.Code (@t.Rate.ToString("0.##")%)</option>
+                            }
+                        </select>
+                    </td>
                     <td class="text-end subtotal">0</td>
+                    <td class="text-end linevat text-muted">0</td>
                     <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
                 </tr>
             </template>
@@ -93,6 +146,8 @@
     <script>
         const body = document.getElementById('linesBody');
         const tpl = document.getElementById('lineTemplate').innerHTML;
+        const fmt = n => n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const r2 = n => Math.round(n * 100) / 100;
         function reindex() {
             body.querySelectorAll('.line-row').forEach(function (row, i) {
                 row.querySelectorAll('[name]').forEach(function (el) {
@@ -100,21 +155,37 @@
                 });
             });
         }
-        function recalc(row) {
-            var q = parseFloat(row.querySelector('.qty').value) || 0;
-            var p = parseFloat(row.querySelector('.price').value) || 0;
-            row.querySelector('.subtotal').textContent = (q * p).toLocaleString('id-ID', { minimumFractionDigits: 2 });
+        function recalcAll() {
+            let dpp = 0, vat = 0;
+            body.querySelectorAll('.line-row').forEach(function (row) {
+                const q = parseFloat(row.querySelector('.qty').value) || 0;
+                const p = parseFloat(row.querySelector('.price').value) || 0;
+                const sub = q * p;
+                const sel = row.querySelector('.tax');
+                const rate = sel && sel.value ? (parseFloat(sel.selectedOptions[0].dataset.rate) || 0) : 0;
+                const lv = r2(sub * rate / 100);
+                row.querySelector('.subtotal').textContent = fmt(sub);
+                row.querySelector('.linevat').textContent = fmt(lv);
+                dpp += sub; vat += lv;
+            });
+            const wsel = document.getElementById('whtSelect');
+            const wrate = wsel && wsel.value ? (parseFloat(wsel.selectedOptions[0].dataset.rate) || 0) : 0;
+            const wht = r2(dpp * wrate / 100);
+            document.getElementById('sumDpp').textContent = fmt(dpp);
+            document.getElementById('sumVat').textContent = fmt(vat);
+            document.getElementById('sumWht').textContent = fmt(wht);
+            document.getElementById('sumTotal').textContent = fmt(dpp + vat - wht);
         }
         document.getElementById('addLine').addEventListener('click', function () {
             body.insertAdjacentHTML('beforeend', tpl.replace(/__I__/g, body.children.length));
-            reindex();
+            reindex(); recalcAll();
         });
         body.addEventListener('click', function (e) {
-            if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); }
+            if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); recalcAll(); }
         });
-        body.addEventListener('input', function (e) {
-            if (e.target.classList.contains('qty') || e.target.classList.contains('price')) recalc(e.target.closest('.line-row'));
-        });
-        body.querySelectorAll('.line-row').forEach(recalc);
+        body.addEventListener('input', recalcAll);
+        body.addEventListener('change', recalcAll);
+        document.getElementById('whtSelect').addEventListener('change', recalcAll);
+        recalcAll();
     </script>
 }

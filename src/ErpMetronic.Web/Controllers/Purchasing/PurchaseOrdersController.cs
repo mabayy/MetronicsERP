@@ -17,12 +17,14 @@ public class PurchaseOrdersController : Controller
     private readonly ApplicationDbContext _db;
     private readonly IStockService _stock;
     private readonly IDocumentNumberService _docNumber;
+    private readonly ITaxService _tax;
 
-    public PurchaseOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber)
+    public PurchaseOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber, ITaxService tax)
     {
         _db = db;
         _stock = stock;
         _docNumber = docNumber;
+        _tax = tax;
     }
 
     public async Task<IActionResult> Index()
@@ -80,6 +82,7 @@ public class PurchaseOrdersController : Controller
             return View(model);
         }
 
+        var (taxedItems, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.WithholdingTaxId);
         var po = new PurchaseOrder
         {
             ReferenceNumber = await _docNumber.NextAsync(Domain.Constants.DocumentCodes.PurchaseOrder, model.OrderDate),
@@ -89,8 +92,11 @@ public class PurchaseOrdersController : Controller
             CurrencyId = model.CurrencyId,
             Status = PurchaseOrderStatus.Draft,
             Note = model.Note,
+            WithholdingTaxId = whtId,
+            WithholdingRate = whtRate,
+            WithholdingAmount = whtAmount,
             CreatedBy = User.Identity?.Name,
-            Items = items.Select(i => new PurchaseOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList()
+            Items = taxedItems
         };
         _db.PurchaseOrders.Add(po);
         await _db.SaveChangesAsync();
@@ -155,7 +161,9 @@ public class PurchaseOrdersController : Controller
 
         // Ganti seluruh item (PO masih Draft, belum ada penerimaan)
         _db.PurchaseOrderItems.RemoveRange(po.Items);
-        po.Items = items.Select(i => new PurchaseOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList();
+        var (taxedItems, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.WithholdingTaxId);
+        po.Items = taxedItems;
+        po.WithholdingTaxId = whtId; po.WithholdingRate = whtRate; po.WithholdingAmount = whtAmount;
 
         await _db.SaveChangesAsync();
         TempData["Success"] = $"Purchase Order {po.ReferenceNumber} diperbarui.";
@@ -286,11 +294,37 @@ public class PurchaseOrdersController : Controller
         return RedirectToAction(nameof(Details), new { id = po.Id });
     }
 
+    // Hitung snapshot PPN per baris & PPh (withholding) per dokumen dari pilihan pengguna.
+    private async Task<(List<PurchaseOrderItem> Items, int? WhtId, decimal WhtRate, decimal WhtAmount)>
+        BuildTaxedItemsAsync(List<PurchaseLineInput> inputs, int? withholdingTaxId)
+    {
+        var taxes = await _tax.GetByIdsAsync(inputs.Select(i => i.TaxId).Append(withholdingTaxId));
+        var items = inputs.Select(i =>
+        {
+            var poi = new PurchaseOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice };
+            if (i.TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == Domain.Enums.TaxKind.ValueAdded)
+            {
+                poi.TaxId = tx.Id; poi.TaxRate = tx.Rate;
+                poi.TaxAmount = Math.Round(poi.Quantity * poi.UnitPrice * tx.Rate / 100m, 2);
+            }
+            return poi;
+        }).ToList();
+
+        var dpp = items.Sum(x => x.Quantity * x.UnitPrice);
+        int? whtId = null; decimal whtRate = 0, whtAmount = 0;
+        if (withholdingTaxId is int wid && taxes.TryGetValue(wid, out var wtx) && wtx.Kind == Domain.Enums.TaxKind.Withholding)
+        {
+            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = Math.Round(dpp * wtx.Rate / 100m, 2);
+        }
+        return (items, whtId, whtRate, whtAmount);
+    }
+
     // ---- helpers ----
     private Task<PurchaseOrder?> LoadAsync(int id) =>
         _db.PurchaseOrders
-            .Include(p => p.Supplier).Include(p => p.Warehouse).Include(p => p.Currency)
+            .Include(p => p.Supplier).Include(p => p.Warehouse).Include(p => p.Currency).Include(p => p.WithholdingTax)
             .Include(p => p.Items).ThenInclude(i => i.Product)
+            .Include(p => p.Items).ThenInclude(i => i.Tax)
             .FirstOrDefaultAsync(p => p.Id == id);
 
     private async Task PopulateAsync()
@@ -307,5 +341,9 @@ public class PurchaseOrdersController : Controller
             .OrderByDescending(p => p.Id).Select(p => new { p.Id, p.ReferenceNumber }).Take(100).ToListAsync();
         ViewBag.SourceRfqs = await _db.RequestForQuotations.Where(r => r.Status == RequestForQuotationStatus.Closed)
             .OrderByDescending(r => r.Id).Select(r => new { r.Id, r.ReferenceNumber }).Take(100).ToListAsync();
+
+        // Pajak: PPN per baris & PPh (withholding) per dokumen — konteks Pembelian
+        ViewBag.VatTaxes = await _tax.GetVatTaxesAsync(Domain.Enums.TaxApplicability.Purchase);
+        ViewBag.WhtTaxes = await _tax.GetWithholdingTaxesAsync(Domain.Enums.TaxApplicability.Purchase);
     }
 }

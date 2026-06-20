@@ -19,6 +19,9 @@ public class PurchaseOrderCreateViewModel
     [Display(Name = "Catatan"), StringLength(300)]
     public string? Note { get; set; }
 
+    [Display(Name = "PPh dipotong")]
+    public int? WithholdingTaxId { get; set; }
+
     public List<PurchaseLineInput> Items { get; set; } = new();
 }
 
@@ -27,6 +30,7 @@ public class PurchaseLineInput
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public int? TaxId { get; set; }
 }
 
 public class ReceivePoViewModel
