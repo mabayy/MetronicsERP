@@ -45,6 +45,7 @@ public class RequestForQuotationsController : Controller
                 model.PurchaseRequisitionId = pr.Id;
                 model.Note = $"Berdasarkan PR {pr.ReferenceNumber}";
                 model.Lines = pr.Lines.Select(l => new RfqLineInput { ProductId = l.ProductId, Quantity = l.Quantity }).ToList();
+                ViewBag.CopiedFrom = $"PR {pr.ReferenceNumber}";
             }
         }
         return View(model);
@@ -166,6 +167,11 @@ public class RequestForQuotationsController : Controller
     }
 
     private async Task PopulateAsync()
-        => ViewBag.Products = await _db.Products.OrderBy(p => p.Name)
+    {
+        ViewBag.Products = await _db.Products.OrderBy(p => p.Name)
             .Select(p => new { p.Id, Display = p.Sku + " — " + p.Name }).ToListAsync();
+        // Sumber "Copy From": PR yang sudah disetujui
+        ViewBag.SourcePrs = await _db.PurchaseRequisitions.Where(p => p.Status == PurchaseRequisitionStatus.Approved)
+            .OrderByDescending(p => p.Id).Select(p => new { p.Id, p.ReferenceNumber }).Take(100).ToListAsync();
+    }
 }

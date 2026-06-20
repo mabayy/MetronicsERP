@@ -34,10 +34,37 @@ public class PurchaseOrdersController : Controller
         return View(list);
     }
 
-    public async Task<IActionResult> Create()
+    // Create mendukung "Copy From": salin dari PR yang disetujui atau RFQ yang sudah ditutup.
+    public async Task<IActionResult> Create(int? fromPr, int? fromRfq)
     {
         await PopulateAsync();
-        return View(new PurchaseOrderCreateViewModel());
+        var model = new PurchaseOrderCreateViewModel();
+
+        if (fromPr is int prId)
+        {
+            var pr = await _db.PurchaseRequisitions.Include(p => p.Lines)
+                .FirstOrDefaultAsync(p => p.Id == prId && p.Status == PurchaseRequisitionStatus.Approved);
+            if (pr is not null)
+            {
+                model.Note = $"Berdasarkan PR {pr.ReferenceNumber}";
+                model.Items = pr.Lines.Select(l => new PurchaseLineInput { ProductId = l.ProductId, Quantity = l.Quantity, UnitPrice = l.EstimatedPrice }).ToList();
+                ViewBag.CopiedFrom = $"PR {pr.ReferenceNumber} — lengkapi pemasok & gudang.";
+            }
+        }
+        else if (fromRfq is int rfqId)
+        {
+            var rfq = await _db.RequestForQuotations.Include(r => r.Lines).Include(r => r.Quotes)
+                .FirstOrDefaultAsync(r => r.Id == rfqId && r.Status == RequestForQuotationStatus.Closed);
+            if (rfq is not null)
+            {
+                var winner = rfq.Quotes.FirstOrDefault(q => q.IsSelected);
+                if (winner is not null) model.SupplierId = winner.SupplierId;
+                model.Note = $"Berdasarkan RFQ {rfq.ReferenceNumber}";
+                model.Items = rfq.Lines.Select(l => new PurchaseLineInput { ProductId = l.ProductId, Quantity = l.Quantity, UnitPrice = 0 }).ToList();
+                ViewBag.CopiedFrom = $"RFQ {rfq.ReferenceNumber} — lengkapi harga satuan & gudang.";
+            }
+        }
+        return View(model);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -274,5 +301,11 @@ public class PurchaseOrdersController : Controller
             .Select(c => new { c.Id, Display = c.Code + " — " + c.Name }).ToListAsync(), "Id", "Display");
         ViewBag.Products = await _db.Products.OrderBy(p => p.Name)
             .Select(p => new { p.Id, Display = p.Sku + " — " + p.Name }).ToListAsync();
+
+        // Sumber "Copy From": PR disetujui & RFQ ditutup
+        ViewBag.SourcePrs = await _db.PurchaseRequisitions.Where(p => p.Status == PurchaseRequisitionStatus.Approved)
+            .OrderByDescending(p => p.Id).Select(p => new { p.Id, p.ReferenceNumber }).Take(100).ToListAsync();
+        ViewBag.SourceRfqs = await _db.RequestForQuotations.Where(r => r.Status == RequestForQuotationStatus.Closed)
+            .OrderByDescending(r => r.Id).Select(r => new { r.Id, r.ReferenceNumber }).Take(100).ToListAsync();
     }
 }

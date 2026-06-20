@@ -12,6 +12,7 @@
     var st = St(Model.Status);
     var canQuote = Model.Status != RequestForQuotationStatus.Closed;
     var canAward = Model.Status == RequestForQuotationStatus.Sent;
+    var canCopyToPo = Model.Status == RequestForQuotationStatus.Closed && Model.Quotes.Any(q => q.IsSelected);
 }
 
 <div class="card mb-3">
@@ -34,6 +35,10 @@
                 <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Hapus RFQ ini?');">
                     <button class="btn btn-light btn-sm text-danger"><i class="bi bi-trash"></i></button>
                 </form>
+            }
+            @if (canCopyToPo)
+            {
+                <a asp-controller="PurchaseOrders" asp-action="Create" asp-route-fromRfq="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-arrow-up-right-square"></i> Salin ke PO</a>
             }
             <a asp-action="Index" class="btn btn-light btn-sm">Kembali</a>
         </div>

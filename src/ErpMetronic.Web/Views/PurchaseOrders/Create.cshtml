@@ -2,7 +2,39 @@
 @{
     ViewData["Title"] = "Purchase Order Baru";
     var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var sourcePrs = ViewBag.SourcePrs as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var sourceRfqs = ViewBag.SourceRfqs as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
+
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-files text-primary me-2"></i> Copy From (salin dari dokumen lain)</div>
+    <div class="card-body">
+        @if (ViewBag.CopiedFrom != null)
+        {
+            <div class="alert alert-info py-2 small mb-3"><i class="bi bi-info-circle me-1"></i> Disalin dari @ViewBag.CopiedFrom</div>
+        }
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold mb-1">Dari Purchase Requisition (disetujui)</label>
+                <div class="input-group">
+                    <select id="srcPr" class="form-select"><option value="">-- Pilih PR --</option>
+                        @foreach (var p in sourcePrs) { <option value="@p.Id">@p.ReferenceNumber</option> }
+                    </select>
+                    <button type="button" class="btn btn-light-primary" id="copyPr"><i class="bi bi-arrow-down-square"></i> Salin</button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold mb-1">Dari RFQ (ditutup / sudah ada pemenang)</label>
+                <div class="input-group">
+                    <select id="srcRfq" class="form-select"><option value="">-- Pilih RFQ --</option>
+                        @foreach (var r in sourceRfqs) { <option value="@r.Id">@r.ReferenceNumber</option> }
+                    </select>
+                    <button type="button" class="btn btn-light-primary" id="copyRfq"><i class="bi bi-arrow-down-square"></i> Salin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card">
     <div class="card-header"><i class="bi bi-cart-plus text-primary me-2"></i> Buat Purchase Order</div>
@@ -37,7 +69,27 @@
             <h6 class="fw-semibold">Detail Item</h6>
             <table class="table align-middle" id="linesTable">
                 <thead><tr><th style="width:50%">Produk</th><th class="text-end">Jumlah</th><th class="text-end">Harga Satuan</th><th class="text-end">Subtotal</th><th></th></tr></thead>
-                <tbody id="linesBody"></tbody>
+                <tbody id="linesBody">
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    var it = Model.Items[i];
+                    <tr class="line-row">
+                        <td>
+                            <select name="Items[@i].ProductId" class="form-select form-select-sm">
+                                <option value="">-- Pilih produk --</option>
+                                @foreach (var p in products)
+                                {
+                                    <option value="@p.Id" selected="@(((int)p.Id) == it.ProductId)">@p.Display</option>
+                                }
+                            </select>
+                        </td>
+                        <td><input name="Items[@i].Quantity" type="number" min="1" value="@it.Quantity" class="form-control form-control-sm text-end qty" /></td>
+                        <td><input name="Items[@i].UnitPrice" type="number" min="0" step="0.01" value="@it.UnitPrice" class="form-control form-control-sm text-end price" /></td>
+                        <td class="text-end subtotal">0</td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                    </tr>
+                }
+                </tbody>
             </table>
             <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
 
@@ -95,6 +147,18 @@
         body.addEventListener('input', function (e) {
             if (e.target.classList.contains('qty') || e.target.classList.contains('price')) recalc(e.target.closest('.line-row'));
         });
-        addLine();
+        // Baris hasil "Copy From" sudah dirender server-side; tambah baris kosong hanya bila belum ada.
+        if (body.children.length === 0) { addLine(); }
+        else { body.querySelectorAll('.line-row').forEach(recalc); }
+
+        // Copy From: navigasi ke Create dengan dokumen sumber terpilih.
+        document.getElementById('copyPr').addEventListener('click', function () {
+            var v = document.getElementById('srcPr').value;
+            if (v) window.location.href = '@Url.Action("Create")?fromPr=' + v;
+        });
+        document.getElementById('copyRfq').addEventListener('click', function () {
+            var v = document.getElementById('srcRfq').value;
+            if (v) window.location.href = '@Url.Action("Create")?fromRfq=' + v;
+        });
     </script>
 }

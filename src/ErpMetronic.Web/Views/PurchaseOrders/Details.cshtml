@@ -44,6 +44,10 @@
             {
                 <a asp-action="Receive" asp-route-id="@Model.Id" class="btn btn-success btn-sm"><i class="bi bi-box-arrow-in-down"></i> Terima Barang</a>
             }
+            @if (Model.Status is PurchaseOrderStatus.PartiallyReceived or PurchaseOrderStatus.Received)
+            {
+                <a asp-controller="PurchaseInvoices" asp-action="Create" asp-route-poId="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-arrow-up-right-square"></i> Salin ke Faktur</a>
+            }
             @if (canCancel)
             {
                 <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Batalkan PO ini?');">

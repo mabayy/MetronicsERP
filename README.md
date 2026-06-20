@@ -17,6 +17,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Manajemen Stok (Inventory) | ✅ | Stok masuk/keluar/transfer/penyesuaian, saldo per gudang, **kartu stok**, **nilai persediaan** |
 | Penerimaan & Pengeluaran | ✅ | Dokumen penerimaan (auto stok masuk) & pengiriman (auto stok keluar) terintegrasi stok |
 | Pengadaan awal (PR & RFQ) | ✅ | Purchase Requisition (approval) → Request for Quotation (penawaran & pemenang) |
+| Copy To / Copy From | ✅ | Salin dokumen antar tahap pembelian: PR → RFQ → PO → Faktur (isi otomatis) |
 | Pembelian (Purchasing) | ✅ | PO (edit saat Draft) → konfirmasi → penerimaan (auto stok masuk), multi-currency |
 | Faktur & Pembayaran Pembelian | ✅ | Faktur dari PO dengan 3-way matching + pembayaran hutang (status Lunas) |
 | Penjualan (Sales) | ✅ | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) |
@@ -90,6 +91,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 16. [Purchase Requisition & RFQ](docs/16-pr-rfq.md)
 17. [Finance (Akuntansi)](docs/17-finance.md)
 18. [Retur & Umur Piutang/Hutang](docs/18-retur-aging.md)
+19. [Copy To / Copy From (Pembelian)](docs/19-copy-document.md)
 
 ## 🧰 Tech Stack
 

@@ -2,7 +2,25 @@
 @{
     ViewData["Title"] = "Request for Quotation Baru";
     var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var sourcePrs = ViewBag.SourcePrs as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
+
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-files text-primary me-2"></i> Copy From (salin dari PR)</div>
+    <div class="card-body">
+        @if (ViewBag.CopiedFrom != null)
+        {
+            <div class="alert alert-info py-2 small mb-3"><i class="bi bi-info-circle me-1"></i> Disalin dari @ViewBag.CopiedFrom</div>
+        }
+        <label class="form-label fw-semibold mb-1">Dari Purchase Requisition (disetujui)</label>
+        <div class="input-group" style="max-width:520px">
+            <select id="srcPr" class="form-select"><option value="">-- Pilih PR --</option>
+                @foreach (var p in sourcePrs) { <option value="@p.Id">@p.ReferenceNumber</option> }
+            </select>
+            <button type="button" class="btn btn-light-primary" id="copyPr"><i class="bi bi-arrow-down-square"></i> Salin</button>
+        </div>
+    </div>
+</div>
 
 <div class="card">
     <div class="card-header"><i class="bi bi-cart-plus text-primary me-2"></i> Buat Request for Quotation</div>
@@ -25,7 +43,25 @@
             <h6 class="fw-semibold">Detail Item</h6>
             <table class="table align-middle" id="linesTable">
                 <thead><tr><th style="width:70%">Produk</th><th class="text-end">Jumlah</th><th></th></tr></thead>
-                <tbody id="linesBody"></tbody>
+                <tbody id="linesBody">
+                @for (int i = 0; i < Model.Lines.Count; i++)
+                {
+                    var it = Model.Lines[i];
+                    <tr class="line-row">
+                        <td>
+                            <select name="Lines[@i].ProductId" class="form-select form-select-sm">
+                                <option value="">-- Pilih produk --</option>
+                                @foreach (var p in products)
+                                {
+                                    <option value="@p.Id" selected="@(((int)p.Id) == it.ProductId)">@p.Display</option>
+                                }
+                            </select>
+                        </td>
+                        <td><input name="Lines[@i].Quantity" type="number" min="1" value="@it.Quantity" class="form-control form-control-sm text-end" /></td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                    </tr>
+                }
+                </tbody>
             </table>
             <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
 
@@ -73,6 +109,11 @@
         body.addEventListener('click', function (e) {
             if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); }
         });
-        addLine();
+        if (body.children.length === 0) { addLine(); }
+
+        document.getElementById('copyPr').addEventListener('click', function () {
+            var v = document.getElementById('srcPr').value;
+            if (v) window.location.href = '@Url.Action("Create")?prId=' + v;
+        });
     </script>
 }

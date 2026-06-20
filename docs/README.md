@@ -26,6 +26,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 16 | [Purchase Requisition & RFQ](16-pr-rfq.md) | Pengadaan awal: PR (approval) → RFQ (penawaran/pemenang) | ✅ |
 | 17 | [Finance (Akuntansi)](17-finance.md) | Bagan akun → jurnal → buku besar → neraca saldo + posting otomatis | ✅ |
 | 18 | [Retur & Umur Piutang/Hutang](18-retur-aging.md) | Retur jual/beli (balik stok + jurnal) + laporan umur AR/AP | ✅ |
+| 19 | [Copy To / Copy From (Pembelian)](19-copy-document.md) | Salin dokumen antar tahap PR → RFQ → PO → Faktur | ✅ |
 
 ## Cara membaca dokumen ini
 

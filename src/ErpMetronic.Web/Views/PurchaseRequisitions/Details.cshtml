@@ -57,7 +57,8 @@
             }
             @if (Model.Status == PurchaseRequisitionStatus.Approved)
             {
-                <a asp-controller="RequestForQuotations" asp-action="Create" asp-route-prId="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-chat-left-text"></i> Buat RFQ</a>
+                <a asp-controller="RequestForQuotations" asp-action="Create" asp-route-prId="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-arrow-up-right-square"></i> Salin ke RFQ</a>
+                <a asp-controller="PurchaseOrders" asp-action="Create" asp-route-fromPr="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-arrow-up-right-square"></i> Salin ke PO</a>
             }
             <a asp-action="Index" class="btn btn-light btn-sm">Kembali</a>
         </div>
