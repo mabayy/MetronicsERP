@@ -1,0 +1,31 @@
+@model List<JournalEntry>
+@{ ViewData["Title"] = "Jurnal"; }
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Jurnal</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Jurnal Baru</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. Jurnal</th><th>Tanggal</th><th>Keterangan</th><th class="text-end">Debit</th><th class="text-end">Kredit</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">Belum ada jurnal</td></tr>
+            }
+            @foreach (var j in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@j.ReferenceNumber</td>
+                    <td>@j.EntryDate.ToString("dd/MM/yyyy")</td>
+                    <td>@j.Description</td>
+                    <td class="text-end">@j.TotalDebit.ToString("N2")</td>
+                    <td class="text-end">@j.TotalCredit.ToString("N2")</td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@j.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

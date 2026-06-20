@@ -1,0 +1,52 @@
+@model List<ErpMetronic.Web.Controllers.TrialBalanceRow>
+@{
+    ViewData["Title"] = "Neraca Saldo";
+    var asOf = (DateTime)ViewBag.AsOf;
+    var totalDebit = (decimal)ViewBag.TotalDebit;
+    var totalCredit = (decimal)ViewBag.TotalCredit;
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span><i class="bi bi-scale text-primary me-2"></i> Neraca Saldo per tanggal @asOf.ToString("dd/MM/yyyy")</span>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-sm-5 col-md-3">
+                <label class="form-label small fw-semibold mb-1">Per Tanggal</label>
+                <input type="date" name="asOf" value="@asOf.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Tampilkan</button></div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr><th>Kode</th><th>Nama Akun</th><th class="text-end">Debit</th><th class="text-end">Kredit</th></tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="4" class="text-center text-muted py-4">Belum ada data</td></tr>
+                }
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td><span class="badge-light-primary px-2 py-1 rounded">@r.Code</span></td>
+                        <td class="fw-semibold text-dark">@r.Name</td>
+                        <td class="text-end">@(r.Debit != 0 ? r.Debit.ToString("N2") : "")</td>
+                        <td class="text-end">@(r.Credit != 0 ? r.Credit.ToString("N2") : "")</td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="2" class="text-end fw-bold">Total</td>
+                        <td class="text-end fw-bold">@totalDebit.ToString("N2")</td>
+                        <td class="text-end fw-bold">@totalCredit.ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

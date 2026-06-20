@@ -1,0 +1,98 @@
+@model JournalEntryCreateViewModel
+@{
+    ViewData["Title"] = "Jurnal Baru";
+    var accounts = ViewBag.Accounts as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-journal-plus text-primary me-2"></i> Buat Jurnal</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label asp-for="EntryDate" class="form-label fw-semibold"></label>
+                    <input asp-for="EntryDate" type="date" class="form-control" />
+                    <span asp-validation-for="EntryDate" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Description" class="form-label fw-semibold"></label>
+                    <input asp-for="Description" class="form-control" />
+                </div>
+            </div>
+
+            <h6 class="fw-semibold">Detail Baris</h6>
+            <table class="table align-middle" id="linesTable">
+                <thead><tr><th style="width:35%">Akun</th><th class="text-end">Debit</th><th class="text-end">Kredit</th><th>Keterangan</th><th></th></tr></thead>
+                <tbody id="linesBody"></tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td class="text-end fw-bold">Total</td>
+                        <td class="text-end fw-bold" id="totalDebit">0.00</td>
+                        <td class="text-end fw-bold" id="totalCredit">0.00</td>
+                        <td colspan="2" class="text-muted small">Total debit dan kredit harus sama.</td>
+                    </tr>
+                </tfoot>
+            </table>
+            <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Jurnal</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+
+            <template id="lineTemplate">
+                <tr class="line-row">
+                    <td>
+                        <select name="Lines[__I__].AccountId" class="form-select form-select-sm">
+                            <option value="">-- Pilih akun --</option>
+                            @foreach (var a in accounts)
+                            {
+                                <option value="@a.Id">@a.Display</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input name="Lines[__I__].Debit" type="number" min="0" step="0.01" value="0" class="form-control form-control-sm text-end debit" /></td>
+                    <td><input name="Lines[__I__].Credit" type="number" min="0" step="0.01" value="0" class="form-control form-control-sm text-end credit" /></td>
+                    <td><input name="Lines[__I__].Description" class="form-control form-control-sm" /></td>
+                    <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                </tr>
+            </template>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const body = document.getElementById('linesBody');
+        const tpl = document.getElementById('lineTemplate').innerHTML;
+        function reindex() {
+            body.querySelectorAll('.line-row').forEach(function (row, i) {
+                row.querySelectorAll('[name]').forEach(function (el) {
+                    el.name = el.name.replace(/Lines\[\d+\]/, 'Lines[' + i + ']').replace(/Lines\[__I__\]/, 'Lines[' + i + ']');
+                });
+            });
+        }
+        function recalcTotals() {
+            var td = 0, tc = 0;
+            body.querySelectorAll('.debit').forEach(function (el) { td += parseFloat(el.value) || 0; });
+            body.querySelectorAll('.credit').forEach(function (el) { tc += parseFloat(el.value) || 0; });
+            document.getElementById('totalDebit').textContent = td.toLocaleString('id-ID', { minimumFractionDigits: 2 });
+            document.getElementById('totalCredit').textContent = tc.toLocaleString('id-ID', { minimumFractionDigits: 2 });
+        }
+        function addLine() {
+            body.insertAdjacentHTML('beforeend', tpl.replace(/__I__/g, body.children.length));
+            reindex();
+        }
+        document.getElementById('addLine').addEventListener('click', addLine);
+        body.addEventListener('click', function (e) {
+            if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); recalcTotals(); }
+        });
+        body.addEventListener('input', function (e) {
+            if (e.target.classList.contains('debit') || e.target.classList.contains('credit')) recalcTotals();
+        });
+        addLine();
+        addLine();
+    </script>
+}

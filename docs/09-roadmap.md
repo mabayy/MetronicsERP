@@ -20,10 +20,11 @@ lanjutan yang dapat dibangun di atasnya, mengikuti pola arsitektur yang sama.
 - Alur: SO → Konfirmasi → Pengiriman (kurangi stok) → Faktur (3-way) → Pembayaran (piutang).
 - Relasi ke `Customer` & `Product`; multi-currency.
 
-### 4. Finance / Akuntansi Dasar
+### 4. Finance / Akuntansi Dasar ✅
 - Entitas: `ChartOfAccount`, `JournalEntry`, `JournalLine`.
 - Buku besar (general ledger), neraca saldo sederhana.
 - Posting otomatis dari transaksi pembelian/penjualan.
+- **Selesai** — lihat [Finance](17-finance.md) & [Retur & Umur Piutang/Hutang](18-retur-aging.md).
 
 ## Peningkatan Teknis
 

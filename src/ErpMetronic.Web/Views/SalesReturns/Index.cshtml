@@ -1,0 +1,32 @@
+@model List<SalesReturn>
+@{ ViewData["Title"] = "Daftar Retur Penjualan"; }
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span>Daftar Retur Penjualan</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Retur Baru</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>No. Retur</th><th>Tanggal</th><th>Pelanggan</th><th>Gudang</th><th class="text-end">Item</th><th class="text-end">Total</th><th class="text-end">Aksi</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Belum ada retur penjualan</td></tr>
+            }
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@r.ReferenceNumber</td>
+                    <td>@r.ReturnDate.ToString("dd/MM/yyyy")</td>
+                    <td>@r.Customer?.Name</td>
+                    <td>@r.Warehouse?.Name</td>
+                    <td class="text-end">@r.Lines.Count</td>
+                    <td class="text-end">@r.Total.ToString("N2")</td>
+                    <td class="text-end"><a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

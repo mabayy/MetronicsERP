@@ -16,11 +16,13 @@ public class SalesInvoicesController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IDocumentNumberService _docNumber;
+    private readonly IJournalService _journal;
 
-    public SalesInvoicesController(ApplicationDbContext db, IDocumentNumberService docNumber)
+    public SalesInvoicesController(ApplicationDbContext db, IDocumentNumberService docNumber, IJournalService journal)
     {
         _db = db;
         _docNumber = docNumber;
+        _journal = journal;
     }
 
     public async Task<IActionResult> Index()
@@ -109,8 +111,33 @@ public class SalesInvoicesController : Controller
         };
         _db.SalesInvoices.Add(invoice);
         await _db.SaveChangesAsync();
+        await _journal.PostSalesInvoiceAsync(invoice, User.Identity?.Name); // jurnal otomatis
         TempData["Success"] = $"Faktur {invoice.ReferenceNumber} dibuat.";
         return RedirectToAction(nameof(Details), new { id = invoice.Id });
+    }
+
+    // Laporan umur piutang per pelanggan
+    public async Task<IActionResult> Aging()
+    {
+        var today = DateTime.Today;
+        var invoices = await _db.SalesInvoices.Include(i => i.Customer).Include(i => i.Lines)
+            .Where(i => i.Status != SalesInvoiceStatus.Paid).ToListAsync();
+        var rows = invoices.GroupBy(i => i.Customer!.Name).Select(g =>
+        {
+            var r = new AgingRow { Partner = g.Key };
+            foreach (var inv in g)
+            {
+                var outstanding = inv.Total - inv.PaidAmount;
+                if (outstanding <= 0) continue;
+                var age = (today - inv.InvoiceDate).Days;
+                if (age <= 30) r.Current += outstanding;
+                else if (age <= 60) r.Bucket31 += outstanding;
+                else if (age <= 90) r.Bucket61 += outstanding;
+                else r.Over90 += outstanding;
+            }
+            return r;
+        }).Where(r => r.Total > 0).OrderByDescending(r => r.Total).ToList();
+        return View(rows);
     }
 
     public async Task<IActionResult> Details(int id)
@@ -139,7 +166,7 @@ public class SalesInvoicesController : Controller
             TempData["Error"] = $"Jumlah melebihi sisa tagihan ({inv.Outstanding:N2}).";
         else
         {
-            _db.SalesPayments.Add(new SalesPayment
+            var payment = new SalesPayment
             {
                 ReferenceNumber = await _docNumber.NextAsync(DocumentCodes.SalesPayment, model.PaymentDate),
                 SalesInvoiceId = inv.Id,
@@ -148,11 +175,13 @@ public class SalesInvoicesController : Controller
                 Method = model.Method,
                 Note = model.Note,
                 CreatedBy = User.Identity?.Name
-            });
+            };
+            _db.SalesPayments.Add(payment);
             inv.PaidAmount += model.Amount;
             inv.Status = inv.PaidAmount >= inv.Total ? SalesInvoiceStatus.Paid : SalesInvoiceStatus.PartiallyPaid;
             inv.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
+            await _journal.PostSalesPaymentAsync(payment, inv.CurrencyId, User.Identity?.Name); // jurnal otomatis
             TempData["Success"] = "Penerimaan pembayaran dicatat.";
         }
         return RedirectToAction(nameof(Details), new { id = model.SalesInvoiceId });

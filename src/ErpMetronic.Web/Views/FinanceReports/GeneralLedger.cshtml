@@ -1,0 +1,68 @@
+@model List<ErpMetronic.Web.Controllers.LedgerRow>
+@{
+    ViewData["Title"] = "Buku Besar";
+    var hasAccount = ViewBag.AccountId != null;
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-journal-text text-primary me-2"></i> Buku Besar per Akun</div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold mb-1">Akun</label>
+                <select name="accountId" asp-items="ViewBag.Accounts" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">-- Pilih akun --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold mb-1">Dari</label>
+                <input type="date" name="from" value="@(((DateTime?)ViewBag.From)?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold mb-1">Sampai</label>
+                <input type="date" name="to" value="@(((DateTime?)ViewBag.To)?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Tampilkan</button></div>
+        </form>
+
+        @if (!hasAccount)
+        {
+            <div class="text-center text-muted py-4">Pilih akun untuk menampilkan buku besar.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr><th>Tanggal</th><th>No. Referensi</th><th>Keterangan</th><th class="text-end">Debit</th><th class="text-end">Kredit</th><th class="text-end">Saldo</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-light">
+                            <td colspan="5" class="fw-semibold">Saldo Awal</td>
+                            <td class="text-end fw-semibold">@(((decimal)ViewBag.Opening).ToString("N2"))</td>
+                        </tr>
+                        @if (!Model.Any())
+                        {
+                            <tr><td colspan="6" class="text-center text-muted py-3">Tidak ada pergerakan pada rentang ini</td></tr>
+                        }
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>@r.Date.ToString("dd/MM/yyyy")</td>
+                                <td class="fw-semibold">@r.Reference</td>
+                                <td>@r.Description</td>
+                                <td class="text-end">@(r.Debit > 0 ? r.Debit.ToString("N2") : "")</td>
+                                <td class="text-end">@(r.Credit > 0 ? r.Credit.ToString("N2") : "")</td>
+                                <td class="text-end fw-semibold">@r.Balance.ToString("N2")</td>
+                            </tr>
+                        }
+                        <tr class="table-light">
+                            <td colspan="5" class="fw-semibold">Saldo Akhir</td>
+                            <td class="text-end fw-semibold">@(((decimal)ViewBag.Closing).ToString("N2"))</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

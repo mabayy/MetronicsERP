@@ -20,6 +20,9 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Pembelian (Purchasing) | ✅ | PO (edit saat Draft) → konfirmasi → penerimaan (auto stok masuk), multi-currency |
 | Faktur & Pembayaran Pembelian | ✅ | Faktur dari PO dengan 3-way matching + pembayaran hutang (status Lunas) |
 | Penjualan (Sales) | ✅ | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) |
+| Retur Jual & Beli | ✅ | Retur penjualan (stok masuk) / pembelian (stok keluar) + jurnal otomatis |
+| Umur Piutang & Hutang | ✅ | Laporan aging AR/AP per mitra (ember 0–30/31–60/61–90/>90) |
+| Finance (Akuntansi) | ✅ | Bagan akun → jurnal double-entry → buku besar → neraca saldo, posting otomatis pembelian/penjualan |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -79,6 +82,14 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 8. [Deployment & Produksi](docs/08-deployment.md)
 9. [Roadmap Pengembangan Lanjutan](docs/09-roadmap.md)
 10. [Master Menu (Menu Dinamis)](docs/10-master-menu.md)
+11. [Manajemen Stok (Inventory)](docs/11-manajemen-stok.md)
+12. [Currency Management](docs/12-currency-management.md)
+13. [Purchasing (Pembelian)](docs/13-purchasing.md)
+14. [Document Numbering](docs/14-document-numbering.md)
+15. [Sales (Penjualan)](docs/15-sales.md)
+16. [Purchase Requisition & RFQ](docs/16-pr-rfq.md)
+17. [Finance (Akuntansi)](docs/17-finance.md)
+18. [Retur & Umur Piutang/Hutang](docs/18-retur-aging.md)
 
 ## 🧰 Tech Stack
 

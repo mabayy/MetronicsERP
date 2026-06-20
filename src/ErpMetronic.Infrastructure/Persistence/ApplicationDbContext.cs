@@ -48,6 +48,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<RequestForQuotation> RequestForQuotations => Set<RequestForQuotation>();
     public DbSet<RfqLine> RfqLines => Set<RfqLine>();
     public DbSet<RfqQuote> RfqQuotes => Set<RfqQuote>();
+    public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
+    public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
+    public DbSet<JournalLine> JournalLines => Set<JournalLine>();
+    public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
+    public DbSet<SalesReturnLine> SalesReturnLines => Set<SalesReturnLine>();
+    public DbSet<PurchaseReturn> PurchaseReturns => Set<PurchaseReturn>();
+    public DbSet<PurchaseReturnLine> PurchaseReturnLines => Set<PurchaseReturnLine>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -196,6 +203,37 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         {
             e.HasOne(x => x.RequestForQuotation).WithMany(p => p.Quotes).HasForeignKey(x => x.RequestForQuotationId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Supplier).WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<SalesReturn>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SalesReturnLine>(e =>
+        {
+            e.HasOne(x => x.SalesReturn).WithMany(p => p.Lines).HasForeignKey(x => x.SalesReturnId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<PurchaseReturn>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Supplier).WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<PurchaseReturnLine>(e =>
+        {
+            e.HasOne(x => x.PurchaseReturn).WithMany(p => p.Lines).HasForeignKey(x => x.PurchaseReturnId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ChartOfAccount>().HasIndex(x => x.Code).IsUnique();
+        builder.Entity<JournalEntry>(e => e.HasIndex(x => x.ReferenceNumber));
+        builder.Entity<JournalLine>(e =>
+        {
+            e.HasOne(x => x.JournalEntry).WithMany(p => p.Lines).HasForeignKey(x => x.JournalEntryId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Account).WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<DeliveryOrder>(e =>

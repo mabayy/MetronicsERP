@@ -311,6 +311,52 @@ public static class DbSeeder
             }
         }
 
+        // 12b-4b. Menu Retur & Aging (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "SalesReturns"))
+        {
+            var salesGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Penjualan" && m.ParentId == null);
+            if (salesGroup is not null)
+            {
+                var mx = await context.MenuItems.Where(m => m.ParentId == salesGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Retur Penjualan", Icon = "bi-arrow-return-left", Controller = "SalesReturns", Action = "Index", ParentId = salesGroup.Id, SortOrder = mx + 1, IsSystem = true },
+                    new MenuItem { Title = "Umur Piutang", Icon = "bi-hourglass-split", Controller = "SalesInvoices", Action = "Aging", ParentId = salesGroup.Id, SortOrder = mx + 2, IsSystem = true });
+            }
+            var purchasingGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Pembelian" && m.ParentId == null);
+            if (purchasingGroup is not null)
+            {
+                var mx = await context.MenuItems.Where(m => m.ParentId == purchasingGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Retur Pembelian", Icon = "bi-arrow-return-right", Controller = "PurchaseReturns", Action = "Index", ParentId = purchasingGroup.Id, SortOrder = mx + 1, IsSystem = true },
+                    new MenuItem { Title = "Umur Hutang", Icon = "bi-hourglass-split", Controller = "PurchaseInvoices", Action = "Aging", ParentId = purchasingGroup.Id, SortOrder = mx + 2, IsSystem = true });
+            }
+            await context.SaveChangesAsync();
+        }
+
+        // 12b-5. Bagan Akun (Chart of Accounts) bawaan (idempoten per kode)
+        foreach (var (code, name, type) in Domain.Constants.AccountCodes.Defaults)
+        {
+            if (!await context.ChartOfAccounts.AnyAsync(a => a.Code == code))
+                context.ChartOfAccounts.Add(new ChartOfAccount { Code = code, Name = name, Type = type, IsSystem = true });
+        }
+        await context.SaveChangesAsync();
+
+        // 12b-6. Menu Keuangan: Bagan Akun, Jurnal, Buku Besar, Neraca Saldo (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "ChartOfAccounts"))
+        {
+            var financeGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Keuangan" && m.ParentId == null);
+            if (financeGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == financeGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Bagan Akun", Icon = "bi-list-columns", Controller = "ChartOfAccounts", Action = "Index", ParentId = financeGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true },
+                    new MenuItem { Title = "Jurnal", Icon = "bi-journal-text", Controller = "JournalEntries", Action = "Index", ParentId = financeGroup.Id, SortOrder = maxChild + 2, RequiredRole = AppRoles.Administrator, IsSystem = true },
+                    new MenuItem { Title = "Buku Besar", Icon = "bi-book", Controller = "FinanceReports", Action = "GeneralLedger", ParentId = financeGroup.Id, SortOrder = maxChild + 3, RequiredRole = AppRoles.Administrator, IsSystem = true },
+                    new MenuItem { Title = "Neraca Saldo", Icon = "bi-clipboard-check", Controller = "FinanceReports", Action = "TrialBalance", ParentId = financeGroup.Id, SortOrder = maxChild + 4, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

@@ -24,6 +24,8 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 14 | [Document Numbering](14-document-numbering.md) | Penomoran dokumen dapat dikustomisasi (prefix/format/reset) | ✅ |
 | 15 | [Sales (Penjualan)](15-sales.md) | SO → pengiriman (stok keluar) → faktur (3-way) → pembayaran (piutang) | ✅ |
 | 16 | [Purchase Requisition & RFQ](16-pr-rfq.md) | Pengadaan awal: PR (approval) → RFQ (penawaran/pemenang) | ✅ |
+| 17 | [Finance (Akuntansi)](17-finance.md) | Bagan akun → jurnal → buku besar → neraca saldo + posting otomatis | ✅ |
+| 18 | [Retur & Umur Piutang/Hutang](18-retur-aging.md) | Retur jual/beli (balik stok + jurnal) + laporan umur AR/AP | ✅ |
 
 ## Cara membaca dokumen ini
 
