@@ -22,6 +22,9 @@ public class PurchaseOrderCreateViewModel
     [Display(Name = "PPh dipotong")]
     public int? WithholdingTaxId { get; set; }
 
+    [Display(Name = "Diskon Header (%)")]
+    public decimal HeaderDiscountPercent { get; set; }
+
     public List<PurchaseLineInput> Items { get; set; } = new();
 }
 
@@ -30,6 +33,7 @@ public class PurchaseLineInput
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal DiscountPercent { get; set; }
     public int? TaxId { get; set; }
 }
 

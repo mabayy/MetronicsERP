@@ -31,6 +31,13 @@ public class SalesOrder : BaseEntity
     [StringLength(300)]
     public string? Note { get; set; }
 
+    // ----- Diskon header (tingkat dokumen) -----
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal HeaderDiscountPercent { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal HeaderDiscountAmount { get; set; }
+
     // ----- PPh dipotong pelanggan (estimasi) tingkat dokumen -----
     public int? WithholdingTaxId { get; set; }
     public Tax? WithholdingTax { get; set; }
@@ -43,8 +50,13 @@ public class SalesOrder : BaseEntity
 
     public ICollection<SalesOrderItem> Items { get; set; } = new List<SalesOrderItem>();
 
+    /// <summary>Neto baris (setelah diskon baris) sebelum diskon header.</summary>
     [NotMapped]
-    public decimal Subtotal => Items?.Sum(i => i.Quantity * i.UnitPrice) ?? 0;
+    public decimal NetBeforeHeaderDiscount => Items?.Sum(i => i.LineNet) ?? 0;
+
+    /// <summary>DPP = neto baris − diskon header.</summary>
+    [NotMapped]
+    public decimal Subtotal => NetBeforeHeaderDiscount - HeaderDiscountAmount;
 
     [NotMapped]
     public decimal TaxTotal => Items?.Sum(i => i.TaxAmount) ?? 0;
@@ -69,6 +81,10 @@ public class SalesOrderItem : BaseEntity
     /// <summary>Akumulasi jumlah yang sudah dikirim (≤ Quantity).</summary>
     public int DeliveredQuantity { get; set; }
 
+    /// <summary>Diskon baris dalam persen.</summary>
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal DiscountPercent { get; set; }
+
     // ----- PPN per baris (snapshot) -----
     public int? TaxId { get; set; }
     public Tax? Tax { get; set; }
@@ -83,5 +99,11 @@ public class SalesOrderItem : BaseEntity
     public int OutstandingQuantity => Quantity - DeliveredQuantity;
 
     [NotMapped]
-    public decimal LineSubtotal => Quantity * UnitPrice;
+    public decimal LineGross => Quantity * UnitPrice;
+
+    [NotMapped]
+    public decimal LineDiscountAmount => Math.Round(LineGross * DiscountPercent / 100m, 2, MidpointRounding.AwayFromZero);
+
+    [NotMapped]
+    public decimal LineNet => LineGross - LineDiscountAmount;
 }

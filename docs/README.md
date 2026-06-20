@@ -28,6 +28,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 18 | [Retur & Umur Piutang/Hutang](18-retur-aging.md) | Retur jual/beli (balik stok + jurnal) + laporan umur AR/AP | ✅ |
 | 19 | [Copy To / Copy From (Pembelian)](19-copy-document.md) | Salin dokumen antar tahap PR → RFQ → PO → Faktur | ✅ |
 | 20 | [Sistem Pajak (PPN & PPh)](20-pajak-ppn-pph.md) | Master pajak, PPN per baris + PPh withholding, posting jurnal otomatis | ✅ |
+| 21 | [Diskon (Baris & Header)](21-diskon.md) | Diskon per baris item + diskon header (gaya SAP B1/Odoo), terintegrasi pajak | ✅ |
 
 ## Cara membaca dokumen ini
 

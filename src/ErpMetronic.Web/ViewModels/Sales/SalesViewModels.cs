@@ -22,6 +22,9 @@ public class SalesOrderCreateViewModel
     [Display(Name = "PPh dipotong")]
     public int? WithholdingTaxId { get; set; }
 
+    [Display(Name = "Diskon Header (%)")]
+    public decimal HeaderDiscountPercent { get; set; }
+
     public List<SalesLineInput> Items { get; set; } = new();
 }
 
@@ -30,6 +33,7 @@ public class SalesLineInput
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal DiscountPercent { get; set; }
     public int? TaxId { get; set; }
 }
 
@@ -62,6 +66,9 @@ public class SalesInvoiceCreateViewModel
     [Display(Name = "PPh dipotong")]
     public int? WithholdingTaxId { get; set; }
 
+    [Display(Name = "Diskon Header (%)")]
+    public decimal HeaderDiscountPercent { get; set; }
+
     public List<SalesInvLineInput> Lines { get; set; } = new();
 }
 
@@ -70,6 +77,7 @@ public class SalesInvLineInput
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal DiscountPercent { get; set; }
     public int? TaxId { get; set; }
 }
 

@@ -82,7 +82,7 @@ public class PurchaseOrdersController : Controller
             return View(model);
         }
 
-        var (taxedItems, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.WithholdingTaxId);
+        var (taxedItems, hdrPct, hdrAmt, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.HeaderDiscountPercent, model.WithholdingTaxId);
         var po = new PurchaseOrder
         {
             ReferenceNumber = await _docNumber.NextAsync(Domain.Constants.DocumentCodes.PurchaseOrder, model.OrderDate),
@@ -92,6 +92,8 @@ public class PurchaseOrdersController : Controller
             CurrencyId = model.CurrencyId,
             Status = PurchaseOrderStatus.Draft,
             Note = model.Note,
+            HeaderDiscountPercent = hdrPct,
+            HeaderDiscountAmount = hdrAmt,
             WithholdingTaxId = whtId,
             WithholdingRate = whtRate,
             WithholdingAmount = whtAmount,
@@ -124,7 +126,9 @@ public class PurchaseOrdersController : Controller
             CurrencyId = po.CurrencyId,
             OrderDate = po.OrderDate,
             Note = po.Note,
-            Items = po.Items.Select(i => new PurchaseLineInput { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice }).ToList()
+            HeaderDiscountPercent = po.HeaderDiscountPercent,
+            WithholdingTaxId = po.WithholdingTaxId,
+            Items = po.Items.Select(i => new PurchaseLineInput { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice, DiscountPercent = i.DiscountPercent, TaxId = i.TaxId }).ToList()
         });
     }
 
@@ -161,8 +165,9 @@ public class PurchaseOrdersController : Controller
 
         // Ganti seluruh item (PO masih Draft, belum ada penerimaan)
         _db.PurchaseOrderItems.RemoveRange(po.Items);
-        var (taxedItems, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.WithholdingTaxId);
+        var (taxedItems, hdrPct, hdrAmt, whtId, whtRate, whtAmount) = await BuildTaxedItemsAsync(items, model.HeaderDiscountPercent, model.WithholdingTaxId);
         po.Items = taxedItems;
+        po.HeaderDiscountPercent = hdrPct; po.HeaderDiscountAmount = hdrAmt;
         po.WithholdingTaxId = whtId; po.WithholdingRate = whtRate; po.WithholdingAmount = whtAmount;
 
         await _db.SaveChangesAsync();
@@ -294,29 +299,40 @@ public class PurchaseOrdersController : Controller
         return RedirectToAction(nameof(Details), new { id = po.Id });
     }
 
-    // Hitung snapshot PPN per baris & PPh (withholding) per dokumen dari pilihan pengguna.
-    private async Task<(List<PurchaseOrderItem> Items, int? WhtId, decimal WhtRate, decimal WhtAmount)>
-        BuildTaxedItemsAsync(List<PurchaseLineInput> inputs, int? withholdingTaxId)
+    // Hitung snapshot diskon (baris + header), PPN per baris (atas neto setelah diskon),
+    // & PPh (withholding) per dokumen. Diskon header dialokasikan proporsional sebelum PPN.
+    private async Task<(List<PurchaseOrderItem> Items, decimal HdrPct, decimal HdrAmt, int? WhtId, decimal WhtRate, decimal WhtAmount)>
+        BuildTaxedItemsAsync(List<PurchaseLineInput> inputs, decimal headerDiscountPercent, int? withholdingTaxId)
     {
         var taxes = await _tax.GetByIdsAsync(inputs.Select(i => i.TaxId).Append(withholdingTaxId));
-        var items = inputs.Select(i =>
+        var items = inputs.Select(i => new PurchaseOrderItem
         {
-            var poi = new PurchaseOrderItem { ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice };
-            if (i.TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == Domain.Enums.TaxKind.ValueAdded)
-            {
-                poi.TaxId = tx.Id; poi.TaxRate = tx.Rate;
-                poi.TaxAmount = Math.Round(poi.Quantity * poi.UnitPrice * tx.Rate / 100m, 2);
-            }
-            return poi;
+            ProductId = i.ProductId, Quantity = i.Quantity, UnitPrice = i.UnitPrice, DiscountPercent = i.DiscountPercent
         }).ToList();
 
-        var dpp = items.Sum(x => x.Quantity * x.UnitPrice);
+        var nets = items.Select(x => x.LineNet).ToList();
+        var s = nets.Sum();
+        var hdrPct = headerDiscountPercent;
+        var hdrAmt = TaxMath.R2(s * hdrPct / 100m);
+
+        for (int k = 0; k < items.Count; k++)
+        {
+            var alloc = s > 0 ? TaxMath.R2(hdrAmt * nets[k] / s) : 0m;
+            var taxable = nets[k] - alloc;
+            if (inputs[k].TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == Domain.Enums.TaxKind.ValueAdded)
+            {
+                items[k].TaxId = tx.Id; items[k].TaxRate = tx.Rate;
+                items[k].TaxAmount = TaxMath.R2(taxable * tx.Rate / 100m);
+            }
+        }
+
+        var dpp = s - hdrAmt;
         int? whtId = null; decimal whtRate = 0, whtAmount = 0;
         if (withholdingTaxId is int wid && taxes.TryGetValue(wid, out var wtx) && wtx.Kind == Domain.Enums.TaxKind.Withholding)
         {
-            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = Math.Round(dpp * wtx.Rate / 100m, 2);
+            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = TaxMath.R2(dpp * wtx.Rate / 100m);
         }
-        return (items, whtId, whtRate, whtAmount);
+        return (items, hdrPct, hdrAmt, whtId, whtRate, whtAmount);
     }
 
     // ---- helpers ----

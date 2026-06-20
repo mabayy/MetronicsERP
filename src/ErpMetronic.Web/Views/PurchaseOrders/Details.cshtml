@@ -63,7 +63,7 @@
     <div class="card-header">Item PO</div>
     <div class="card-body p-0">
         <table class="table align-middle mb-0">
-            <thead><tr><th>Produk</th><th class="text-end">Dipesan</th><th class="text-end">Diterima</th><th class="text-end">Sisa</th><th class="text-end">Harga Satuan</th><th>PPN</th><th class="text-end">Subtotal</th></tr></thead>
+            <thead><tr><th>Produk</th><th class="text-end">Dipesan</th><th class="text-end">Diterima</th><th class="text-end">Sisa</th><th class="text-end">Harga Satuan</th><th class="text-end">Disk</th><th>PPN</th><th class="text-end">Jumlah</th></tr></thead>
             <tbody>
             @foreach (var i in Model.Items)
             {
@@ -73,19 +73,25 @@
                     <td class="text-end">@i.ReceivedQuantity.ToString("N0")</td>
                     <td class="text-end">@i.OutstandingQuantity.ToString("N0")</td>
                     <td class="text-end">@curCode @i.UnitPrice.ToString("N2")</td>
+                    <td class="text-end">@(i.DiscountPercent > 0 ? i.DiscountPercent.ToString("0.##") + "%" : "—")</td>
                     <td><span class="text-muted small">@(i.Tax?.Code ?? "—")</span> <span class="text-end">@i.TaxAmount.ToString("N2")</span></td>
-                    <td class="text-end">@curCode @((i.Quantity * i.UnitPrice).ToString("N2"))</td>
+                    <td class="text-end">@curCode @i.LineNet.ToString("N2")</td>
                 </tr>
             }
             </tbody>
             <tfoot>
-                <tr><td colspan="6" class="text-end fw-semibold">DPP</td><td class="text-end">@curCode @Model.Subtotal.ToString("N2")</td></tr>
-                <tr><td colspan="6" class="text-end fw-semibold">PPN</td><td class="text-end">@curCode @Model.TaxTotal.ToString("N2")</td></tr>
+                @if (Model.HeaderDiscountAmount > 0)
+                {
+                    <tr><td colspan="7" class="text-end fw-semibold">Subtotal</td><td class="text-end">@curCode @Model.NetBeforeHeaderDiscount.ToString("N2")</td></tr>
+                    <tr><td colspan="7" class="text-end fw-semibold text-danger">Diskon Header (@Model.HeaderDiscountPercent.ToString("0.##")%)</td><td class="text-end text-danger">−@curCode @Model.HeaderDiscountAmount.ToString("N2")</td></tr>
+                }
+                <tr><td colspan="7" class="text-end fw-semibold">DPP</td><td class="text-end">@curCode @Model.Subtotal.ToString("N2")</td></tr>
+                <tr><td colspan="7" class="text-end fw-semibold">PPN</td><td class="text-end">@curCode @Model.TaxTotal.ToString("N2")</td></tr>
                 @if (Model.WithholdingAmount > 0)
                 {
-                    <tr><td colspan="6" class="text-end fw-semibold text-danger">PPh @(Model.WithholdingTax?.Code)</td><td class="text-end text-danger">−@curCode @Model.WithholdingAmount.ToString("N2")</td></tr>
+                    <tr><td colspan="7" class="text-end fw-semibold text-danger">PPh @(Model.WithholdingTax?.Code)</td><td class="text-end text-danger">−@curCode @Model.WithholdingAmount.ToString("N2")</td></tr>
                 }
-                <tr class="table-light"><td colspan="6" class="text-end fw-bold">Total</td><td class="text-end fw-bold">@curCode @Model.GrandTotal.ToString("N2")</td></tr>
+                <tr class="table-light"><td colspan="7" class="text-end fw-bold">Total</td><td class="text-end fw-bold">@curCode @Model.GrandTotal.ToString("N2")</td></tr>
             </tfoot>
         </table>
     </div>

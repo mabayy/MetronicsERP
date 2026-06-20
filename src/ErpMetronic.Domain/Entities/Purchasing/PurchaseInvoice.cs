@@ -35,6 +35,13 @@ public class PurchaseInvoice : BaseEntity
     [StringLength(300)]
     public string? Note { get; set; }
 
+    // ----- Diskon header (tingkat dokumen) -----
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal HeaderDiscountPercent { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal HeaderDiscountAmount { get; set; }
+
     // ----- PPh dipotong (withholding) tingkat dokumen -----
     public int? WithholdingTaxId { get; set; }
     public Tax? WithholdingTax { get; set; }
@@ -50,9 +57,13 @@ public class PurchaseInvoice : BaseEntity
     public ICollection<PurchaseInvoiceLine> Lines { get; set; } = new List<PurchaseInvoiceLine>();
     public ICollection<PurchasePayment> Payments { get; set; } = new List<PurchasePayment>();
 
-    /// <summary>DPP (dasar pengenaan pajak) = jumlah baris sebelum pajak.</summary>
+    /// <summary>Jumlah neto baris (setelah diskon baris) sebelum diskon header.</summary>
     [NotMapped]
-    public decimal Subtotal => Lines?.Sum(l => l.Quantity * l.UnitPrice) ?? 0;
+    public decimal NetBeforeHeaderDiscount => Lines?.Sum(l => l.LineNet) ?? 0;
+
+    /// <summary>DPP (dasar pengenaan pajak) = neto baris − diskon header.</summary>
+    [NotMapped]
+    public decimal Subtotal => NetBeforeHeaderDiscount - HeaderDiscountAmount;
 
     /// <summary>Total PPN dari seluruh baris.</summary>
     [NotMapped]
@@ -79,6 +90,10 @@ public class PurchaseInvoiceLine : BaseEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal UnitPrice { get; set; }
 
+    /// <summary>Diskon baris dalam persen.</summary>
+    [Column(TypeName = "decimal(9,4)")]
+    public decimal DiscountPercent { get; set; }
+
     // ----- PPN per baris (snapshot) -----
     public int? TaxId { get; set; }
     public Tax? Tax { get; set; }
@@ -89,11 +104,19 @@ public class PurchaseInvoiceLine : BaseEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal TaxAmount { get; set; }
 
+    /// <summary>Bruto baris = jumlah × harga.</summary>
     [NotMapped]
-    public decimal LineSubtotal => Quantity * UnitPrice;
+    public decimal LineGross => Quantity * UnitPrice;
 
     [NotMapped]
-    public decimal LineTotal => LineSubtotal + TaxAmount;
+    public decimal LineDiscountAmount => Math.Round(LineGross * DiscountPercent / 100m, 2, MidpointRounding.AwayFromZero);
+
+    /// <summary>Neto baris setelah diskon baris (sebelum diskon header).</summary>
+    [NotMapped]
+    public decimal LineNet => LineGross - LineDiscountAmount;
+
+    [NotMapped]
+    public decimal LineTotal => LineNet + TaxAmount;
 }
 
 public class PurchasePayment : BaseEntity

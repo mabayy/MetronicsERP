@@ -5,6 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErpMetronic.Infrastructure.Services;
 
+/// <summary>Pembulatan uang konsisten (2 desimal, setengah ke atas) agar selaras dengan perhitungan di sisi browser.</summary>
+public static class TaxMath
+{
+    public static decimal R2(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+}
+
 /// <summary>Akses master pajak untuk dropdown & perhitungan snapshot pada transaksi.</summary>
 public interface ITaxService
 {

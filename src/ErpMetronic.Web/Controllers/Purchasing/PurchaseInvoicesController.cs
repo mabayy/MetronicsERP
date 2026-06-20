@@ -72,8 +72,9 @@ public class PurchaseInvoicesController : Controller
         {
             PurchaseOrderId = po.Id,
             WithholdingTaxId = po.WithholdingTaxId, // bawa PPh dari PO
+            HeaderDiscountPercent = po.HeaderDiscountPercent, // bawa diskon header dari PO
             Lines = po.Items.Where(i => invoiceable.TryGetValue(i.ProductId, out var q) && q > 0)
-                .Select(i => new InvoiceLineInput { ProductId = i.ProductId, Quantity = invoiceable[i.ProductId], UnitPrice = i.UnitPrice, TaxId = i.TaxId }).ToList()
+                .Select(i => new InvoiceLineInput { ProductId = i.ProductId, Quantity = invoiceable[i.ProductId], UnitPrice = i.UnitPrice, DiscountPercent = i.DiscountPercent, TaxId = i.TaxId }).ToList()
         };
         return View(model);
     }
@@ -108,23 +109,31 @@ public class PurchaseInvoicesController : Controller
             return View(model);
         }
 
-        // Hitung snapshot PPN per baris & PPh per dokumen
+        // Hitung snapshot diskon (baris + header), PPN per baris (atas neto), & PPh per dokumen
         var taxes = await _tax.GetByIdsAsync(lines.Select(l => l.TaxId).Append(model.WithholdingTaxId));
-        var invLines = lines.Select(l =>
+        var invLines = lines.Select(l => new PurchaseInvoiceLine
         {
-            var pil = new PurchaseInvoiceLine { ProductId = l.ProductId, Quantity = l.Quantity, UnitPrice = l.UnitPrice };
-            if (l.TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == TaxKind.ValueAdded)
-            {
-                pil.TaxId = tx.Id; pil.TaxRate = tx.Rate;
-                pil.TaxAmount = Math.Round(pil.Quantity * pil.UnitPrice * tx.Rate / 100m, 2);
-            }
-            return pil;
+            ProductId = l.ProductId, Quantity = l.Quantity, UnitPrice = l.UnitPrice, DiscountPercent = l.DiscountPercent
         }).ToList();
-        var dpp = invLines.Sum(x => x.Quantity * x.UnitPrice);
+        var nets = invLines.Select(x => x.LineNet).ToList();
+        var s = nets.Sum();
+        var hdrPct = model.HeaderDiscountPercent;
+        var hdrAmt = TaxMath.R2(s * hdrPct / 100m);
+        for (int k = 0; k < invLines.Count; k++)
+        {
+            var alloc = s > 0 ? TaxMath.R2(hdrAmt * nets[k] / s) : 0m;
+            var taxable = nets[k] - alloc;
+            if (lines[k].TaxId is int tid && taxes.TryGetValue(tid, out var tx) && tx.Kind == TaxKind.ValueAdded)
+            {
+                invLines[k].TaxId = tx.Id; invLines[k].TaxRate = tx.Rate;
+                invLines[k].TaxAmount = TaxMath.R2(taxable * tx.Rate / 100m);
+            }
+        }
+        var dpp = s - hdrAmt;
         int? whtId = null; decimal whtRate = 0, whtAmount = 0;
         if (model.WithholdingTaxId is int wid && taxes.TryGetValue(wid, out var wtx) && wtx.Kind == TaxKind.Withholding)
         {
-            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = Math.Round(dpp * wtx.Rate / 100m, 2);
+            whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = TaxMath.R2(dpp * wtx.Rate / 100m);
         }
 
         var invoice = new PurchaseInvoice
@@ -136,6 +145,8 @@ public class PurchaseInvoicesController : Controller
             CurrencyId = po.CurrencyId,
             Status = PurchaseInvoiceStatus.Unpaid,
             Note = model.Note,
+            HeaderDiscountPercent = hdrPct,
+            HeaderDiscountAmount = hdrAmt,
             WithholdingTaxId = whtId,
             WithholdingRate = whtRate,
             WithholdingAmount = whtAmount,

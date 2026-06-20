@@ -35,12 +35,13 @@
 
             <table class="table align-middle" id="linesTable">
                 <thead><tr>
-                    <th style="width:30%">Produk</th>
+                    <th style="width:26%">Produk</th>
                     <th class="text-end">Maks</th>
-                    <th class="text-end" style="width:110px">Jumlah</th>
-                    <th class="text-end" style="width:130px">Harga Satuan</th>
-                    <th style="width:15%">PPN</th>
-                    <th class="text-end">DPP</th>
+                    <th class="text-end" style="width:90px">Qty</th>
+                    <th class="text-end" style="width:120px">Harga Satuan</th>
+                    <th class="text-end" style="width:80px">Disk %</th>
+                    <th style="width:13%">PPN</th>
+                    <th class="text-end">Jumlah</th>
                     <th class="text-end">PPN Rp</th>
                 </tr></thead>
                 <tbody id="linesBody">
@@ -56,6 +57,7 @@
                         <td class="text-end fw-semibold">@max</td>
                         <td><input name="Lines[@i].Quantity" type="number" min="0" max="@max" value="@l.Quantity" class="form-control form-control-sm text-end qty" /></td>
                         <td><input name="Lines[@i].UnitPrice" type="number" min="0" step="0.01" value="@l.UnitPrice" class="form-control form-control-sm text-end price" /></td>
+                        <td><input name="Lines[@i].DiscountPercent" type="number" min="0" max="100" step="0.01" value="@l.DiscountPercent" class="form-control form-control-sm text-end disc" /></td>
                         <td>
                             <select name="Lines[@i].TaxId" class="form-select form-select-sm tax">
                                 <option value="" data-rate="0">Tanpa PPN</option>
@@ -75,7 +77,9 @@
 
             <div class="row mt-3">
                 <div class="col-md-5">
-                    <label asp-for="WithholdingTaxId" class="form-label fw-semibold"></label>
+                    <label asp-for="HeaderDiscountPercent" class="form-label fw-semibold"></label>
+                    <input asp-for="HeaderDiscountPercent" type="number" min="0" max="100" step="0.01" class="form-control" id="headerDisc" />
+                    <label asp-for="WithholdingTaxId" class="form-label fw-semibold mt-3"></label>
                     <select asp-for="WithholdingTaxId" class="form-select" id="whtSelect">
                         <option value="" data-rate="0">Tanpa PPh</option>
                         @foreach (var t in whtTaxes)
@@ -83,11 +87,13 @@
                             <option value="@t.Id" data-rate="@t.Rate">@t.Code — @t.Name (@t.Rate.ToString("0.##")%)</option>
                         }
                     </select>
-                    <span class="text-muted small">PPh dipotong dari nilai dibayar (atas DPP).</span>
+                    <span class="text-muted small">Diskon header & PPh dihitung atas DPP (setelah diskon baris).</span>
                 </div>
                 <div class="col-md-7">
                     <table class="table table-sm mb-0">
-                        <tr><td class="text-end fw-semibold">DPP (Subtotal)</td><td class="text-end" style="width:180px"><span id="sumDpp">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold">Subtotal (setelah diskon baris)</td><td class="text-end" style="width:180px"><span id="sumNet">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold text-danger">Diskon Header</td><td class="text-end text-danger">−<span id="sumHdrDisc">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold">DPP</td><td class="text-end"><span id="sumDpp">0</span></td></tr>
                         <tr><td class="text-end fw-semibold">PPN</td><td class="text-end"><span id="sumVat">0</span></td></tr>
                         <tr><td class="text-end fw-semibold text-danger">PPh dipotong</td><td class="text-end text-danger">−<span id="sumWht">0</span></td></tr>
                         <tr class="table-light"><td class="text-end fw-bold">Total Faktur</td><td class="text-end fw-bold"><span id="sumTotal">0</span></td></tr>
@@ -110,21 +116,35 @@
         const fmt = n => n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const r2 = n => Math.round(n * 100) / 100;
         function recalcAll() {
-            let dpp = 0, vat = 0;
-            body.querySelectorAll('.line-row').forEach(function (row) {
+            const rows = [...body.querySelectorAll('.line-row')];
+            const nets = rows.map(function (row) {
                 const q = parseFloat(row.querySelector('.qty').value) || 0;
                 const p = parseFloat(row.querySelector('.price').value) || 0;
-                const sub = q * p;
+                const d = parseFloat(row.querySelector('.disc').value) || 0;
+                const gross = q * p;
+                const net = gross - r2(gross * d / 100);
+                row.querySelector('.subtotal').textContent = fmt(net);
+                return net;
+            });
+            const S = nets.reduce((a, b) => a + b, 0);
+            const hpct = parseFloat(document.getElementById('headerDisc').value) || 0;
+            const hAmt = r2(S * hpct / 100);
+            let vat = 0;
+            rows.forEach(function (row, i) {
+                const alloc = S > 0 ? r2(hAmt * nets[i] / S) : 0;
+                const taxable = nets[i] - alloc;
                 const sel = row.querySelector('.tax');
                 const rate = sel && sel.value ? (parseFloat(sel.selectedOptions[0].dataset.rate) || 0) : 0;
-                const lv = r2(sub * rate / 100);
-                row.querySelector('.subtotal').textContent = fmt(sub);
+                const lv = r2(taxable * rate / 100);
                 row.querySelector('.linevat').textContent = fmt(lv);
-                dpp += sub; vat += lv;
+                vat += lv;
             });
+            const dpp = S - hAmt;
             const wsel = document.getElementById('whtSelect');
             const wrate = wsel && wsel.value ? (parseFloat(wsel.selectedOptions[0].dataset.rate) || 0) : 0;
             const wht = r2(dpp * wrate / 100);
+            document.getElementById('sumNet').textContent = fmt(S);
+            document.getElementById('sumHdrDisc').textContent = fmt(hAmt);
             document.getElementById('sumDpp').textContent = fmt(dpp);
             document.getElementById('sumVat').textContent = fmt(vat);
             document.getElementById('sumWht').textContent = fmt(wht);
@@ -133,6 +153,7 @@
         body.addEventListener('input', recalcAll);
         body.addEventListener('change', recalcAll);
         document.getElementById('whtSelect').addEventListener('change', recalcAll);
+        document.getElementById('headerDisc').addEventListener('input', recalcAll);
         recalcAll();
     </script>
 }
