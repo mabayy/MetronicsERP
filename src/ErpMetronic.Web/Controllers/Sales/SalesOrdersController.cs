@@ -19,13 +19,15 @@ public class SalesOrdersController : Controller
     private readonly IStockService _stock;
     private readonly IDocumentNumberService _docNumber;
     private readonly ITaxService _tax;
+    private readonly IJournalService _journal;
 
-    public SalesOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber, ITaxService tax)
+    public SalesOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber, ITaxService tax, IJournalService journal)
     {
         _db = db;
         _stock = stock;
         _docNumber = docNumber;
         _tax = tax;
+        _journal = journal;
     }
 
     public async Task<IActionResult> Index()
@@ -230,6 +232,7 @@ public class SalesOrdersController : Controller
         _db.DeliveryOrders.Add(delivery);
         await _db.SaveChangesAsync();
 
+        decimal cogs = 0;
         foreach (var (item, qty) in toDeliver)
         {
             var result = await _stock.StockOutAsync(item.ProductId, so.WarehouseId, qty, model.DeliveryDate,
@@ -239,6 +242,7 @@ public class SalesOrdersController : Controller
                 ModelState.AddModelError(string.Empty, result.Error ?? "Gagal memposting stok keluar.");
                 return View(so); // transaksi rollback otomatis (belum commit)
             }
+            cogs += qty * result.UnitCost;
             item.DeliveredQuantity += qty;
         }
 
@@ -246,6 +250,8 @@ public class SalesOrdersController : Controller
             ? SalesOrderStatus.Delivered : SalesOrderStatus.PartiallyDelivered;
 
         await _db.SaveChangesAsync();
+        // HPP otomatis (perpetual): Dr HPP / Cr Persediaan senilai biaya rata-rata yang keluar.
+        await _journal.PostDeliveryCogsAsync(delivery.Id, model.DeliveryDate, delivery.ReferenceNumber, cogs, User.Identity?.Name);
         await tx.CommitAsync();
         TempData["Success"] = $"Barang dikirim ({delivery.ReferenceNumber}) & stok berkurang. Status SO: {so.Status}.";
         return RedirectToAction(nameof(Details), new { id = so.Id });

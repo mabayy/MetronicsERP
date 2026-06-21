@@ -67,10 +67,10 @@ public class GoodsReceiptsController : Controller
         _db.GoodsReceipts.Add(receipt);
         await _db.SaveChangesAsync();
 
-        // Posting otomatis ke Stok Masuk
+        // Posting otomatis ke Stok Masuk (biaya beli memperbarui rata-rata bergerak)
         foreach (var l in lines)
             await _stock.StockInAsync(l.ProductId, model.WarehouseId, l.Quantity, model.ReceiptDate,
-                $"Penerimaan {receipt.ReferenceNumber}", User.Identity?.Name);
+                $"Penerimaan {receipt.ReferenceNumber}", User.Identity?.Name, l.UnitCost);
 
         await tx.CommitAsync();
         TempData["Success"] = $"Penerimaan {receipt.ReferenceNumber} tersimpan & stok bertambah.";

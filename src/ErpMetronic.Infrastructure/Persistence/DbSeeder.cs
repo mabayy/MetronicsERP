@@ -61,8 +61,8 @@ public static class DbSeeder
             var cat = await context.Categories.FirstAsync();
             var uom = await context.UnitOfMeasures.FirstAsync();
             context.Products.AddRange(
-                new Product { Sku = "PRD-0001", Name = "Contoh Produk A", CategoryId = cat.Id, UnitOfMeasureId = uom.Id, PurchasePrice = 10000, SellingPrice = 15000, StockQuantity = 100, ReorderLevel = 10 },
-                new Product { Sku = "PRD-0002", Name = "Contoh Produk B", CategoryId = cat.Id, UnitOfMeasureId = uom.Id, PurchasePrice = 25000, SellingPrice = 32000, StockQuantity = 50, ReorderLevel = 5 });
+                new Product { Sku = "PRD-0001", Name = "Contoh Produk A", CategoryId = cat.Id, UnitOfMeasureId = uom.Id, PurchasePrice = 10000, SellingPrice = 15000, AverageCost = 10000, StockQuantity = 100, ReorderLevel = 10 },
+                new Product { Sku = "PRD-0002", Name = "Contoh Produk B", CategoryId = cat.Id, UnitOfMeasureId = uom.Id, PurchasePrice = 25000, SellingPrice = 32000, AverageCost = 25000, StockQuantity = 50, ReorderLevel = 5 });
             await context.SaveChangesAsync();
         }
 

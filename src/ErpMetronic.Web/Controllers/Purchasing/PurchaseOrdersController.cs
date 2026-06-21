@@ -284,7 +284,7 @@ public class PurchaseOrdersController : Controller
         foreach (var (item, qty) in toReceive)
         {
             await _stock.StockInAsync(item.ProductId, po.WarehouseId, qty, model.ReceiptDate,
-                $"Penerimaan {receipt.ReferenceNumber} (PO {po.ReferenceNumber})", User.Identity?.Name);
+                $"Penerimaan {receipt.ReferenceNumber} (PO {po.ReferenceNumber})", User.Identity?.Name, item.UnitPrice);
             item.ReceivedQuantity += qty;
         }
 

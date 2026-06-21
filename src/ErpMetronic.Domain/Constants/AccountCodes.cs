@@ -19,6 +19,7 @@ public static class AccountCodes
     public const string Capital = "3100";            // Modal
     public const string SalesRevenue = "4100";       // Pendapatan Penjualan
     public const string PurchaseExpense = "5100";    // Pembelian/HPP
+    public const string Cogs = "5200";               // Harga Pokok Penjualan (HPP)
 
     /// <summary>Bagan akun bawaan (kode, nama, jenis) untuk seeding.</summary>
     public static readonly (string Code, string Name, AccountType Type)[] Defaults =
@@ -33,6 +34,7 @@ public static class AccountCodes
         (WhtPayable, "Hutang PPh", AccountType.Liability),
         (Capital, "Modal", AccountType.Equity),
         (SalesRevenue, "Pendapatan Penjualan", AccountType.Revenue),
-        (PurchaseExpense, "Pembelian", AccountType.Expense)
+        (PurchaseExpense, "Pembelian", AccountType.Expense),
+        (Cogs, "Harga Pokok Penjualan", AccountType.Expense)
     };
 }

@@ -54,3 +54,44 @@ lanjutan yang dapat dibangun di atasnya, mengikuti pola arsitektur yang sama.
 2. Purchasing → memperkaya pergerakan stok masuk.
 3. Sales → pergerakan stok keluar + piutang.
 4. Finance → mengikat semuanya menjadi laporan keuangan.
+
+---
+
+## Rencana Lanjutan — Menuju Paritas SAP B1 / Odoo
+
+Modul inti (Inventory, Purchasing, Sales, Finance, Pajak PPN/PPh, Diskon, Retur, Copy To/From,
+Document Numbering, Multi-currency) sudah selesai. Berikut peta pengembangan agar setara SAP B1/Odoo,
+diurut berdasarkan dampak terhadap fondasi yang ada.
+
+### Gap akuntansi yang ditutup lebih dulu
+- **HPP/COGS otomatis + metode penilaian persediaan (Moving Average)** — 🔜 **sedang dikerjakan**
+  (lihat [Tahap 22](22-hpp-moving-average.md)). Saat penjualan/pengiriman: Dr HPP / Cr Persediaan
+  senilai biaya rata-rata bergerak; biaya rata-rata diperbarui tiap penerimaan.
+
+### Tier 1 — Menutup loop keuangan
+1. **Laporan keuangan**: Neraca (Balance Sheet), Laba Rugi (P&L), Arus Kas — agregasi dari jurnal.
+2. **Termin pembayaran & jatuh tempo** (Net 30, dst.) + **batas kredit pelanggan**.
+3. **Modul Bank & Kas**: akun bank/kas, satu pembayaran untuk banyak faktur, uang muka (down payment),
+   **rekonsiliasi bank**.
+4. **Tutup buku** periode/tahun (locking + jurnal penutup).
+
+### Tier 2 — Fitur komersial
+5. **Price List** (daftar harga per pelanggan/mata uang) + harga khusus & diskon bertingkat.
+6. **Sales Quotation → SO** (penawaran penjualan, melengkapi RFQ di sisi beli).
+7. **Workflow approval** berjenjang (PO/SO di atas nilai tertentu butuh persetujuan).
+8. **Batch/Lot & Serial number + kedaluwarsa**, serta **reorder point (min/max)** + saran pembelian.
+
+### Tier 3 — Modul lanjutan / industri
+9. **Manufaktur**: Bill of Materials (BoM) + Production Order + MRP.
+10. **Landed cost** (biaya impor dibebankan ke harga pokok).
+11. **Aktiva tetap & penyusutan**.
+12. **Akuntansi analitik / cost center / project**.
+13. **CRM**: lead, opportunity, pipeline, aktivitas.
+14. **Multi-company / multi-cabang**.
+
+### Lintas-modul (pengalaman pemakaian)
+15. **Cetak PDF & kirim email** dokumen (faktur/PO/quotation).
+16. **Dashboard & KPI** (grafik, pivot) + **export Excel/PDF** semua laporan.
+17. **Audit trail** otomatis (EF Core interceptor pada `SaveChanges`).
+18. **Lokalisasi Indonesia**: export **e-Faktur**, laporan PPN/PPh untuk SPT.
+19. **Lampiran/attachment** pada dokumen.

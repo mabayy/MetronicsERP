@@ -26,6 +26,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Finance (Akuntansi) | ✅ | Bagan akun → jurnal double-entry → buku besar → neraca saldo, posting otomatis pembelian/penjualan |
 | Pajak (PPN & PPh) | ✅ | Master pajak, PPN per baris + PPh withholding (gaya SAP B1/Odoo), posting jurnal otomatis |
 | Diskon (Baris & Header) | ✅ | Diskon per baris item + diskon header dialokasikan sebelum pajak (gaya SAP B1/Odoo) |
+| HPP & Moving Average | ✅ | Persediaan perpetual: biaya rata-rata bergerak + posting HPP otomatis saat pengiriman |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -96,6 +97,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 19. [Copy To / Copy From (Pembelian)](docs/19-copy-document.md)
 20. [Sistem Pajak (PPN & PPh)](docs/20-pajak-ppn-pph.md)
 21. [Diskon (Baris & Header)](docs/21-diskon.md)
+22. [HPP & Moving Average](docs/22-hpp-moving-average.md)
 
 ## 🧰 Tech Stack
 

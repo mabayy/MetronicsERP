@@ -29,6 +29,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 19 | [Copy To / Copy From (Pembelian)](19-copy-document.md) | Salin dokumen antar tahap PR → RFQ → PO → Faktur | ✅ |
 | 20 | [Sistem Pajak (PPN & PPh)](20-pajak-ppn-pph.md) | Master pajak, PPN per baris + PPh withholding, posting jurnal otomatis | ✅ |
 | 21 | [Diskon (Baris & Header)](21-diskon.md) | Diskon per baris item + diskon header (gaya SAP B1/Odoo), terintegrasi pajak | ✅ |
+| 22 | [HPP & Moving Average](22-hpp-moving-average.md) | Biaya rata-rata bergerak + posting HPP otomatis saat pengiriman (perpetual) | ✅ |
 
 ## Cara membaca dokumen ini
 

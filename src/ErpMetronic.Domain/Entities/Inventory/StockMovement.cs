@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using ErpMetronic.Domain.Common;
 using ErpMetronic.Domain.Enums;
 
@@ -21,6 +22,10 @@ public class StockMovement : BaseEntity
 
     /// <summary>Jumlah pergerakan. Positif untuk masuk/keluar/transfer; bertanda untuk penyesuaian.</summary>
     public int Quantity { get; set; }
+
+    /// <summary>Biaya per unit untuk pergerakan ini (masuk = biaya beli; keluar = biaya rata-rata/HPP).</summary>
+    [Column(TypeName = "decimal(18,4)")]
+    public decimal UnitCost { get; set; }
 
     /// <summary>Gudang asal/utama.</summary>
     public int WarehouseId { get; set; }

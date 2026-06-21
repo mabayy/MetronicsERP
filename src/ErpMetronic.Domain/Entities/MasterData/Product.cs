@@ -22,6 +22,10 @@ public class Product : BaseEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal SellingPrice { get; set; }
 
+    /// <summary>Biaya rata-rata bergerak (moving average cost) dalam mata uang dasar.</summary>
+    [Column(TypeName = "decimal(18,4)")]
+    public decimal AverageCost { get; set; }
+
     public int StockQuantity { get; set; }
     public int ReorderLevel { get; set; }
 

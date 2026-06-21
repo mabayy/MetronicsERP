@@ -116,6 +116,18 @@ public class JournalService : IJournalService
             }, user);
     }
 
+    public async Task PostDeliveryCogsAsync(int deliveryId, DateTime date, string reference, decimal cogsAmount, string? user)
+    {
+        var amount = Math.Round(cogsAmount, 2, MidpointRounding.AwayFromZero);
+        if (amount <= 0) return; // tanpa biaya rata-rata, tidak ada HPP yang diposting
+        // Dr Harga Pokok Penjualan, Cr Persediaan
+        await PostAsync(date, $"HPP Pengiriman {reference}", "DeliveryOrder", deliveryId, new[]
+        {
+            (AccountCodes.Cogs, amount, 0m),
+            (AccountCodes.Inventory, 0m, amount)
+        }, user);
+    }
+
     private async Task<decimal> ToBaseAsync(decimal amount, int? currencyId, DateTime date)
     {
         var baseCurrency = await _currency.GetBaseCurrencyAsync();

@@ -22,19 +22,32 @@ public class StockService : IStockService
             .Select(s => (int?)s.Quantity)
             .FirstOrDefaultAsync() ?? 0;
 
-    public async Task<StockResult> StockInAsync(int productId, int warehouseId, int quantity, DateTime date, string? note, string? user)
+    public async Task<StockResult> StockInAsync(int productId, int warehouseId, int quantity, DateTime date, string? note, string? user, decimal? unitCost = null)
     {
         if (quantity <= 0) return StockResult.Fail("Jumlah harus lebih dari 0.");
         if (!await ValidateAsync(productId, warehouseId)) return StockResult.Fail("Produk atau gudang tidak valid.");
 
         var stock = await GetOrCreateStockAsync(productId, warehouseId);
-        stock.Quantity += quantity;
-        await AdjustProductTotalAsync(productId, quantity);
+        var product = await _db.Products.FirstAsync(p => p.Id == productId);
 
-        var movement = await BuildMovementAsync(MovementType.StockIn, productId, warehouseId, null, quantity, date, note, user);
+        // Perbarui biaya rata-rata bergerak bila biaya masuk diberikan.
+        var movementCost = unitCost ?? product.AverageCost;
+        if (unitCost is decimal c && c >= 0)
+        {
+            var qtyBefore = Math.Max(product.StockQuantity, 0);
+            var newQty = qtyBefore + quantity;
+            product.AverageCost = newQty > 0
+                ? Math.Round((qtyBefore * product.AverageCost + quantity * c) / newQty, 4, MidpointRounding.AwayFromZero)
+                : c;
+        }
+
+        stock.Quantity += quantity;
+        product.StockQuantity += quantity;
+
+        var movement = await BuildMovementAsync(MovementType.StockIn, productId, warehouseId, null, quantity, date, note, user, movementCost);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
-        return StockResult.Ok(movement);
+        return StockResult.Ok(movement, movementCost);
     }
 
     public async Task<StockResult> StockOutAsync(int productId, int warehouseId, int quantity, DateTime date, string? note, string? user)
@@ -46,13 +59,16 @@ public class StockService : IStockService
         if (stock.Quantity < quantity)
             return StockResult.Fail($"Stok tidak mencukupi. Saldo saat ini: {stock.Quantity}.");
 
-        stock.Quantity -= quantity;
-        await AdjustProductTotalAsync(productId, -quantity);
+        var product = await _db.Products.FirstAsync(p => p.Id == productId);
+        var cost = product.AverageCost; // biaya yang mengalir keluar (untuk HPP)
 
-        var movement = await BuildMovementAsync(MovementType.StockOut, productId, warehouseId, null, quantity, date, note, user);
+        stock.Quantity -= quantity;
+        product.StockQuantity -= quantity;
+
+        var movement = await BuildMovementAsync(MovementType.StockOut, productId, warehouseId, null, quantity, date, note, user, cost);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
-        return StockResult.Ok(movement);
+        return StockResult.Ok(movement, cost);
     }
 
     public async Task<StockResult> TransferAsync(int productId, int sourceWarehouseId, int destinationWarehouseId, int quantity, DateTime date, string? note, string? user)
@@ -71,7 +87,8 @@ public class StockService : IStockService
         dest.Quantity += quantity;
         // Total stok produk tidak berubah pada transfer.
 
-        var movement = await BuildMovementAsync(MovementType.Transfer, productId, sourceWarehouseId, destinationWarehouseId, quantity, date, note, user);
+        var avgCost = await _db.Products.Where(p => p.Id == productId).Select(p => p.AverageCost).FirstAsync();
+        var movement = await BuildMovementAsync(MovementType.Transfer, productId, sourceWarehouseId, destinationWarehouseId, quantity, date, note, user, avgCost);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
@@ -86,10 +103,11 @@ public class StockService : IStockService
         var variance = countedQuantity - stock.Quantity;
         if (variance == 0) return StockResult.Fail("Tidak ada selisih—saldo sudah sesuai.");
 
+        var product = await _db.Products.FirstAsync(p => p.Id == productId);
         stock.Quantity = countedQuantity;
-        await AdjustProductTotalAsync(productId, variance);
+        product.StockQuantity += variance;
 
-        var movement = await BuildMovementAsync(MovementType.Adjustment, productId, warehouseId, null, variance, date, note, user);
+        var movement = await BuildMovementAsync(MovementType.Adjustment, productId, warehouseId, null, variance, date, note, user, product.AverageCost);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
@@ -112,13 +130,7 @@ public class StockService : IStockService
         return stock;
     }
 
-    private async Task AdjustProductTotalAsync(int productId, int delta)
-    {
-        var product = await _db.Products.FirstAsync(p => p.Id == productId);
-        product.StockQuantity += delta;
-    }
-
-    private async Task<StockMovement> BuildMovementAsync(MovementType type, int productId, int warehouseId, int? destWarehouseId, int quantity, DateTime date, string? note, string? user)
+    private async Task<StockMovement> BuildMovementAsync(MovementType type, int productId, int warehouseId, int? destWarehouseId, int quantity, DateTime date, string? note, string? user, decimal unitCost = 0)
     {
         var docCode = type switch
         {
@@ -137,6 +149,7 @@ public class StockService : IStockService
             WarehouseId = warehouseId,
             DestinationWarehouseId = destWarehouseId,
             Quantity = quantity,
+            UnitCost = unitCost,
             Note = note,
             CreatedBy = user
         };
