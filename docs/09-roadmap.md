@@ -69,7 +69,8 @@ diurut berdasarkan dampak terhadap fondasi yang ada.
   senilai biaya rata-rata bergerak; biaya rata-rata diperbarui tiap penerimaan.
 
 ### Tier 1 — Menutup loop keuangan
-1. **Laporan keuangan**: Neraca (Balance Sheet), Laba Rugi (P&L), Arus Kas — agregasi dari jurnal.
+1. **Laporan keuangan**: Laba Rugi (P&L) & Neraca (Balance Sheet) — ✅ **selesai**
+   (lihat [Tahap 23](23-laporan-keuangan.md)). Arus Kas menyusul.
 2. **Termin pembayaran & jatuh tempo** (Net 30, dst.) + **batas kredit pelanggan**.
 3. **Modul Bank & Kas**: akun bank/kas, satu pembayaran untuk banyak faktur, uang muka (down payment),
    **rekonsiliasi bank**.

@@ -30,6 +30,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 20 | [Sistem Pajak (PPN & PPh)](20-pajak-ppn-pph.md) | Master pajak, PPN per baris + PPh withholding, posting jurnal otomatis | ✅ |
 | 21 | [Diskon (Baris & Header)](21-diskon.md) | Diskon per baris item + diskon header (gaya SAP B1/Odoo), terintegrasi pajak | ✅ |
 | 22 | [HPP & Moving Average](22-hpp-moving-average.md) | Biaya rata-rata bergerak + posting HPP otomatis saat pengiriman (perpetual) | ✅ |
+| 23 | [Laporan Keuangan](23-laporan-keuangan.md) | Laba Rugi (Income Statement) & Neraca (Balance Sheet) dari jurnal | ✅ |
 
 ## Cara membaca dokumen ini
 

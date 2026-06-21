@@ -1,0 +1,70 @@
+@model ErpMetronic.Web.Controllers.BalanceSheetVm
+@{
+    ViewData["Title"] = "Neraca";
+    var balanced = Math.Round(Model.TotalAssets, 2) == Math.Round(Model.TotalLiabilitiesEquity, 2);
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span><i class="bi bi-bank text-primary me-2"></i> Neraca per tanggal @Model.AsOf.ToString("dd/MM/yyyy")</span>
+        @if (balanced)
+        {
+            <span class="badge-light-success px-2 py-1 rounded"><i class="bi bi-check-circle"></i> Seimbang</span>
+        }
+        else
+        {
+            <span class="badge-light-danger px-2 py-1 rounded"><i class="bi bi-exclamation-triangle"></i> Tidak seimbang</span>
+        }
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-sm-5 col-md-3">
+                <label class="form-label small fw-semibold mb-1">Per Tanggal</label>
+                <input type="date" name="asOf" value="@Model.AsOf.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Tampilkan</button></div>
+        </form>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <table class="table align-middle mb-0">
+                    <tbody>
+                        <tr class="table-light"><td class="fw-bold" colspan="2">Aset</td></tr>
+                        @if (!Model.Assets.Any()) { <tr><td colspan="2" class="text-muted ps-4">Tidak ada</td></tr> }
+                        @foreach (var r in Model.Assets)
+                        {
+                            <tr><td class="ps-4"><span class="text-muted small me-2">@r.Code</span>@r.Name</td><td class="text-end">@r.Amount.ToString("N2")</td></tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light"><td class="text-end fw-bold">Total Aset</td><td class="text-end fw-bold">@Model.TotalAssets.ToString("N2")</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="col-lg-6">
+                <table class="table align-middle mb-0">
+                    <tbody>
+                        <tr class="table-light"><td class="fw-bold" colspan="2">Liabilitas</td></tr>
+                        @if (!Model.Liabilities.Any()) { <tr><td colspan="2" class="text-muted ps-4">Tidak ada</td></tr> }
+                        @foreach (var r in Model.Liabilities)
+                        {
+                            <tr><td class="ps-4"><span class="text-muted small me-2">@r.Code</span>@r.Name</td><td class="text-end">@r.Amount.ToString("N2")</td></tr>
+                        }
+                        <tr><td class="text-end fw-semibold">Total Liabilitas</td><td class="text-end fw-semibold">@Model.TotalLiabilities.ToString("N2")</td></tr>
+
+                        <tr class="table-light"><td class="fw-bold" colspan="2">Ekuitas</td></tr>
+                        @foreach (var r in Model.Equity)
+                        {
+                            <tr><td class="ps-4"><span class="text-muted small me-2">@r.Code</span>@r.Name</td><td class="text-end">@r.Amount.ToString("N2")</td></tr>
+                        }
+                        <tr><td class="ps-4">Laba (Rugi) Berjalan</td><td class="text-end @(Model.NetIncome < 0 ? "text-danger" : "")">@Model.NetIncome.ToString("N2")</td></tr>
+                        <tr><td class="text-end fw-semibold">Total Ekuitas</td><td class="text-end fw-semibold">@Model.TotalEquity.ToString("N2")</td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light"><td class="text-end fw-bold">Total Liabilitas + Ekuitas</td><td class="text-end fw-bold">@Model.TotalLiabilitiesEquity.ToString("N2")</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

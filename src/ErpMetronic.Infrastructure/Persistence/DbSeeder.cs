@@ -383,6 +383,20 @@ public static class DbSeeder
             }
         }
 
+        // 12b-9. Menu Keuangan → Laba Rugi & Neraca (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "FinanceReports" && m.Action == "BalanceSheet"))
+        {
+            var financeGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Keuangan" && m.ParentId == null);
+            if (financeGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == financeGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Laba Rugi", Icon = "bi-graph-up-arrow", Controller = "FinanceReports", Action = "IncomeStatement", ParentId = financeGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true },
+                    new MenuItem { Title = "Neraca", Icon = "bi-bank", Controller = "FinanceReports", Action = "BalanceSheet", ParentId = financeGroup.Id, SortOrder = maxChild + 2, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {
