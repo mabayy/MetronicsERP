@@ -208,9 +208,11 @@ public class SalesInvoicesController : Controller
             .Include(i => i.Customer).Include(i => i.SalesOrder).Include(i => i.Currency).Include(i => i.WithholdingTax).Include(i => i.PaymentTerm)
             .Include(i => i.Lines).ThenInclude(l => l.Product)
             .Include(i => i.Lines).ThenInclude(l => l.Tax)
-            .Include(i => i.Payments)
+            .Include(i => i.Payments).ThenInclude(p => p.CashBankAccount)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (inv is null) return NotFound();
+        ViewBag.CashBankAccounts = new SelectList(await _db.CashBankAccounts.Where(a => a.IsActive).OrderBy(a => a.Kind).ThenBy(a => a.Code)
+            .Select(a => new { a.Id, Display = a.Name }).ToListAsync(), "Id", "Display");
         return View(inv);
     }
 
@@ -229,6 +231,7 @@ public class SalesInvoicesController : Controller
             TempData["Error"] = $"Jumlah melebihi sisa tagihan ({inv.Outstanding:N2}).";
         else
         {
+            var cashAccount = model.CashBankAccountId is int cid ? await _db.CashBankAccounts.FindAsync(cid) : null;
             var payment = new SalesPayment
             {
                 ReferenceNumber = await _docNumber.NextAsync(DocumentCodes.SalesPayment, model.PaymentDate),
@@ -236,6 +239,7 @@ public class SalesInvoicesController : Controller
                 PaymentDate = model.PaymentDate,
                 Amount = model.Amount,
                 Method = model.Method,
+                CashBankAccountId = cashAccount?.Id,
                 Note = model.Note,
                 CreatedBy = User.Identity?.Name
             };
@@ -244,7 +248,7 @@ public class SalesInvoicesController : Controller
             inv.Status = inv.PaidAmount >= inv.Total ? SalesInvoiceStatus.Paid : SalesInvoiceStatus.PartiallyPaid;
             inv.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            await _journal.PostSalesPaymentAsync(payment, inv.CurrencyId, User.Identity?.Name); // jurnal otomatis
+            await _journal.PostSalesPaymentAsync(payment, inv.CurrencyId, cashAccount?.AccountCode ?? AccountCodes.Cash, User.Identity?.Name); // jurnal otomatis
             TempData["Success"] = "Penerimaan pembayaran dicatat.";
         }
         return RedirectToAction(nameof(Details), new { id = model.SalesInvoiceId });

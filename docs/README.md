@@ -33,6 +33,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 23 | [Laporan Keuangan](23-laporan-keuangan.md) | Laba Rugi (Income Statement) & Neraca (Balance Sheet) dari jurnal | ✅ |
 | 24 | [Termin, Jatuh Tempo & Batas Kredit](24-termin-jatuh-tempo-batas-kredit.md) | Payment term, due date otomatis, batas kredit, aging by due date | ✅ |
 | 25 | [Laporan Arus Kas](25-arus-kas.md) | Cash flow: mutasi kas/bank per kategori + saldo awal/akhir | ✅ |
+| 26 | [Modul Bank & Kas](26-bank-kas.md) | Master akun kas/bank, routing pembayaran ke GL, rekonsiliasi bank | ✅ |
 
 ## Cara membaca dokumen ini
 

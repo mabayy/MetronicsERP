@@ -50,6 +50,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<RfqQuote> RfqQuotes => Set<RfqQuote>();
     public DbSet<Tax> Taxes => Set<Tax>();
     public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
+    public DbSet<CashBankAccount> CashBankAccounts => Set<CashBankAccount>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -231,6 +232,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         });
 
         builder.Entity<Tax>().HasIndex(x => x.Code).IsUnique();
+
+        // Akun Kas/Bank + relasi pembayaran (Restrict agar tidak terhapus saat dipakai).
+        builder.Entity<CashBankAccount>().HasIndex(x => x.Code).IsUnique();
+        builder.Entity<PurchasePayment>().HasOne(x => x.CashBankAccount).WithMany().HasForeignKey(x => x.CashBankAccountId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesPayment>().HasOne(x => x.CashBankAccount).WithMany().HasForeignKey(x => x.CashBankAccountId).OnDelete(DeleteBehavior.Restrict);
 
         // Termin pembayaran + relasi ke mitra & faktur (Restrict agar tidak terhapus saat dipakai).
         builder.Entity<PaymentTerm>().HasIndex(x => x.Code).IsUnique();

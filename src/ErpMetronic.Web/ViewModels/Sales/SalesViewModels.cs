@@ -94,6 +94,9 @@ public class SalesPaymentViewModel
     [Range(0.01, double.MaxValue, ErrorMessage = "Jumlah harus lebih dari 0"), Display(Name = "Jumlah Diterima")]
     public decimal Amount { get; set; }
 
+    [Display(Name = "Akun Kas/Bank")]
+    public int? CashBankAccountId { get; set; }
+
     [Display(Name = "Metode"), StringLength(40)]
     public string? Method { get; set; }
 

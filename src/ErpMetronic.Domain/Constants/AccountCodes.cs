@@ -8,7 +8,8 @@ namespace ErpMetronic.Domain.Constants;
 /// </summary>
 public static class AccountCodes
 {
-    public const string Cash = "1100";              // Kas/Bank
+    public const string Cash = "1100";              // Kas
+    public const string Bank = "1110";              // Bank
     public const string AccountsReceivable = "1200"; // Piutang Usaha
     public const string Inventory = "1300";          // Persediaan
     public const string InputVat = "1310";           // PPN Masukan (pajak dibayar, aset)
@@ -24,7 +25,8 @@ public static class AccountCodes
     /// <summary>Bagan akun bawaan (kode, nama, jenis) untuk seeding.</summary>
     public static readonly (string Code, string Name, AccountType Type)[] Defaults =
     {
-        (Cash, "Kas/Bank", AccountType.Asset),
+        (Cash, "Kas", AccountType.Asset),
+        (Bank, "Bank", AccountType.Asset),
         (AccountsReceivable, "Piutang Usaha", AccountType.Asset),
         (Inventory, "Persediaan", AccountType.Asset),
         (InputVat, "PPN Masukan", AccountType.Asset),

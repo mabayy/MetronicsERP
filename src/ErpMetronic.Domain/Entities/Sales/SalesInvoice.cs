@@ -134,6 +134,10 @@ public class SalesPayment : BaseEntity
     [StringLength(40)]
     public string? Method { get; set; }
 
+    /// <summary>Akun kas/bank tujuan dana.</summary>
+    public int? CashBankAccountId { get; set; }
+    public CashBankAccount? CashBankAccount { get; set; }
+
     [StringLength(300)]
     public string? Note { get; set; }
 }

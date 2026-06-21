@@ -73,8 +73,8 @@ diurut berdasarkan dampak terhadap fondasi yang ada.
    ([Tahap 23](23-laporan-keuangan.md)); **Arus Kas** — ✅ **selesai** ([Tahap 25](25-arus-kas.md)).
 2. **Termin pembayaran & jatuh tempo** (Net 30, dst.) + **batas kredit pelanggan** — ✅ **selesai**
    (lihat [Tahap 24](24-termin-jatuh-tempo-batas-kredit.md)).
-3. **Modul Bank & Kas**: akun bank/kas, satu pembayaran untuk banyak faktur, uang muka (down payment),
-   **rekonsiliasi bank**.
+3. **Modul Bank & Kas**: akun bank/kas + routing pembayaran ke GL + **rekonsiliasi bank** — ✅ **selesai**
+   ([Tahap 26](26-bank-kas.md)). Lanjutan: satu pembayaran untuk banyak faktur & uang muka (down payment).
 4. **Tutup buku** periode/tahun (locking + jurnal penutup).
 
 ### Tier 2 — Fitur komersial

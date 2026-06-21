@@ -434,6 +434,33 @@ public static class DbSeeder
             }
         }
 
+        // 12b-13. Akun Kas/Bank bawaan (idempoten per kode)
+        var defaultCashBank = new[]
+        {
+            ("KAS", "Kas", Domain.Entities.CashBankAccountKind.Cash, Domain.Constants.AccountCodes.Cash),
+            ("BANK", "Bank", Domain.Entities.CashBankAccountKind.Bank, Domain.Constants.AccountCodes.Bank)
+        };
+        foreach (var (code, name, kind, account) in defaultCashBank)
+        {
+            if (!await context.CashBankAccounts.AnyAsync(a => a.Code == code))
+                context.CashBankAccounts.Add(new CashBankAccount { Code = code, Name = name, Kind = kind, AccountCode = account, IsActive = true, IsSystem = true });
+        }
+        await context.SaveChangesAsync();
+
+        // 12b-14. Menu Keuangan → Bank & Kas + Rekonsiliasi (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "CashBankAccounts"))
+        {
+            var financeGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Keuangan" && m.ParentId == null);
+            if (financeGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == financeGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Bank & Kas", Icon = "bi-wallet2", Controller = "CashBankAccounts", Action = "Index", ParentId = financeGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true },
+                    new MenuItem { Title = "Rekonsiliasi Bank", Icon = "bi-check2-square", Controller = "BankReconciliation", Action = "Index", ParentId = financeGroup.Id, SortOrder = maxChild + 2, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

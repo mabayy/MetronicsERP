@@ -75,15 +75,15 @@ public class JournalService : IJournalService
             }, user);
     }
 
-    public async Task PostPurchasePaymentAsync(PurchasePayment payment, int? currencyId, string? user)
+    public async Task PostPurchasePaymentAsync(PurchasePayment payment, int? currencyId, string cashAccountCode, string? user)
     {
         var amount = await ToBaseAsync(payment.Amount, currencyId, payment.PaymentDate);
-        // Dr Hutang Usaha, Cr Kas/Bank
+        // Dr Hutang Usaha, Cr Kas/Bank (akun terpilih)
         await PostAsync(payment.PaymentDate, $"Pembayaran Pembelian {payment.ReferenceNumber}",
             "PurchasePayment", payment.Id, new[]
             {
                 (AccountCodes.AccountsPayable, amount, 0m),
-                (AccountCodes.Cash, 0m, amount)
+                (cashAccountCode, 0m, amount)
             }, user);
     }
 
@@ -104,14 +104,14 @@ public class JournalService : IJournalService
             }, user);
     }
 
-    public async Task PostSalesPaymentAsync(SalesPayment payment, int? currencyId, string? user)
+    public async Task PostSalesPaymentAsync(SalesPayment payment, int? currencyId, string cashAccountCode, string? user)
     {
         var amount = await ToBaseAsync(payment.Amount, currencyId, payment.PaymentDate);
-        // Dr Kas/Bank, Cr Piutang Usaha
+        // Dr Kas/Bank (akun terpilih), Cr Piutang Usaha
         await PostAsync(payment.PaymentDate, $"Penerimaan Penjualan {payment.ReferenceNumber}",
             "SalesPayment", payment.Id, new[]
             {
-                (AccountCodes.Cash, amount, 0m),
+                (cashAccountCode, amount, 0m),
                 (AccountCodes.AccountsReceivable, 0m, amount)
             }, user);
     }

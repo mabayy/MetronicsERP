@@ -48,4 +48,8 @@ public class JournalLine : BaseEntity
 
     [StringLength(250)]
     public string? Description { get; set; }
+
+    /// <summary>Penanda rekonsiliasi bank/kas (dicocokkan dengan rekening koran).</summary>
+    public bool IsReconciled { get; set; }
+    public DateTime? ReconciledDate { get; set; }
 }

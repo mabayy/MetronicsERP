@@ -115,11 +115,15 @@ public class FinanceReportsController : Controller
         var fromDate = from ?? new DateTime(today.Year, today.Month, 1);
         var toDate = to ?? today;
 
-        var cash = await _db.ChartOfAccounts.FirstOrDefaultAsync(a => a.Code == Domain.Constants.AccountCodes.Cash);
-        var vm = new CashFlowVm { From = fromDate, To = toDate };
-        if (cash is null) return View(vm);
+        // Seluruh akun GL yang ditandai sebagai kas/bank.
+        var codes = await _db.CashBankAccounts.Select(a => a.AccountCode).Distinct().ToListAsync();
+        if (codes.Count == 0) codes.Add(Domain.Constants.AccountCodes.Cash);
+        var acctIds = await _db.ChartOfAccounts.Where(a => codes.Contains(a.Code)).Select(a => a.Id).ToListAsync();
 
-        var q = _db.JournalLines.Include(l => l.JournalEntry).Where(l => l.AccountId == cash.Id);
+        var vm = new CashFlowVm { From = fromDate, To = toDate };
+        if (acctIds.Count == 0) return View(vm);
+
+        var q = _db.JournalLines.Include(l => l.JournalEntry).Where(l => acctIds.Contains(l.AccountId));
         vm.Opening = await q.Where(l => l.JournalEntry!.EntryDate < fromDate).SumAsync(l => (decimal?)(l.Debit - l.Credit)) ?? 0;
 
         var inRange = await q.Where(l => l.JournalEntry!.EntryDate >= fromDate && l.JournalEntry.EntryDate <= toDate)

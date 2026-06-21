@@ -1,0 +1,112 @@
+@model ErpMetronic.Web.Controllers.ReconcileVm
+@{ ViewData["Title"] = "Rekonsiliasi Bank/Kas"; }
+
+<div class="card mb-3">
+    <div class="card-header">
+        <span><i class="bi bi-bank text-primary me-2"></i> Rekonsiliasi Bank/Kas</span>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-sm-5 col-md-4">
+                <label class="form-label small fw-semibold mb-1">Akun Kas/Bank</label>
+                <select name="accountId" class="form-select form-select-sm">
+                    @foreach (var a in Model.Accounts)
+                    {
+                        <option value="@a.Id" selected="@(a.Id == Model.AccountId)">@a.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-3 col-md-3">
+                <label class="form-label small fw-semibold mb-1">Dari</label>
+                <input type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-sm-3 col-md-3">
+                <label class="form-label small fw-semibold mb-1">Sampai</label>
+                <input type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Tampilkan</button></div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Account == null)
+{
+    <div class="alert alert-info"><i class="bi bi-info-circle me-1"></i> Belum ada akun kas/bank</div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Saldo Buku</div><div class="fs-5 fw-bold">@Model.BookBalance.ToString("N2")</div></div></div>
+        <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Saldo Terekonsiliasi</div><div class="fs-5 fw-bold">@Model.ReconciledBalance.ToString("N2")</div></div></div>
+        <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Saldo Rekening Koran</div><input type="number" step="0.01" id="stmt" class="form-control form-control-sm mt-1" placeholder="0.00" /></div></div>
+        <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Selisih</div><div class="fs-5 fw-bold"><span id="diff"></span></div></div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Lembar Kerja Rekonsiliasi (@Model.From.ToString("dd/MM/yyyy") – @Model.To.ToString("dd/MM/yyyy"))</div>
+        <div class="card-body p-0">
+            <form method="post" asp-action="Save">
+                <input type="hidden" name="accountId" value="@Model.AccountId" />
+                <input type="hidden" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr>
+                        <th style="width:40px;"></th>
+                        <th>Tanggal</th>
+                        <th>Referensi</th>
+                        <th>Keterangan</th>
+                        <th class="text-end">Masuk</th>
+                        <th class="text-end">Keluar</th>
+                        <th>Status</th>
+                    </tr></thead>
+                    <tbody>
+                    @if (!Model.Lines.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">Tidak ada mutasi pada periode ini</td></tr>
+                    }
+                    @foreach (var l in Model.Lines)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="reconciledIds" value="@l.JournalLineId" checked="@l.IsReconciled" class="form-check-input recCheck" />
+                                <input type="hidden" name="allIds" value="@l.JournalLineId" />
+                            </td>
+                            <td>@l.Date.ToString("dd/MM/yyyy")</td>
+                            <td><span class="badge-light-primary px-2 py-1 rounded">@l.Reference</span></td>
+                            <td>@l.Description</td>
+                            <td class="text-end text-success">@(l.In != 0 ? l.In.ToString("N2") : "")</td>
+                            <td class="text-end text-danger">@(l.Out != 0 ? l.Out.ToString("N2") : "")</td>
+                            <td>
+                                @if (l.IsReconciled) { <span class="badge-light-success px-2 py-1 rounded">Terekonsiliasi</span> }
+                                else { <span class="badge-light-warning px-2 py-1 rounded">Belum</span> }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                <div class="p-3 border-top">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Simpan Rekonsiliasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<script>
+    (function () {
+        var reconciled = @Model.ReconciledBalance.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var stmt = document.getElementById('stmt');
+        var diff = document.getElementById('diff');
+        function fmt(n) {
+            return n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function recompute() {
+            if (!stmt || !diff) return;
+            if (stmt.value === '') { diff.textContent = fmt(-reconciled); return; }
+            var v = parseFloat(stmt.value);
+            if (isNaN(v)) { diff.textContent = ''; return; }
+            diff.textContent = fmt(v - reconciled);
+        }
+        if (stmt) { stmt.addEventListener('input', recompute); recompute(); }
+    })();
+</script>

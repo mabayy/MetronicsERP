@@ -141,6 +141,10 @@ public class PurchasePayment : BaseEntity
     [StringLength(40)]
     public string? Method { get; set; }
 
+    /// <summary>Akun kas/bank sumber dana.</summary>
+    public int? CashBankAccountId { get; set; }
+    public CashBankAccount? CashBankAccount { get; set; }
+
     [StringLength(300)]
     public string? Note { get; set; }
 }
