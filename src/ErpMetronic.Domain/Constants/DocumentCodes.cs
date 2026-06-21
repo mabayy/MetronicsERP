@@ -23,6 +23,7 @@ public static class DocumentCodes
     public const string JournalVoucher = "JV";
     public const string SalesReturn = "SRET";
     public const string PurchaseReturn = "PRET";
+    public const string SalesQuotation = "SQ";
 
     /// <summary>Kode bawaan beserta nama default (untuk seeding).</summary>
     public static readonly (string Code, string Name)[] BuiltIns =
@@ -43,6 +44,7 @@ public static class DocumentCodes
         (RequestForQuotation, "Request for Quotation"),
         (JournalVoucher, "Jurnal"),
         (SalesReturn, "Retur Penjualan"),
-        (PurchaseReturn, "Retur Pembelian")
+        (PurchaseReturn, "Retur Pembelian"),
+        (SalesQuotation, "Penawaran Penjualan")
     };
 }

@@ -485,6 +485,18 @@ public static class DbSeeder
             }
         }
 
+        // 12b-17. Menu Penjualan → Penawaran (Sales Quotation) (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "SalesQuotations"))
+        {
+            var salesGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Penjualan" && m.ParentId == null);
+            if (salesGroup is not null)
+            {
+                var minChild = await context.MenuItems.Where(m => m.ParentId == salesGroup.Id).MinAsync(m => (int?)m.SortOrder) ?? 1;
+                context.MenuItems.Add(new MenuItem { Title = "Penawaran", Icon = "bi-file-earmark-text", Controller = "SalesQuotations", Action = "Index", ParentId = salesGroup.Id, SortOrder = minChild - 1, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

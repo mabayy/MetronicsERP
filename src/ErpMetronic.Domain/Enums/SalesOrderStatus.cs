@@ -17,3 +17,12 @@ public enum SalesInvoiceStatus
     PartiallyPaid = 1,
     Paid = 2
 }
+
+/// <summary>Status siklus hidup Penawaran Penjualan (Sales Quotation).</summary>
+public enum SalesQuotationStatus
+{
+    Draft = 0,
+    Sent = 1,
+    Accepted = 2,
+    Rejected = 3
+}

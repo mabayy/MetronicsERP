@@ -1,0 +1,248 @@
+@using ErpMetronic.Domain.Entities
+@model SalesQuotationCreateViewModel
+@{
+    ViewData["Title"] = "Penawaran Penjualan Baru";
+    var products = ViewBag.Products as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var vatTaxes = ViewBag.VatTaxes as IEnumerable<Tax> ?? Enumerable.Empty<Tax>();
+    var whtTaxes = ViewBag.WhtTaxes as IEnumerable<Tax> ?? Enumerable.Empty<Tax>();
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-file-earmark-text text-primary me-2"></i> Buat Penawaran Penjualan</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label asp-for="CustomerId" class="form-label fw-semibold"></label>
+                    <select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select"><option value="">-- Pilih pelanggan --</option></select>
+                    <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="WarehouseId" class="form-label fw-semibold"></label>
+                    <select asp-for="WarehouseId" asp-items="ViewBag.Warehouses" class="form-select"><option value="">-- Pilih gudang --</option></select>
+                    <span asp-validation-for="WarehouseId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="CurrencyId" class="form-label fw-semibold"></label>
+                    <select asp-for="CurrencyId" asp-items="ViewBag.Currencies" class="form-select"><option value="">-</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="QuotationDate" class="form-label fw-semibold">Tanggal Penawaran</label>
+                    <input asp-for="QuotationDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ValidUntil" class="form-label fw-semibold">Berlaku Sampai</label>
+                    <input asp-for="ValidUntil" type="date" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Note" class="form-label fw-semibold"></label>
+                    <input asp-for="Note" class="form-control" />
+                </div>
+            </div>
+
+            <h6 class="fw-semibold">Detail Item</h6>
+            <table class="table align-middle" id="linesTable">
+                <thead><tr>
+                    <th style="width:28%">Produk</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Harga Satuan</th>
+                    <th class="text-end" style="width:90px">Disk %</th>
+                    <th style="width:14%">PPN</th>
+                    <th class="text-end">Jumlah</th>
+                    <th class="text-end">PPN Rp</th>
+                    <th></th>
+                </tr></thead>
+                <tbody id="linesBody">
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    var it = Model.Items[i];
+                    <tr class="line-row">
+                        <td>
+                            <select name="Items[@i].ProductId" class="form-select form-select-sm">
+                                <option value="">-- Pilih produk --</option>
+                                @foreach (var p in products)
+                                {
+                                    <option value="@p.Id" selected="@(((int)p.Id) == it.ProductId)">@p.Display</option>
+                                }
+                            </select>
+                        </td>
+                        <td><input name="Items[@i].Quantity" type="number" min="1" value="@it.Quantity" class="form-control form-control-sm text-end qty" /></td>
+                        <td><input name="Items[@i].UnitPrice" type="number" min="0" step="0.01" value="@it.UnitPrice" class="form-control form-control-sm text-end price" /></td>
+                        <td><input name="Items[@i].DiscountPercent" type="number" min="0" max="100" step="0.01" value="@it.DiscountPercent" class="form-control form-control-sm text-end disc" /></td>
+                        <td>
+                            <select name="Items[@i].TaxId" class="form-select form-select-sm tax">
+                                <option value="" data-rate="0">Tanpa PPN</option>
+                                @foreach (var t in vatTaxes)
+                                {
+                                    <option value="@t.Id" data-rate="@t.Rate" selected="@(t.Id == it.TaxId)">@t.Code (@t.Rate.ToString("0.##")%)</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="text-end subtotal">0</td>
+                        <td class="text-end linevat text-muted">0</td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-light btn-sm" id="addLine"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+
+            <div class="row mt-4">
+                <div class="col-md-5">
+                    <label asp-for="HeaderDiscountPercent" class="form-label fw-semibold"></label>
+                    <input asp-for="HeaderDiscountPercent" type="number" min="0" max="100" step="0.01" class="form-control" id="headerDisc" />
+                    <label asp-for="WithholdingTaxId" class="form-label fw-semibold mt-3"></label>
+                    <select asp-for="WithholdingTaxId" class="form-select" id="whtSelect">
+                        <option value="" data-rate="0">Tanpa PPh</option>
+                        @foreach (var t in whtTaxes)
+                        {
+                            <option value="@t.Id" data-rate="@t.Rate">@t.Code — @t.Name (@t.Rate.ToString("0.##")%)</option>
+                        }
+                    </select>
+                    <span class="text-muted small">Diskon header & PPh dihitung atas DPP (setelah diskon baris).</span>
+                </div>
+                <div class="col-md-7">
+                    <table class="table table-sm mb-0">
+                        <tr><td class="text-end fw-semibold">Subtotal (setelah diskon baris)</td><td class="text-end" style="width:180px"><span id="sumNet">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold text-danger">Diskon Header</td><td class="text-end text-danger">−<span id="sumHdrDisc">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold">DPP</td><td class="text-end"><span id="sumDpp">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold">PPN</td><td class="text-end"><span id="sumVat">0</span></td></tr>
+                        <tr><td class="text-end fw-semibold text-danger">PPh dipotong</td><td class="text-end text-danger">−<span id="sumWht">0</span></td></tr>
+                        <tr class="table-light"><td class="text-end fw-bold">Total</td><td class="text-end fw-bold"><span id="sumTotal">0</span></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Penawaran (Draft)</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+
+            <template id="lineTemplate">
+                <tr class="line-row">
+                    <td>
+                        <select name="Items[__I__].ProductId" class="form-select form-select-sm">
+                            <option value="">-- Pilih produk --</option>
+                            @foreach (var p in products)
+                            {
+                                <option value="@p.Id">@p.Display</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input name="Items[__I__].Quantity" type="number" min="1" value="1" class="form-control form-control-sm text-end qty" /></td>
+                    <td><input name="Items[__I__].UnitPrice" type="number" min="0" step="0.01" value="0" class="form-control form-control-sm text-end price" /></td>
+                    <td><input name="Items[__I__].DiscountPercent" type="number" min="0" max="100" step="0.01" value="0" class="form-control form-control-sm text-end disc" /></td>
+                    <td>
+                        <select name="Items[__I__].TaxId" class="form-select form-select-sm tax">
+                            <option value="" data-rate="0">Tanpa PPN</option>
+                            @foreach (var t in vatTaxes)
+                            {
+                                <option value="@t.Id" data-rate="@t.Rate">@t.Code (@t.Rate.ToString("0.##")%)</option>
+                            }
+                        </select>
+                    </td>
+                    <td class="text-end subtotal">0</td>
+                    <td class="text-end linevat text-muted">0</td>
+                    <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger removeLine"><i class="bi bi-x-lg"></i></button></td>
+                </tr>
+            </template>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const body = document.getElementById('linesBody');
+        const tpl = document.getElementById('lineTemplate').innerHTML;
+        const fmt = n => n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const r2 = n => Math.round(n * 100) / 100;
+        function reindex() {
+            body.querySelectorAll('.line-row').forEach(function (row, i) {
+                row.querySelectorAll('[name]').forEach(function (el) {
+                    el.name = el.name.replace(/Items\[\d+\]/, 'Items[' + i + ']').replace(/Items\[__I__\]/, 'Items[' + i + ']');
+                });
+            });
+        }
+        function recalcAll() {
+            const rows = [...body.querySelectorAll('.line-row')];
+            // Pass 1: neto per baris (setelah diskon baris)
+            const nets = rows.map(function (row) {
+                const q = parseFloat(row.querySelector('.qty').value) || 0;
+                const p = parseFloat(row.querySelector('.price').value) || 0;
+                const d = parseFloat(row.querySelector('.disc').value) || 0;
+                const gross = q * p;
+                const net = gross - r2(gross * d / 100);
+                row.querySelector('.subtotal').textContent = fmt(net);
+                return net;
+            });
+            const S = nets.reduce((a, b) => a + b, 0);
+            const hpct = parseFloat(document.getElementById('headerDisc').value) || 0;
+            const hAmt = r2(S * hpct / 100);
+            // Pass 2: alokasi diskon header proporsional, lalu PPN atas taxable
+            let vat = 0;
+            rows.forEach(function (row, i) {
+                const alloc = S > 0 ? r2(hAmt * nets[i] / S) : 0;
+                const taxable = nets[i] - alloc;
+                const sel = row.querySelector('.tax');
+                const rate = sel && sel.value ? (parseFloat(sel.selectedOptions[0].dataset.rate) || 0) : 0;
+                const lv = r2(taxable * rate / 100);
+                row.querySelector('.linevat').textContent = fmt(lv);
+                vat += lv;
+            });
+            const dpp = S - hAmt;
+            const wsel = document.getElementById('whtSelect');
+            const wrate = wsel && wsel.value ? (parseFloat(wsel.selectedOptions[0].dataset.rate) || 0) : 0;
+            const wht = r2(dpp * wrate / 100);
+            document.getElementById('sumNet').textContent = fmt(S);
+            document.getElementById('sumHdrDisc').textContent = fmt(hAmt);
+            document.getElementById('sumDpp').textContent = fmt(dpp);
+            document.getElementById('sumVat').textContent = fmt(vat);
+            document.getElementById('sumWht').textContent = fmt(wht);
+            document.getElementById('sumTotal').textContent = fmt(dpp + vat - wht);
+        }
+        function addLine() {
+            body.insertAdjacentHTML('beforeend', tpl.replace(/__I__/g, body.children.length));
+            reindex();
+        }
+        document.getElementById('addLine').addEventListener('click', function () { addLine(); recalcAll(); });
+        body.addEventListener('click', function (e) {
+            if (e.target.closest('.removeLine')) { e.target.closest('.line-row').remove(); reindex(); recalcAll(); }
+        });
+        body.addEventListener('input', recalcAll);
+        body.addEventListener('change', recalcAll);
+        document.getElementById('whtSelect').addEventListener('change', recalcAll);
+        document.getElementById('headerDisc').addEventListener('input', recalcAll);
+
+        // ----- Auto-isi harga dari daftar harga pelanggan -----
+        const PRICING = {
+            def: @Json.Serialize(ViewBag.DefaultPrices ?? new Dictionary<int, decimal>()),
+            custList: @Json.Serialize(ViewBag.CustomerPriceList ?? new Dictionary<int, int>()),
+            listPrices: @Json.Serialize(ViewBag.PriceListPrices ?? new Dictionary<int, Dictionary<int, decimal>>())
+        };
+        const custSel = document.querySelector('select[name="CustomerId"]');
+        function priceFor(pid) {
+            if (!pid) return null;
+            const cust = custSel ? custSel.value : '';
+            const listId = (cust && PRICING.custList) ? PRICING.custList[cust] : null;
+            if (listId != null && PRICING.listPrices[listId] && PRICING.listPrices[listId][pid] != null)
+                return PRICING.listPrices[listId][pid];
+            return (PRICING.def && PRICING.def[pid] != null) ? PRICING.def[pid] : null;
+        }
+        function applyPrice(row) {
+            const psel = row.querySelector('select[name$=".ProductId"]');
+            const price = priceFor(psel && psel.value);
+            if (price != null) row.querySelector('.price').value = price;
+        }
+        body.addEventListener('change', function (e) {
+            if (e.target.matches('select[name$=".ProductId"]')) { applyPrice(e.target.closest('.line-row')); recalcAll(); }
+        });
+        if (custSel) custSel.addEventListener('change', function () {
+            body.querySelectorAll('.line-row').forEach(applyPrice); recalcAll();
+        });
+
+        if (body.children.length === 0) { addLine(); }
+        recalcAll();
+    </script>
+}

@@ -81,7 +81,7 @@ diurut berdasarkan dampak terhadap fondasi yang ada.
 ### Tier 2 — Fitur komersial
 5. **Price List** (daftar harga per pelanggan/mata uang) — ✅ **selesai** ([Tahap 28](28-price-list.md));
    harga bertingkat & aturan diskon menyusul.
-6. **Sales Quotation → SO** (penawaran penjualan, melengkapi RFQ di sisi beli).
+6. **Sales Quotation → SO** (penawaran penjualan) — ✅ **selesai** ([Tahap 29](29-sales-quotation.md)).
 7. **Workflow approval** berjenjang (PO/SO di atas nilai tertentu butuh persetujuan).
 8. **Batch/Lot & Serial number + kedaluwarsa**, serta **reorder point (min/max)** + saran pembelian.
 

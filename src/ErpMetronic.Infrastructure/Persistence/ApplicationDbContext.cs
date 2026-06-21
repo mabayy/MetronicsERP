@@ -54,6 +54,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<FiscalYear> FiscalYears => Set<FiscalYear>();
     public DbSet<PriceList> PriceLists => Set<PriceList>();
     public DbSet<PriceListItem> PriceListItems => Set<PriceListItem>();
+    public DbSet<SalesQuotation> SalesQuotations => Set<SalesQuotation>();
+    public DbSet<SalesQuotationItem> SalesQuotationItems => Set<SalesQuotationItem>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -248,6 +250,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
         });
         builder.Entity<Customer>().HasOne(x => x.PriceList).WithMany().HasForeignKey(x => x.PriceListId).OnDelete(DeleteBehavior.Restrict);
+
+        // Penawaran Penjualan (Sales Quotation)
+        builder.Entity<SalesQuotation>(e =>
+        {
+            e.HasIndex(x => x.ReferenceNumber);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.WithholdingTax).WithMany().HasForeignKey(x => x.WithholdingTaxId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SalesQuotationItem>(e =>
+        {
+            e.HasOne(x => x.SalesQuotation).WithMany(p => p.Items).HasForeignKey(x => x.SalesQuotationId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Tax).WithMany().HasForeignKey(x => x.TaxId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         // Akun Kas/Bank + relasi pembayaran (Restrict agar tidak terhapus saat dipakai).
         builder.Entity<CashBankAccount>().HasIndex(x => x.Code).IsUnique();

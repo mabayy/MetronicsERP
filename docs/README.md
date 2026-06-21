@@ -36,6 +36,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 26 | [Modul Bank & Kas](26-bank-kas.md) | Master akun kas/bank, routing pembayaran ke GL, rekonsiliasi bank | ✅ |
 | 27 | [Tutup Buku](27-tutup-buku.md) | Jurnal penutup laba/rugi → Laba Ditahan + kunci periode | ✅ |
 | 28 | [Daftar Harga (Price List)](28-price-list.md) | Daftar harga per pelanggan, auto-isi harga di Sales Order | ✅ |
+| 29 | [Penawaran Penjualan (Quotation)](29-sales-quotation.md) | Quotation → konversi ke Sales Order (gaya Odoo) | ✅ |
 
 ## Cara membaca dokumen ini
 

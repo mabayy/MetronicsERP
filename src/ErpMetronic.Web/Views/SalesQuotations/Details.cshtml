@@ -1,0 +1,103 @@
+@using ErpMetronic.Domain.Enums
+@model ErpMetronic.Domain.Entities.SalesQuotation
+@{
+    ViewData["Title"] = "Penawaran " + Model.ReferenceNumber;
+    var curCode = Model.Currency?.Code;
+    (string Label, string Css) St(SalesQuotationStatus s) => s switch
+    {
+        SalesQuotationStatus.Draft => ("Draft", "badge-light-warning"),
+        SalesQuotationStatus.Sent => ("Terkirim", "badge-light-primary"),
+        SalesQuotationStatus.Accepted => ("Diterima", "badge-light-success"),
+        SalesQuotationStatus.Rejected => ("Ditolak", "badge-light-danger"),
+        _ => (s.ToString(), "badge-light-primary")
+    };
+    var st = St(Model.Status);
+}
+
+<div class="card mb-3">
+    <div class="card-header justify-content-between">
+        <span>Penawaran @Model.ReferenceNumber</span>
+        <span class="@st.Css px-2 py-1 rounded">@st.Label</span>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-3">
+            <dt class="col-sm-3">Tanggal</dt><dd class="col-sm-9">@Model.QuotationDate.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Berlaku Sampai</dt><dd class="col-sm-9">@Model.ValidUntil.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Pelanggan</dt><dd class="col-sm-9">@Model.Customer?.Name</dd>
+            <dt class="col-sm-3">Gudang</dt><dd class="col-sm-9">@Model.Warehouse?.Name</dd>
+            <dt class="col-sm-3">Mata Uang</dt><dd class="col-sm-9">@(Model.Currency?.Code ?? "—")</dd>
+            <dt class="col-sm-3">Catatan</dt><dd class="col-sm-9">@Model.Note</dd>
+        </dl>
+        <div class="d-flex gap-2 flex-wrap">
+            @if (Model.Status == SalesQuotationStatus.Draft)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-light btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                <form asp-action="Send" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Tandai penawaran ini sebagai terkirim?');">
+                    <button class="btn btn-primary btn-sm"><i class="bi bi-send"></i> Tandai Terkirim</button>
+                </form>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Hapus penawaran ini?');">
+                    <button class="btn btn-light btn-sm text-danger"><i class="bi bi-trash"></i> Hapus</button>
+                </form>
+            }
+            @if (Model.Status == SalesQuotationStatus.Sent)
+            {
+                <form asp-action="Accept" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Terima penawaran ini?');">
+                    <button class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Terima</button>
+                </form>
+                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Tolak penawaran ini?');">
+                    <button class="btn btn-light btn-sm text-danger"><i class="bi bi-x-circle"></i> Tolak</button>
+                </form>
+            }
+            @if (Model.Status == SalesQuotationStatus.Accepted)
+            {
+                @if (Model.ConvertedSalesOrderId == null)
+                {
+                    <form asp-action="ConvertToSo" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Konversi penawaran ini menjadi Sales Order?');">
+                        <button class="btn btn-primary btn-sm"><i class="bi bi-arrow-right-circle"></i> Konversi ke Sales Order</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="SalesOrders" asp-action="Details" asp-route-id="@Model.ConvertedSalesOrderId" class="btn btn-light btn-sm"><i class="bi bi-box-arrow-up-right"></i> Lihat Sales Order</a>
+                }
+            }
+            <a asp-action="Index" class="btn btn-light btn-sm">Kembali</a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Item Penawaran</div>
+    <div class="card-body p-0">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Produk</th><th class="text-end">Qty</th><th class="text-end">Harga</th><th class="text-end">Disk</th><th>PPN</th><th class="text-end">Jumlah</th></tr></thead>
+            <tbody>
+            @foreach (var i in Model.Items)
+            {
+                <tr>
+                    <td>@i.Product?.Sku — @i.Product?.Name</td>
+                    <td class="text-end">@i.Quantity.ToString("N0")</td>
+                    <td class="text-end">@curCode @i.UnitPrice.ToString("N2")</td>
+                    <td class="text-end">@(i.DiscountPercent > 0 ? i.DiscountPercent.ToString("0.##") + "%" : "—")</td>
+                    <td><span class="text-muted small">@(i.Tax?.Code ?? "—")</span> <span class="text-end">@i.TaxAmount.ToString("N2")</span></td>
+                    <td class="text-end">@curCode @i.LineNet.ToString("N2")</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+                @if (Model.HeaderDiscountAmount > 0)
+                {
+                    <tr><td colspan="5" class="text-end fw-semibold">Subtotal</td><td class="text-end">@curCode @Model.NetBeforeHeaderDiscount.ToString("N2")</td></tr>
+                    <tr><td colspan="5" class="text-end fw-semibold text-danger">Diskon Header (@Model.HeaderDiscountPercent.ToString("0.##")%)</td><td class="text-end text-danger">−@curCode @Model.HeaderDiscountAmount.ToString("N2")</td></tr>
+                }
+                <tr><td colspan="5" class="text-end fw-semibold">DPP</td><td class="text-end">@curCode @Model.Subtotal.ToString("N2")</td></tr>
+                <tr><td colspan="5" class="text-end fw-semibold">PPN</td><td class="text-end">@curCode @Model.TaxTotal.ToString("N2")</td></tr>
+                @if (Model.WithholdingAmount > 0)
+                {
+                    <tr><td colspan="5" class="text-end fw-semibold text-danger">PPh @(Model.WithholdingTax?.Code)</td><td class="text-end text-danger">−@curCode @Model.WithholdingAmount.ToString("N2")</td></tr>
+                }
+                <tr class="table-light"><td colspan="5" class="text-end fw-bold">Total</td><td class="text-end fw-bold">@curCode @Model.GrandTotal.ToString("N2")</td></tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

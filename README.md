@@ -33,6 +33,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Bank & Kas | ✅ | Master akun kas/bank, routing pembayaran ke GL, rekonsiliasi bank |
 | Tutup Buku | ✅ | Jurnal penutup laba/rugi → Laba Ditahan + kunci periode (period lock) |
 | Daftar Harga (Price List) | ✅ | Daftar harga per pelanggan, harga jual auto-isi di Sales Order |
+| Penawaran Penjualan | ✅ | Sales Quotation → konversi ke Sales Order (gaya Odoo) |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -110,6 +111,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 26. [Modul Bank & Kas](docs/26-bank-kas.md)
 27. [Tutup Buku](docs/27-tutup-buku.md)
 28. [Daftar Harga (Price List)](docs/28-price-list.md)
+29. [Penawaran Penjualan (Quotation)](docs/29-sales-quotation.md)
 
 ## 🧰 Tech Stack
 
