@@ -32,6 +32,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 22 | [HPP & Moving Average](22-hpp-moving-average.md) | Biaya rata-rata bergerak + posting HPP otomatis saat pengiriman (perpetual) | ✅ |
 | 23 | [Laporan Keuangan](23-laporan-keuangan.md) | Laba Rugi (Income Statement) & Neraca (Balance Sheet) dari jurnal | ✅ |
 | 24 | [Termin, Jatuh Tempo & Batas Kredit](24-termin-jatuh-tempo-batas-kredit.md) | Payment term, due date otomatis, batas kredit, aging by due date | ✅ |
+| 25 | [Laporan Arus Kas](25-arus-kas.md) | Cash flow: mutasi kas/bank per kategori + saldo awal/akhir | ✅ |
 
 ## Cara membaca dokumen ini
 

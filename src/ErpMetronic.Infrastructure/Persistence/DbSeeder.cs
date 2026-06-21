@@ -397,6 +397,18 @@ public static class DbSeeder
             }
         }
 
+        // 12b-12. Menu Keuangan → Arus Kas (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "FinanceReports" && m.Action == "CashFlow"))
+        {
+            var financeGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Keuangan" && m.ParentId == null);
+            if (financeGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == financeGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Arus Kas", Icon = "bi-cash-stack", Controller = "FinanceReports", Action = "CashFlow", ParentId = financeGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12b-10. Termin pembayaran bawaan (idempoten per kode)
         var defaultTerms = new[]
         {

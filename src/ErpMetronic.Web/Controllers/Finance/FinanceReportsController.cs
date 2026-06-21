@@ -108,6 +108,54 @@ public class FinanceReportsController : Controller
         return View(vm);
     }
 
+    // Laporan Arus Kas: mutasi akun Kas/Bank dalam periode (kas masuk/keluar) + ringkasan per kategori.
+    public async Task<IActionResult> CashFlow(DateTime? from, DateTime? to)
+    {
+        var today = DateTime.Today;
+        var fromDate = from ?? new DateTime(today.Year, today.Month, 1);
+        var toDate = to ?? today;
+
+        var cash = await _db.ChartOfAccounts.FirstOrDefaultAsync(a => a.Code == Domain.Constants.AccountCodes.Cash);
+        var vm = new CashFlowVm { From = fromDate, To = toDate };
+        if (cash is null) return View(vm);
+
+        var q = _db.JournalLines.Include(l => l.JournalEntry).Where(l => l.AccountId == cash.Id);
+        vm.Opening = await q.Where(l => l.JournalEntry!.EntryDate < fromDate).SumAsync(l => (decimal?)(l.Debit - l.Credit)) ?? 0;
+
+        var inRange = await q.Where(l => l.JournalEntry!.EntryDate >= fromDate && l.JournalEntry.EntryDate <= toDate)
+            .OrderBy(l => l.JournalEntry!.EntryDate).ThenBy(l => l.Id).ToListAsync();
+
+        var running = vm.Opening;
+        foreach (var l in inRange)
+        {
+            running += l.Debit - l.Credit;
+            vm.Rows.Add(new CashFlowRow
+            {
+                Date = l.JournalEntry!.EntryDate,
+                Reference = l.JournalEntry.ReferenceNumber,
+                Description = l.Description ?? l.JournalEntry.Description,
+                Category = CategoryOf(l.JournalEntry.SourceType),
+                In = l.Debit,
+                Out = l.Credit,
+                Balance = running
+            });
+        }
+        vm.Summary = vm.Rows.GroupBy(r => r.Category)
+            .Select(g => new CashFlowSummary { Category = g.Key, In = g.Sum(x => x.In), Out = g.Sum(x => x.Out) })
+            .OrderByDescending(s => s.In + s.Out).ToList();
+        return View(vm);
+    }
+
+    private static string CategoryOf(string? sourceType) => sourceType switch
+    {
+        "SalesPayment" => "Penerimaan Penjualan",
+        "PurchasePayment" => "Pembayaran Pembelian",
+        "SalesReturn" => "Retur Penjualan",
+        "PurchaseReturn" => "Retur Pembelian",
+        null or "" => "Jurnal Manual",
+        _ => "Lainnya"
+    };
+
     // Neraca (Balance Sheet): Aset = Liabilitas + Ekuitas (termasuk laba berjalan) s.d. tanggal.
     public async Task<IActionResult> BalanceSheet(DateTime? asOf)
     {
@@ -189,6 +237,38 @@ public class BalanceSheetVm
     public decimal EquityPosted => Equity.Sum(r => r.Amount);
     public decimal TotalEquity => EquityPosted + NetIncome;
     public decimal TotalLiabilitiesEquity => TotalLiabilities + TotalEquity;
+}
+
+public class CashFlowRow
+{
+    public DateTime Date { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public decimal In { get; set; }
+    public decimal Out { get; set; }
+    public decimal Balance { get; set; }
+}
+
+public class CashFlowSummary
+{
+    public string Category { get; set; } = string.Empty;
+    public decimal In { get; set; }
+    public decimal Out { get; set; }
+    public decimal Net => In - Out;
+}
+
+public class CashFlowVm
+{
+    public DateTime From { get; set; }
+    public DateTime To { get; set; }
+    public decimal Opening { get; set; }
+    public List<CashFlowRow> Rows { get; set; } = new();
+    public List<CashFlowSummary> Summary { get; set; } = new();
+    public decimal TotalIn => Rows.Sum(r => r.In);
+    public decimal TotalOut => Rows.Sum(r => r.Out);
+    public decimal NetChange => TotalIn - TotalOut;
+    public decimal Closing => Opening + NetChange;
 }
 
 /// <summary>Baris laporan umur piutang/hutang per mitra (pelanggan/pemasok).</summary>

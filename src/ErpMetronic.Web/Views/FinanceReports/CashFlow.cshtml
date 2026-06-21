@@ -1,0 +1,83 @@
+@model ErpMetronic.Web.Controllers.CashFlowVm
+@{
+    ViewData["Title"] = "Arus Kas";
+}
+
+<div class="card">
+    <div class="card-header">
+        <span><i class="bi bi-cash-stack text-primary me-2"></i> Arus Kas (@Model.From.ToString("dd/MM/yyyy") – @Model.To.ToString("dd/MM/yyyy"))</span>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label small fw-semibold mb-1">Dari</label>
+                <input type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label small fw-semibold mb-1">Sampai</label>
+                <input type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Tampilkan</button></div>
+        </form>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Saldo Awal</div><div class="fs-5 fw-bold">@Model.Opening.ToString("N2")</div></div></div>
+            <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Kas Masuk</div><div class="fs-5 fw-bold text-success">@Model.TotalIn.ToString("N2")</div></div></div>
+            <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Kas Keluar</div><div class="fs-5 fw-bold text-danger">@Model.TotalOut.ToString("N2")</div></div></div>
+            <div class="col-md-3"><div class="border rounded p-3"><div class="text-muted small">Saldo Akhir</div><div class="fs-5 fw-bold">@Model.Closing.ToString("N2")</div></div></div>
+        </div>
+
+        @if (Model.Summary.Any())
+        {
+            <h6 class="fw-semibold">Ringkasan per Kategori</h6>
+            <div class="table-responsive mb-4">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Kategori</th><th class="text-end">Masuk</th><th class="text-end">Keluar</th><th class="text-end">Neto</th></tr></thead>
+                    <tbody>
+                    @foreach (var s in Model.Summary)
+                    {
+                        <tr>
+                            <td>@s.Category</td>
+                            <td class="text-end text-success">@(s.In != 0 ? s.In.ToString("N2") : "")</td>
+                            <td class="text-end text-danger">@(s.Out != 0 ? s.Out.ToString("N2") : "")</td>
+                            <td class="text-end fw-semibold @(s.Net < 0 ? "text-danger" : "")">@s.Net.ToString("N2")</td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light fw-bold"><td class="text-end">Total</td><td class="text-end">@Model.TotalIn.ToString("N2")</td><td class="text-end">@Model.TotalOut.ToString("N2")</td><td class="text-end">@Model.NetChange.ToString("N2")</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+
+        <h6 class="fw-semibold">Rincian Mutasi Kas/Bank</h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Tanggal</th><th>Referensi</th><th>Kategori</th><th>Keterangan</th><th class="text-end">Masuk</th><th class="text-end">Keluar</th><th class="text-end">Saldo</th></tr></thead>
+                <tbody>
+                    <tr class="table-light"><td colspan="6" class="fw-semibold">Saldo Awal</td><td class="text-end fw-semibold">@Model.Opening.ToString("N2")</td></tr>
+                    @if (!Model.Rows.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-3">Tidak ada mutasi kas pada periode ini</td></tr>
+                    }
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r.Date.ToString("dd/MM/yyyy")</td>
+                            <td><span class="badge-light-primary px-2 py-1 rounded">@r.Reference</span></td>
+                            <td class="text-muted small">@r.Category</td>
+                            <td>@r.Description</td>
+                            <td class="text-end text-success">@(r.In != 0 ? r.In.ToString("N2") : "")</td>
+                            <td class="text-end text-danger">@(r.Out != 0 ? r.Out.ToString("N2") : "")</td>
+                            <td class="text-end">@r.Balance.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-light fw-bold"><td colspan="4" class="text-end">Saldo Akhir</td><td class="text-end">@Model.TotalIn.ToString("N2")</td><td class="text-end">@Model.TotalOut.ToString("N2")</td><td class="text-end">@Model.Closing.ToString("N2")</td></tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
