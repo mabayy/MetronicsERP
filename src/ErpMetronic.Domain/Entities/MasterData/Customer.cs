@@ -33,4 +33,8 @@ public class Customer : BaseEntity
     /// <summary>Termin pembayaran default.</summary>
     public int? PaymentTermId { get; set; }
     public PaymentTerm? PaymentTerm { get; set; }
+
+    /// <summary>Daftar harga default pelanggan.</summary>
+    public int? PriceListId { get; set; }
+    public PriceList? PriceList { get; set; }
 }

@@ -62,6 +62,10 @@ public class CustomersController : Controller
     }
 
     private async Task PopulateAsync()
-        => ViewBag.PaymentTerms = new SelectList(await _db.PaymentTerms.Where(t => t.IsActive).OrderBy(t => t.NetDays)
+    {
+        ViewBag.PaymentTerms = new SelectList(await _db.PaymentTerms.Where(t => t.IsActive).OrderBy(t => t.NetDays)
             .Select(t => new { t.Id, Display = t.Name }).ToListAsync(), "Id", "Display");
+        ViewBag.PriceLists = new SelectList(await _db.PriceLists.Where(p => p.IsActive).OrderBy(p => p.Name)
+            .Select(p => new { p.Id, Display = p.Name }).ToListAsync(), "Id", "Display");
+    }
 }

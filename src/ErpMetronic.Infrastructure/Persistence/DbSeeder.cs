@@ -473,6 +473,18 @@ public static class DbSeeder
             }
         }
 
+        // 12b-16. Menu Master Data → Daftar Harga (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "PriceLists"))
+        {
+            var masterGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Master Data" && m.ParentId == null);
+            if (masterGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == masterGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Daftar Harga", Icon = "bi-tags", Controller = "PriceLists", Action = "Index", ParentId = masterGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

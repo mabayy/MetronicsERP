@@ -311,5 +311,13 @@ public class SalesOrdersController : Controller
             .Select(p => new { p.Id, Display = p.Sku + " — " + p.Name }).ToListAsync();
         ViewBag.VatTaxes = await _tax.GetVatTaxesAsync(Domain.Enums.TaxApplicability.Sales);
         ViewBag.WhtTaxes = await _tax.GetWithholdingTaxesAsync(Domain.Enums.TaxApplicability.Sales);
+
+        // Data harga untuk auto-isi: harga default produk, daftar harga pelanggan, & harga per daftar.
+        ViewBag.DefaultPrices = await _db.Products.ToDictionaryAsync(p => p.Id, p => p.SellingPrice);
+        ViewBag.CustomerPriceList = await _db.Customers.Where(c => c.PriceListId != null)
+            .ToDictionaryAsync(c => c.Id, c => c.PriceListId!.Value);
+        ViewBag.PriceListPrices = (await _db.PriceListItems.ToListAsync())
+            .GroupBy(i => i.PriceListId)
+            .ToDictionary(g => g.Key, g => g.ToDictionary(x => x.ProductId, x => x.Price));
     }
 }

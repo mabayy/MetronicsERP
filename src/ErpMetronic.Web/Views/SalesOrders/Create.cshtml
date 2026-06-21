@@ -210,6 +210,34 @@
         body.addEventListener('change', recalcAll);
         document.getElementById('whtSelect').addEventListener('change', recalcAll);
         document.getElementById('headerDisc').addEventListener('input', recalcAll);
+
+        // ----- Auto-isi harga dari daftar harga pelanggan -----
+        const PRICING = {
+            def: @Json.Serialize(ViewBag.DefaultPrices ?? new Dictionary<int, decimal>()),
+            custList: @Json.Serialize(ViewBag.CustomerPriceList ?? new Dictionary<int, int>()),
+            listPrices: @Json.Serialize(ViewBag.PriceListPrices ?? new Dictionary<int, Dictionary<int, decimal>>())
+        };
+        const custSel = document.querySelector('select[name="CustomerId"]');
+        function priceFor(pid) {
+            if (!pid) return null;
+            const cust = custSel ? custSel.value : '';
+            const listId = (cust && PRICING.custList) ? PRICING.custList[cust] : null;
+            if (listId != null && PRICING.listPrices[listId] && PRICING.listPrices[listId][pid] != null)
+                return PRICING.listPrices[listId][pid];
+            return (PRICING.def && PRICING.def[pid] != null) ? PRICING.def[pid] : null;
+        }
+        function applyPrice(row) {
+            const psel = row.querySelector('select[name$=".ProductId"]');
+            const price = priceFor(psel && psel.value);
+            if (price != null) row.querySelector('.price').value = price;
+        }
+        body.addEventListener('change', function (e) {
+            if (e.target.matches('select[name$=".ProductId"]')) { applyPrice(e.target.closest('.line-row')); recalcAll(); }
+        });
+        if (custSel) custSel.addEventListener('change', function () {
+            body.querySelectorAll('.line-row').forEach(applyPrice); recalcAll();
+        });
+
         if (body.children.length === 0) { addLine(); }
         recalcAll();
     </script>

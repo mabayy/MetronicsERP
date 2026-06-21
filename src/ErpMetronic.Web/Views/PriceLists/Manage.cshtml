@@ -1,0 +1,45 @@
+@model PriceListManageViewModel
+@{ ViewData["Title"] = $"Harga — {Model.PriceListName}"; }
+
+<div class="card">
+    <div class="card-header">Harga — @Model.PriceListName</div>
+    <div class="card-body">
+        <div class="alert alert-light border small mb-3">
+            <i class="bi bi-info-circle me-1"></i> Kosongkan harga untuk memakai harga jual default produk. Isi 0 / kosong untuk menghapus override.
+        </div>
+        <form asp-action="Manage" method="post">
+            <input type="hidden" asp-for="PriceListId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr>
+                    <th>Produk</th>
+                    <th class="text-end" style="width: 220px;">Harga</th>
+                </tr></thead>
+                <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="2" class="text-center text-muted py-4">Belum ada produk</td></tr>
+                }
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            @Model.Items[i].ProductName
+                            <input type="hidden" asp-for="Items[i].ProductId" />
+                        </td>
+                        <td>
+                            <input asp-for="Items[i].Price" type="number" min="0" step="0.01" class="form-control form-control-sm text-end" placeholder="(default)" />
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Harga</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -51,6 +51,10 @@
                     <select asp-for="PaymentTermId" asp-items="ViewBag.PaymentTerms" class="form-select"><option value="">-- Tanpa termin --</option></select>
                     <span asp-validation-for="PaymentTermId" class="text-danger small"></span>
                 </div>
+                <div class="col-md-6">
+                    <label asp-for="PriceListId" class="form-label fw-semibold">Daftar Harga</label>
+                    <select asp-for="PriceListId" asp-items="ViewBag.PriceLists" class="form-select"><option value="">-- Harga default --</option></select>
+                </div>
                 <div class="col-12 form-check ms-2">
                     <input asp-for="IsActive" class="form-check-input" />
                     <label asp-for="IsActive" class="form-check-label">Aktif</label>

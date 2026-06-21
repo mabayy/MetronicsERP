@@ -35,6 +35,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 25 | [Laporan Arus Kas](25-arus-kas.md) | Cash flow: mutasi kas/bank per kategori + saldo awal/akhir | ✅ |
 | 26 | [Modul Bank & Kas](26-bank-kas.md) | Master akun kas/bank, routing pembayaran ke GL, rekonsiliasi bank | ✅ |
 | 27 | [Tutup Buku](27-tutup-buku.md) | Jurnal penutup laba/rugi → Laba Ditahan + kunci periode | ✅ |
+| 28 | [Daftar Harga (Price List)](28-price-list.md) | Daftar harga per pelanggan, auto-isi harga di Sales Order | ✅ |
 
 ## Cara membaca dokumen ini
 

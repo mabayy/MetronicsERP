@@ -52,6 +52,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
     public DbSet<CashBankAccount> CashBankAccounts => Set<CashBankAccount>();
     public DbSet<FiscalYear> FiscalYears => Set<FiscalYear>();
+    public DbSet<PriceList> PriceLists => Set<PriceList>();
+    public DbSet<PriceListItem> PriceListItems => Set<PriceListItem>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -235,6 +237,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         builder.Entity<Tax>().HasIndex(x => x.Code).IsUnique();
 
         builder.Entity<FiscalYear>().HasIndex(x => x.Year).IsUnique();
+
+        // Daftar Harga (price list) + item + relasi pelanggan.
+        builder.Entity<PriceList>().HasIndex(x => x.Code).IsUnique();
+        builder.Entity<PriceList>().HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PriceListItem>(e =>
+        {
+            e.HasIndex(x => new { x.PriceListId, x.ProductId }).IsUnique();
+            e.HasOne(x => x.PriceList).WithMany(p => p.Items).HasForeignKey(x => x.PriceListId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<Customer>().HasOne(x => x.PriceList).WithMany().HasForeignKey(x => x.PriceListId).OnDelete(DeleteBehavior.Restrict);
 
         // Akun Kas/Bank + relasi pembayaran (Restrict agar tidak terhapus saat dipakai).
         builder.Entity<CashBankAccount>().HasIndex(x => x.Code).IsUnique();
