@@ -24,4 +24,8 @@ public class Supplier : BaseEntity
 
     [StringLength(300)]
     public string? Address { get; set; }
+
+    /// <summary>Termin pembayaran default.</summary>
+    public int? PaymentTermId { get; set; }
+    public PaymentTerm? PaymentTerm { get; set; }
 }

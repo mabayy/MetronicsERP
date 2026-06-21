@@ -22,7 +22,11 @@
                     <label asp-for="InvoiceDate" class="form-label fw-semibold"></label>
                     <input asp-for="InvoiceDate" type="date" class="form-control" />
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-4">
+                    <label asp-for="PaymentTermId" class="form-label fw-semibold">Termin Pembayaran</label>
+                    <select asp-for="PaymentTermId" asp-items="ViewBag.PaymentTerms" class="form-select"><option value="">-- Tanpa termin --</option></select>
+                </div>
+                <div class="col-md-4">
                     <label asp-for="Note" class="form-label fw-semibold"></label>
                     <input asp-for="Note" class="form-control" />
                 </div>

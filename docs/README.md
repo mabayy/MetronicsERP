@@ -31,6 +31,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 21 | [Diskon (Baris & Header)](21-diskon.md) | Diskon per baris item + diskon header (gaya SAP B1/Odoo), terintegrasi pajak | ✅ |
 | 22 | [HPP & Moving Average](22-hpp-moving-average.md) | Biaya rata-rata bergerak + posting HPP otomatis saat pengiriman (perpetual) | ✅ |
 | 23 | [Laporan Keuangan](23-laporan-keuangan.md) | Laba Rugi (Income Statement) & Neraca (Balance Sheet) dari jurnal | ✅ |
+| 24 | [Termin, Jatuh Tempo & Batas Kredit](24-termin-jatuh-tempo-batas-kredit.md) | Payment term, due date otomatis, batas kredit, aging by due date | ✅ |
 
 ## Cara membaca dokumen ini
 

@@ -37,6 +37,17 @@
                     <input asp-for="City" class="form-control" />
                     <span asp-validation-for="City" class="text-danger small"></span>
                 </div>
+                <div class="col-md-6">
+                    <label asp-for="CreditLimit" class="form-label fw-semibold">Batas Kredit</label>
+                    <input asp-for="CreditLimit" type="number" min="0" step="0.01" class="form-control" />
+                    <span class="text-muted small">0 = tanpa batas</span>
+                    <span asp-validation-for="CreditLimit" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PaymentTermId" class="form-label fw-semibold">Termin Pembayaran</label>
+                    <select asp-for="PaymentTermId" asp-items="ViewBag.PaymentTerms" class="form-select"><option value="">-- Tanpa termin --</option></select>
+                    <span asp-validation-for="PaymentTermId" class="text-danger small"></span>
+                </div>
                 <div class="col-12 form-check ms-2">
                     <input asp-for="IsActive" class="form-check-input" />
                     <label asp-for="IsActive" class="form-check-label">Aktif</label>

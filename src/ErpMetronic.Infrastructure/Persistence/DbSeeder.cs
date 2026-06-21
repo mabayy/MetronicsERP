@@ -397,6 +397,31 @@ public static class DbSeeder
             }
         }
 
+        // 12b-10. Termin pembayaran bawaan (idempoten per kode)
+        var defaultTerms = new[]
+        {
+            ("CASH", "Tunai", 0), ("NET7", "Net 7 Hari", 7), ("NET14", "Net 14 Hari", 14),
+            ("NET30", "Net 30 Hari", 30), ("NET60", "Net 60 Hari", 60)
+        };
+        foreach (var (code, name, days) in defaultTerms)
+        {
+            if (!await context.PaymentTerms.AnyAsync(t => t.Code == code))
+                context.PaymentTerms.Add(new PaymentTerm { Code = code, Name = name, NetDays = days, IsActive = true, IsSystem = true });
+        }
+        await context.SaveChangesAsync();
+
+        // 12b-11. Menu Master Data → Termin Pembayaran (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "PaymentTerms"))
+        {
+            var masterGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Master Data" && m.ParentId == null);
+            if (masterGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == masterGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Termin Pembayaran", Icon = "bi-calendar-check", Controller = "PaymentTerms", Action = "Index", ParentId = masterGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

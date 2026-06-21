@@ -49,6 +49,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<RfqLine> RfqLines => Set<RfqLine>();
     public DbSet<RfqQuote> RfqQuotes => Set<RfqQuote>();
     public DbSet<Tax> Taxes => Set<Tax>();
+    public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -230,6 +231,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         });
 
         builder.Entity<Tax>().HasIndex(x => x.Code).IsUnique();
+
+        // Termin pembayaran + relasi ke mitra & faktur (Restrict agar tidak terhapus saat dipakai).
+        builder.Entity<PaymentTerm>().HasIndex(x => x.Code).IsUnique();
+        builder.Entity<Customer>().HasOne(x => x.PaymentTerm).WithMany().HasForeignKey(x => x.PaymentTermId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Supplier>().HasOne(x => x.PaymentTerm).WithMany().HasForeignKey(x => x.PaymentTermId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PurchaseInvoice>().HasOne(x => x.PaymentTerm).WithMany().HasForeignKey(x => x.PaymentTermId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesInvoice>().HasOne(x => x.PaymentTerm).WithMany().HasForeignKey(x => x.PaymentTermId).OnDelete(DeleteBehavior.Restrict);
 
         // Relasi pajak: PPN per baris & PPh (withholding) per header. Semua Restrict
         // agar pajak yang masih dipakai dokumen tidak bisa terhapus.

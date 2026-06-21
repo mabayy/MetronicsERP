@@ -2,6 +2,7 @@ using ErpMetronic.Domain.Entities;
 using ErpMetronic.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErpMetronic.Web.Controllers;
@@ -15,12 +16,12 @@ public class CustomersController : Controller
     public async Task<IActionResult> Index()
         => View(await _db.Customers.OrderBy(c => c.Code).ToListAsync());
 
-    public IActionResult Create() => View(new Customer());
+    public async Task<IActionResult> Create() { await PopulateAsync(); return View(new Customer()); }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Customer model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) { await PopulateAsync(); return View(model); }
         model.CreatedBy = User.Identity?.Name;
         _db.Customers.Add(model);
         await _db.SaveChangesAsync();
@@ -32,6 +33,7 @@ public class CustomersController : Controller
     {
         var item = await _db.Customers.FindAsync(id);
         if (item is null) return NotFound();
+        await PopulateAsync();
         return View(item);
     }
 
@@ -39,7 +41,7 @@ public class CustomersController : Controller
     public async Task<IActionResult> Edit(int id, Customer model)
     {
         if (id != model.Id) return NotFound();
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) { await PopulateAsync(); return View(model); }
         model.UpdatedAt = DateTime.UtcNow;
         model.UpdatedBy = User.Identity?.Name;
         _db.Customers.Update(model);
@@ -58,4 +60,8 @@ public class CustomersController : Controller
         TempData["Success"] = "Pelanggan berhasil dihapus.";
         return RedirectToAction(nameof(Index));
     }
+
+    private async Task PopulateAsync()
+        => ViewBag.PaymentTerms = new SelectList(await _db.PaymentTerms.Where(t => t.IsActive).OrderBy(t => t.NetDays)
+            .Select(t => new { t.Id, Display = t.Name }).ToListAsync(), "Id", "Display");
 }

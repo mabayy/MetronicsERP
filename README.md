@@ -28,6 +28,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Diskon (Baris & Header) | ✅ | Diskon per baris item + diskon header dialokasikan sebelum pajak (gaya SAP B1/Odoo) |
 | HPP & Moving Average | ✅ | Persediaan perpetual: biaya rata-rata bergerak + posting HPP otomatis saat pengiriman |
 | Laporan Keuangan | ✅ | Laba Rugi (Income Statement) & Neraca (Balance Sheet) dari jurnal |
+| Termin & Batas Kredit | ✅ | Termin pembayaran, jatuh tempo otomatis, batas kredit pelanggan, aging by due date |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -100,6 +101,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 21. [Diskon (Baris & Header)](docs/21-diskon.md)
 22. [HPP & Moving Average](docs/22-hpp-moving-average.md)
 23. [Laporan Keuangan](docs/23-laporan-keuangan.md)
+24. [Termin, Jatuh Tempo & Batas Kredit](docs/24-termin-jatuh-tempo-batas-kredit.md)
 
 ## 🧰 Tech Stack
 

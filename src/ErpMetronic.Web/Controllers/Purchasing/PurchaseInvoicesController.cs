@@ -6,6 +6,7 @@ using ErpMetronic.Infrastructure.Services;
 using ErpMetronic.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErpMetronic.Web.Controllers;
@@ -71,6 +72,7 @@ public class PurchaseInvoicesController : Controller
         var model = new PurchaseInvoiceCreateViewModel
         {
             PurchaseOrderId = po.Id,
+            PaymentTermId = po.Supplier?.PaymentTermId, // termin default dari pemasok
             WithholdingTaxId = po.WithholdingTaxId, // bawa PPh dari PO
             HeaderDiscountPercent = po.HeaderDiscountPercent, // bawa diskon header dari PO
             Lines = po.Items.Where(i => invoiceable.TryGetValue(i.ProductId, out var q) && q > 0)
@@ -136,10 +138,13 @@ public class PurchaseInvoicesController : Controller
             whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = TaxMath.R2(dpp * wtx.Rate / 100m);
         }
 
+        var term = model.PaymentTermId is int ptid ? await _db.PaymentTerms.FindAsync(ptid) : null;
         var invoice = new PurchaseInvoice
         {
             ReferenceNumber = await _docNumber.NextAsync(DocumentCodes.PurchaseInvoice, model.InvoiceDate),
             InvoiceDate = model.InvoiceDate,
+            DueDate = model.InvoiceDate.AddDays(term?.NetDays ?? 0),
+            PaymentTermId = term?.Id,
             SupplierId = po.SupplierId,
             PurchaseOrderId = po.Id,
             CurrencyId = po.CurrencyId,
@@ -173,11 +178,11 @@ public class PurchaseInvoicesController : Controller
             {
                 var outstanding = inv.Total - inv.PaidAmount;
                 if (outstanding <= 0) continue;
-                var age = (today - inv.InvoiceDate).Days;
-                if (age <= 30) r.Current += outstanding;
-                else if (age <= 60) r.Bucket31 += outstanding;
-                else if (age <= 90) r.Bucket61 += outstanding;
-                else r.Over90 += outstanding;
+                var overdue = (today - inv.DueDate).Days; // umur dihitung dari jatuh tempo
+                if (overdue <= 0) r.Current += outstanding;       // belum jatuh tempo
+                else if (overdue <= 30) r.Bucket31 += outstanding; // 1–30 hari lewat
+                else if (overdue <= 60) r.Bucket61 += outstanding; // 31–60
+                else r.Over90 += outstanding;                      // > 60
             }
             return r;
         }).Where(r => r.Total > 0).OrderByDescending(r => r.Total).ToList();
@@ -187,7 +192,7 @@ public class PurchaseInvoicesController : Controller
     public async Task<IActionResult> Details(int id)
     {
         var inv = await _db.PurchaseInvoices
-            .Include(i => i.Supplier).Include(i => i.PurchaseOrder).Include(i => i.Currency).Include(i => i.WithholdingTax)
+            .Include(i => i.Supplier).Include(i => i.PurchaseOrder).Include(i => i.Currency).Include(i => i.WithholdingTax).Include(i => i.PaymentTerm)
             .Include(i => i.Lines).ThenInclude(l => l.Product)
             .Include(i => i.Lines).ThenInclude(l => l.Tax)
             .Include(i => i.Payments)
@@ -257,6 +262,8 @@ public class PurchaseInvoicesController : Controller
     {
         ViewBag.VatTaxes = await _tax.GetVatTaxesAsync(Domain.Enums.TaxApplicability.Purchase);
         ViewBag.WhtTaxes = await _tax.GetWithholdingTaxesAsync(Domain.Enums.TaxApplicability.Purchase);
+        ViewBag.PaymentTerms = new SelectList(await _db.PaymentTerms.Where(t => t.IsActive).OrderBy(t => t.NetDays)
+            .Select(t => new { t.Id, Display = t.Name }).ToListAsync(), "Id", "Display");
     }
 
     private Task<PurchaseOrder?> LoadPoAsync(int id) =>

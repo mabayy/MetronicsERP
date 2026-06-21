@@ -9,6 +9,9 @@ public class PurchaseInvoiceCreateViewModel
     [Required, DataType(DataType.Date), Display(Name = "Tanggal Faktur")]
     public DateTime InvoiceDate { get; set; } = DateTime.Today;
 
+    [Display(Name = "Termin Pembayaran")]
+    public int? PaymentTermId { get; set; }
+
     [Display(Name = "Catatan"), StringLength(300)]
     public string? Note { get; set; }
 

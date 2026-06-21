@@ -17,6 +17,12 @@ public class PurchaseInvoice : BaseEntity
 
     public DateTime InvoiceDate { get; set; } = DateTime.Today;
 
+    /// <summary>Jatuh tempo = tanggal faktur + termin.</summary>
+    public DateTime DueDate { get; set; } = DateTime.Today;
+
+    public int? PaymentTermId { get; set; }
+    public PaymentTerm? PaymentTerm { get; set; }
+
     public int SupplierId { get; set; }
     public Supplier? Supplier { get; set; }
 

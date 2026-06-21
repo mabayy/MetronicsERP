@@ -21,6 +21,15 @@
     <div class="card-body">
         <dl class="row mb-0">
             <dt class="col-sm-3">Tanggal</dt><dd class="col-sm-9">@Model.InvoiceDate.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Jatuh Tempo</dt>
+            <dd class="col-sm-9">
+                @Model.DueDate.ToString("dd/MM/yyyy")
+                @if (Model.Status != SalesInvoiceStatus.Paid && Model.DueDate < DateTime.Today)
+                {
+                    <span class="badge-light-danger px-2 rounded ms-1">Jatuh Tempo Lewat</span>
+                }
+            </dd>
+            <dt class="col-sm-3">Termin</dt><dd class="col-sm-9">@(Model.PaymentTerm?.Name ?? "—")</dd>
             <dt class="col-sm-3">Pelanggan</dt><dd class="col-sm-9">@Model.Customer?.Name</dd>
             <dt class="col-sm-3">Dari SO</dt><dd class="col-sm-9">@Model.SalesOrder?.ReferenceNumber</dd>
             <dt class="col-sm-3">Catatan</dt><dd class="col-sm-9">@Model.Note</dd>

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using ErpMetronic.Domain.Common;
 
 namespace ErpMetronic.Domain.Entities;
@@ -24,4 +25,12 @@ public class Customer : BaseEntity
 
     [StringLength(100)]
     public string? City { get; set; }
+
+    /// <summary>Batas kredit (0 = tanpa batas). Faktur penjualan diblokir bila melebihi.</summary>
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal CreditLimit { get; set; }
+
+    /// <summary>Termin pembayaran default.</summary>
+    public int? PaymentTermId { get; set; }
+    public PaymentTerm? PaymentTerm { get; set; }
 }

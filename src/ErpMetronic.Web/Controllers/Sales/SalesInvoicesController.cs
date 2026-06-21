@@ -6,6 +6,7 @@ using ErpMetronic.Infrastructure.Services;
 using ErpMetronic.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErpMetronic.Web.Controllers;
@@ -67,6 +68,7 @@ public class SalesInvoicesController : Controller
         var model = new SalesInvoiceCreateViewModel
         {
             SalesOrderId = so.Id,
+            PaymentTermId = so.Customer?.PaymentTermId, // termin default dari pelanggan
             WithholdingTaxId = so.WithholdingTaxId, // bawa PPh dari SO
             HeaderDiscountPercent = so.HeaderDiscountPercent, // bawa diskon header dari SO
             Lines = so.Items.Where(i => invoiceable.TryGetValue(i.ProductId, out var q) && q > 0)
@@ -130,10 +132,31 @@ public class SalesInvoicesController : Controller
             whtId = wtx.Id; whtRate = wtx.Rate; whtAmount = TaxMath.R2(dpp * wtx.Rate / 100m);
         }
 
+        var newTotal = dpp + invLines.Sum(x => x.TaxAmount) - whtAmount;
+
+        // Batas kredit pelanggan (cek sebelum nomor dibuat): eksposur piutang belum lunas + faktur ini ≤ batas.
+        var customer = await _db.Customers.FindAsync(so.CustomerId);
+        if (customer is not null && customer.CreditLimit > 0)
+        {
+            var openInvoices = await _db.SalesInvoices.Include(i => i.Lines)
+                .Where(i => i.CustomerId == so.CustomerId && i.Status != SalesInvoiceStatus.Paid).ToListAsync();
+            var exposure = openInvoices.Sum(i => i.Outstanding);
+            if (exposure + newTotal > customer.CreditLimit)
+            {
+                ModelState.AddModelError(string.Empty,
+                    $"Melebihi batas kredit pelanggan ({customer.CreditLimit:N2}). Eksposur saat ini {exposure:N2} + faktur {newTotal:N2}.");
+                ViewBag.SalesOrder = so; ViewBag.Invoiceable = invoiceable; await PopulateTaxesAsync();
+                return View(model);
+            }
+        }
+
+        var term = model.PaymentTermId is int ptid ? await _db.PaymentTerms.FindAsync(ptid) : null;
         var invoice = new SalesInvoice
         {
             ReferenceNumber = await _docNumber.NextAsync(DocumentCodes.SalesInvoice, model.InvoiceDate),
             InvoiceDate = model.InvoiceDate,
+            DueDate = model.InvoiceDate.AddDays(term?.NetDays ?? 0),
+            PaymentTermId = term?.Id,
             CustomerId = so.CustomerId,
             SalesOrderId = so.Id,
             CurrencyId = so.CurrencyId,
@@ -147,6 +170,7 @@ public class SalesInvoicesController : Controller
             CreatedBy = User.Identity?.Name,
             Lines = invLines
         };
+
         _db.SalesInvoices.Add(invoice);
         await _db.SaveChangesAsync();
         await _journal.PostSalesInvoiceAsync(invoice, User.Identity?.Name); // jurnal otomatis
@@ -167,11 +191,11 @@ public class SalesInvoicesController : Controller
             {
                 var outstanding = inv.Total - inv.PaidAmount;
                 if (outstanding <= 0) continue;
-                var age = (today - inv.InvoiceDate).Days;
-                if (age <= 30) r.Current += outstanding;
-                else if (age <= 60) r.Bucket31 += outstanding;
-                else if (age <= 90) r.Bucket61 += outstanding;
-                else r.Over90 += outstanding;
+                var overdue = (today - inv.DueDate).Days; // umur dihitung dari jatuh tempo
+                if (overdue <= 0) r.Current += outstanding;       // belum jatuh tempo
+                else if (overdue <= 30) r.Bucket31 += outstanding; // 1–30 hari lewat
+                else if (overdue <= 60) r.Bucket61 += outstanding; // 31–60
+                else r.Over90 += outstanding;                      // > 60
             }
             return r;
         }).Where(r => r.Total > 0).OrderByDescending(r => r.Total).ToList();
@@ -181,7 +205,7 @@ public class SalesInvoicesController : Controller
     public async Task<IActionResult> Details(int id)
     {
         var inv = await _db.SalesInvoices
-            .Include(i => i.Customer).Include(i => i.SalesOrder).Include(i => i.Currency).Include(i => i.WithholdingTax)
+            .Include(i => i.Customer).Include(i => i.SalesOrder).Include(i => i.Currency).Include(i => i.WithholdingTax).Include(i => i.PaymentTerm)
             .Include(i => i.Lines).ThenInclude(l => l.Product)
             .Include(i => i.Lines).ThenInclude(l => l.Tax)
             .Include(i => i.Payments)
@@ -251,6 +275,8 @@ public class SalesInvoicesController : Controller
     {
         ViewBag.VatTaxes = await _tax.GetVatTaxesAsync(Domain.Enums.TaxApplicability.Sales);
         ViewBag.WhtTaxes = await _tax.GetWithholdingTaxesAsync(Domain.Enums.TaxApplicability.Sales);
+        ViewBag.PaymentTerms = new SelectList(await _db.PaymentTerms.Where(t => t.IsActive).OrderBy(t => t.NetDays)
+            .Select(t => new { t.Id, Display = t.Name }).ToListAsync(), "Id", "Display");
     }
 
     private Task<SalesOrder?> LoadSoAsync(int id) =>

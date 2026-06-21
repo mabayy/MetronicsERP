@@ -71,7 +71,8 @@ diurut berdasarkan dampak terhadap fondasi yang ada.
 ### Tier 1 — Menutup loop keuangan
 1. **Laporan keuangan**: Laba Rugi (P&L) & Neraca (Balance Sheet) — ✅ **selesai**
    (lihat [Tahap 23](23-laporan-keuangan.md)). Arus Kas menyusul.
-2. **Termin pembayaran & jatuh tempo** (Net 30, dst.) + **batas kredit pelanggan**.
+2. **Termin pembayaran & jatuh tempo** (Net 30, dst.) + **batas kredit pelanggan** — ✅ **selesai**
+   (lihat [Tahap 24](24-termin-jatuh-tempo-batas-kredit.md)).
 3. **Modul Bank & Kas**: akun bank/kas, satu pembayaran untuk banyak faktur, uang muka (down payment),
    **rekonsiliasi bank**.
 4. **Tutup buku** periode/tahun (locking + jurnal penutup).
