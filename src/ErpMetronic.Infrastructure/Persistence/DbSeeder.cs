@@ -461,6 +461,18 @@ public static class DbSeeder
             }
         }
 
+        // 12b-15. Menu Keuangan → Tutup Buku (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "FiscalYears"))
+        {
+            var financeGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Keuangan" && m.ParentId == null);
+            if (financeGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == financeGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Tutup Buku", Icon = "bi-lock", Controller = "FiscalYears", Action = "Index", ParentId = financeGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

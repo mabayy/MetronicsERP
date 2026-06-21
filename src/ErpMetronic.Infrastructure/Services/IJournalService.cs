@@ -16,4 +16,13 @@ public interface IJournalService
 
     /// <summary>HPP saat pengiriman (perpetual): Dr Harga Pokok Penjualan / Cr Persediaan.</summary>
     Task PostDeliveryCogsAsync(int deliveryId, DateTime date, string reference, decimal cogsAmount, string? user);
+
+    /// <summary>Tanggal kunci (akhir tahun fiskal terakhir yang ditutup); null bila belum ada.</summary>
+    Task<DateTime?> GetLockDateAsync();
+    /// <summary>Apakah tanggal jatuh pada periode yang sudah ditutup (≤ tanggal kunci).</summary>
+    Task<bool> IsPeriodClosedAsync(DateTime date);
+    /// <summary>Tutup buku tahun: jurnal penutup laba/rugi → Laba Ditahan, lalu kunci periode.</summary>
+    Task<(bool Ok, string? Error)> CloseFiscalYearAsync(int year, string? user);
+    /// <summary>Buka kembali tahun yang ditutup (hapus jurnal penutup).</summary>
+    Task<(bool Ok, string? Error)> ReopenFiscalYearAsync(int year, string? user);
 }

@@ -97,6 +97,9 @@ public class SalesInvoicesController : Controller
             }
         }
 
+        if (await _journal.IsPeriodClosedAsync(model.InvoiceDate))
+            ModelState.AddModelError(string.Empty, "Periode sudah ditutup (tutup buku). Gunakan tanggal setelah periode terkunci.");
+
         if (!ModelState.IsValid)
         {
             ViewBag.SalesOrder = so;
@@ -229,6 +232,8 @@ public class SalesInvoicesController : Controller
             TempData["Error"] = "Jumlah harus lebih dari 0.";
         else if (model.Amount > inv.Outstanding)
             TempData["Error"] = $"Jumlah melebihi sisa tagihan ({inv.Outstanding:N2}).";
+        else if (await _journal.IsPeriodClosedAsync(model.PaymentDate))
+            TempData["Error"] = "Periode sudah ditutup (tutup buku).";
         else
         {
             var cashAccount = model.CashBankAccountId is int cid ? await _db.CashBankAccounts.FindAsync(cid) : null;

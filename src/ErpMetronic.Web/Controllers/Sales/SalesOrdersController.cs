@@ -214,6 +214,8 @@ public class SalesOrdersController : Controller
         }
         if (toDeliver.Count == 0 && ModelState.ErrorCount == 0)
             ModelState.AddModelError(string.Empty, "Tidak ada jumlah yang dikirim.");
+        if (await _journal.IsPeriodClosedAsync(model.DeliveryDate))
+            ModelState.AddModelError(string.Empty, "Periode sudah ditutup (tutup buku). Gunakan tanggal setelah periode terkunci.");
         if (!ModelState.IsValid) return View(so);
 
         await using var tx = await _db.Database.BeginTransactionAsync();

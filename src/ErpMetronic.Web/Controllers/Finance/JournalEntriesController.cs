@@ -17,11 +17,13 @@ public class JournalEntriesController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IDocumentNumberService _docNumber;
+    private readonly IJournalService _journal;
 
-    public JournalEntriesController(ApplicationDbContext db, IDocumentNumberService docNumber)
+    public JournalEntriesController(ApplicationDbContext db, IDocumentNumberService docNumber, IJournalService journal)
     {
         _db = db;
         _docNumber = docNumber;
+        _journal = journal;
     }
 
     public async Task<IActionResult> Index()
@@ -49,6 +51,8 @@ public class JournalEntriesController : Controller
             ModelState.AddModelError(string.Empty, "Setiap baris hanya boleh debit ATAU kredit (tidak negatif).");
         if (totalDebit <= 0 || Math.Round(totalDebit, 2) != Math.Round(totalCredit, 2))
             ModelState.AddModelError(string.Empty, $"Jurnal tidak seimbang (Debit {totalDebit:N2} ≠ Kredit {totalCredit:N2}).");
+        if (await _journal.IsPeriodClosedAsync(model.EntryDate))
+            ModelState.AddModelError(string.Empty, "Periode sudah ditutup (tutup buku). Pilih tanggal setelah periode terkunci.");
 
         if (!ModelState.IsValid) { await PopulateAsync(); return View(model); }
 

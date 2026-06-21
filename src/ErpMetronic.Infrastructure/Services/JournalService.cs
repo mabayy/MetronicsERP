@@ -1,5 +1,6 @@
 using ErpMetronic.Domain.Constants;
 using ErpMetronic.Domain.Entities;
+using ErpMetronic.Domain.Enums;
 using ErpMetronic.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,10 @@ public class JournalService : IJournalService
         // Idempoten: jangan posting ganda untuk dokumen sumber yang sama.
         if (sourceType is not null && sourceId is not null &&
             await _db.JournalEntries.AnyAsync(j => j.SourceType == sourceType && j.SourceId == sourceId))
+            return null;
+
+        // Periode terkunci: tolak posting (kecuali jurnal penutup itu sendiri).
+        if (sourceType != "YearEndClosing" && await IsPeriodClosedAsync(date))
             return null;
 
         var lineList = lines.Where(l => l.Debit != 0 || l.Credit != 0).ToList();
@@ -126,6 +131,96 @@ public class JournalService : IJournalService
             (AccountCodes.Cogs, amount, 0m),
             (AccountCodes.Inventory, 0m, amount)
         }, user);
+    }
+
+    public async Task<DateTime?> GetLockDateAsync()
+    {
+        var lastClosed = await _db.FiscalYears.Where(f => f.Status == FiscalYearStatus.Closed)
+            .OrderByDescending(f => f.Year).Select(f => (int?)f.Year).FirstOrDefaultAsync();
+        return lastClosed.HasValue ? new DateTime(lastClosed.Value, 12, 31) : null;
+    }
+
+    public async Task<bool> IsPeriodClosedAsync(DateTime date)
+    {
+        var lockDate = await GetLockDateAsync();
+        return lockDate.HasValue && date.Date <= lockDate.Value.Date;
+    }
+
+    public async Task<(bool Ok, string? Error)> CloseFiscalYearAsync(int year, string? user)
+    {
+        var fy = await _db.FiscalYears.FirstOrDefaultAsync(f => f.Year == year);
+        if (fy?.Status == FiscalYearStatus.Closed) return (false, $"Tahun {year} sudah ditutup.");
+
+        // Tutup berurutan: tahun sebelumnya yang memiliki data harus sudah ditutup.
+        var lockDate = await GetLockDateAsync();
+        if (lockDate.HasValue && year <= lockDate.Value.Year) return (false, "Tahun ini sudah berada dalam periode terkunci.");
+
+        if (fy is null)
+        {
+            fy = new FiscalYear { Year = year, Status = FiscalYearStatus.Open, CreatedBy = user };
+            _db.FiscalYears.Add(fy);
+            await _db.SaveChangesAsync();
+        }
+
+        var start = new DateTime(year, 1, 1);
+        var end = new DateTime(year, 12, 31);
+        var data = await _db.JournalLines.Include(l => l.Account).Include(l => l.JournalEntry)
+            .Where(l => l.JournalEntry!.EntryDate >= start && l.JournalEntry.EntryDate <= end
+                && (l.Account!.Type == AccountType.Revenue || l.Account.Type == AccountType.Expense))
+            .GroupBy(l => new { l.Account!.Code, l.Account.Type })
+            .Select(g => new { g.Key.Code, g.Key.Type, Debit = g.Sum(x => x.Debit), Credit = g.Sum(x => x.Credit) })
+            .ToListAsync();
+
+        var lines = new List<(string, decimal, decimal)>();
+        decimal totalRev = 0, totalExp = 0;
+        foreach (var d in data)
+        {
+            if (d.Type == AccountType.Revenue)
+            {
+                var bal = d.Credit - d.Debit; // saldo normal kredit
+                if (bal != 0) { lines.Add((d.Code, bal, 0m)); totalRev += bal; } // Dr untuk menutup
+            }
+            else
+            {
+                var bal = d.Debit - d.Credit; // saldo normal debit
+                if (bal != 0) { lines.Add((d.Code, 0m, bal)); totalExp += bal; } // Cr untuk menutup
+            }
+        }
+        var net = totalRev - totalExp;
+        if (net > 0) lines.Add((AccountCodes.RetainedEarnings, 0m, net));
+        else if (net < 0) lines.Add((AccountCodes.RetainedEarnings, -net, 0m));
+
+        if (lines.Count > 0)
+            await PostAsync(end, $"Jurnal Penutup Tahun {year}", "YearEndClosing", fy.Id, lines, user);
+
+        fy.Status = FiscalYearStatus.Closed;
+        fy.ClosedAt = DateTime.UtcNow;
+        fy.ClosedBy = user;
+        await _db.SaveChangesAsync();
+        return (true, null);
+    }
+
+    public async Task<(bool Ok, string? Error)> ReopenFiscalYearAsync(int year, string? user)
+    {
+        var fy = await _db.FiscalYears.FirstOrDefaultAsync(f => f.Year == year);
+        if (fy is null || fy.Status != FiscalYearStatus.Closed) return (false, $"Tahun {year} tidak dalam keadaan ditutup.");
+
+        // Hanya tahun terkunci paling akhir yang boleh dibuka (jaga urutan).
+        var latestClosed = await _db.FiscalYears.Where(f => f.Status == FiscalYearStatus.Closed).MaxAsync(f => (int?)f.Year);
+        if (year != latestClosed) return (false, "Hanya tahun terkunci terakhir yang dapat dibuka kembali.");
+
+        var entry = await _db.JournalEntries.Include(j => j.Lines)
+            .FirstOrDefaultAsync(j => j.SourceType == "YearEndClosing" && j.SourceId == fy.Id);
+        if (entry is not null)
+        {
+            _db.JournalLines.RemoveRange(entry.Lines);
+            _db.JournalEntries.Remove(entry);
+        }
+        fy.Status = FiscalYearStatus.Open;
+        fy.ClosedAt = null;
+        fy.ClosedBy = null;
+        await _db.SaveChangesAsync();
+        return (true, null);
     }
 
     private async Task<decimal> ToBaseAsync(decimal amount, int? currencyId, DateTime date)

@@ -1,0 +1,63 @@
+@using ErpMetronic.Domain.Entities
+@model List<ErpMetronic.Web.Controllers.FiscalYearRow>
+@{
+    ViewData["Title"] = "Tutup Buku";
+    var lockDate = ViewBag.LockDate as DateTime?;
+}
+
+<div class="card">
+    <div class="card-header justify-content-between">
+        <span><i class="bi bi-lock text-primary me-2"></i> Tutup Buku (Tahun Fiskal)</span>
+        <span class="text-muted small">
+            Tanggal kunci: @(lockDate.HasValue ? lockDate.Value.ToString("dd/MM/yyyy") : "—")
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-light border small mb-3">
+            <i class="bi bi-info-circle"></i> Menutup tahun akan memposting <strong>jurnal penutup</strong>
+            (laba/rugi → <strong>Laba Ditahan</strong>) dan <strong>mengunci</strong> semua transaksi pada
+            tahun tersebut & sebelumnya. Hanya tahun terkunci terakhir yang dapat dibuka kembali.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Tahun</th><th>Status</th><th>Ditutup Pada</th><th class="text-end">Aksi</th></tr></thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@r.Year</td>
+                        <td>
+                            @if (r.Status == FiscalYearStatus.Closed)
+                            {
+                                <span class="badge-light-danger px-2 py-1 rounded"><i class="bi bi-lock"></i> Ditutup</span>
+                            }
+                            else
+                            {
+                                <span class="badge-light-success px-2 py-1 rounded"><i class="bi bi-unlock"></i> Terbuka</span>
+                            }
+                        </td>
+                        <td class="text-muted">@(r.ClosedAt.HasValue ? r.ClosedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                        <td class="text-end">
+                            @if (r.Status == FiscalYearStatus.Open)
+                            {
+                                <form asp-action="Close" method="post" class="d-inline" onsubmit="return confirm('Tutup buku tahun @r.Year? Jurnal penutup diposting & periode dikunci.');">
+                                    <input type="hidden" name="year" value="@r.Year" />
+                                    <button class="btn btn-sm btn-danger"><i class="bi bi-lock"></i> Tutup Buku</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="Reopen" method="post" class="d-inline" onsubmit="return confirm('Buka kembali tahun @r.Year? Jurnal penutup akan dihapus.');">
+                                    <input type="hidden" name="year" value="@r.Year" />
+                                    <button class="btn btn-sm btn-light"><i class="bi bi-unlock"></i> Buka Kembali</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

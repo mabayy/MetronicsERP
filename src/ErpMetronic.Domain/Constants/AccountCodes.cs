@@ -18,6 +18,7 @@ public static class AccountCodes
     public const string OutputVat = "2110";          // PPN Keluaran (pajak terutang)
     public const string WhtPayable = "2130";         // Hutang PPh (dipotong dari pemasok)
     public const string Capital = "3100";            // Modal
+    public const string RetainedEarnings = "3200";   // Laba Ditahan
     public const string SalesRevenue = "4100";       // Pendapatan Penjualan
     public const string PurchaseExpense = "5100";    // Pembelian/HPP
     public const string Cogs = "5200";               // Harga Pokok Penjualan (HPP)
@@ -35,6 +36,7 @@ public static class AccountCodes
         (OutputVat, "PPN Keluaran", AccountType.Liability),
         (WhtPayable, "Hutang PPh", AccountType.Liability),
         (Capital, "Modal", AccountType.Equity),
+        (RetainedEarnings, "Laba Ditahan", AccountType.Equity),
         (SalesRevenue, "Pendapatan Penjualan", AccountType.Revenue),
         (PurchaseExpense, "Pembelian", AccountType.Expense),
         (Cogs, "Harga Pokok Penjualan", AccountType.Expense)

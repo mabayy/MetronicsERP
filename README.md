@@ -31,6 +31,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Termin & Batas Kredit | ✅ | Termin pembayaran, jatuh tempo otomatis, batas kredit pelanggan, aging by due date |
 | Laporan Arus Kas | ✅ | Cash flow: mutasi kas/bank per kategori + saldo awal/akhir |
 | Bank & Kas | ✅ | Master akun kas/bank, routing pembayaran ke GL, rekonsiliasi bank |
+| Tutup Buku | ✅ | Jurnal penutup laba/rugi → Laba Ditahan + kunci periode (period lock) |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -106,6 +107,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 24. [Termin, Jatuh Tempo & Batas Kredit](docs/24-termin-jatuh-tempo-batas-kredit.md)
 25. [Laporan Arus Kas](docs/25-arus-kas.md)
 26. [Modul Bank & Kas](docs/26-bank-kas.md)
+27. [Tutup Buku](docs/27-tutup-buku.md)
 
 ## 🧰 Tech Stack
 
