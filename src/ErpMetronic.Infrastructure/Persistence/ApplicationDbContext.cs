@@ -56,6 +56,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<PriceListItem> PriceListItems => Set<PriceListItem>();
     public DbSet<SalesQuotation> SalesQuotations => Set<SalesQuotation>();
     public DbSet<SalesQuotationItem> SalesQuotationItems => Set<SalesQuotationItem>();
+    public DbSet<ApprovalRule> ApprovalRules => Set<ApprovalRule>();
+    public DbSet<ApprovalRuleStep> ApprovalRuleSteps => Set<ApprovalRuleStep>();
+    public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<ApprovalStep> ApprovalSteps => Set<ApprovalStep>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -250,6 +254,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
         });
         builder.Entity<Customer>().HasOne(x => x.PriceList).WithMany().HasForeignKey(x => x.PriceListId).OnDelete(DeleteBehavior.Restrict);
+
+        // Persetujuan (Approval) berjenjang
+        builder.Entity<ApprovalRuleStep>(e =>
+        {
+            e.HasOne(x => x.ApprovalRule).WithMany(p => p.Steps).HasForeignKey(x => x.ApprovalRuleId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Position).WithMany().HasForeignKey(x => x.PositionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<ApprovalRequest>(e => e.HasIndex(x => new { x.DocumentType, x.DocumentId }));
+        builder.Entity<ApprovalStep>(e =>
+        {
+            e.HasOne(x => x.ApprovalRequest).WithMany(p => p.Steps).HasForeignKey(x => x.ApprovalRequestId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Position).WithMany().HasForeignKey(x => x.PositionId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         // Penawaran Penjualan (Sales Quotation)
         builder.Entity<SalesQuotation>(e =>

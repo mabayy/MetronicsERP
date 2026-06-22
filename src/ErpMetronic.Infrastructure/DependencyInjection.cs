@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentNumberService, DocumentNumberService>();
         services.AddScoped<IJournalService, JournalService>();
         services.AddScoped<ITaxService, TaxService>();
+        services.AddScoped<IApprovalService, ApprovalService>();
 
         return services;
     }

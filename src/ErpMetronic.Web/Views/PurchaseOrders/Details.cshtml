@@ -8,6 +8,7 @@
     (string Label, string Css) St(PurchaseOrderStatus s) => s switch
     {
         PurchaseOrderStatus.Draft => ("Draft", "badge-light-warning"),
+        PurchaseOrderStatus.PendingApproval => ("Menunggu Persetujuan", "badge-light-warning"),
         PurchaseOrderStatus.Ordered => ("Dipesan", "badge-light-primary"),
         PurchaseOrderStatus.PartiallyReceived => ("Diterima Sebagian", "badge-light-warning"),
         PurchaseOrderStatus.Received => ("Diterima", "badge-light-success"),
@@ -58,6 +59,51 @@
         </div>
     </div>
 </div>
+
+@if (ViewBag.Approval != null)
+{
+    var approval = (ErpMetronic.Domain.Entities.ApprovalRequest)ViewBag.Approval;
+    (string Label, string Css) ApBadge(ApprovalStatus s) => s switch
+    {
+        ApprovalStatus.Pending => ("Menunggu", "badge-light-warning"),
+        ApprovalStatus.Approved => ("Disetujui", "badge-light-success"),
+        ApprovalStatus.Rejected => ("Ditolak", "badge-light-danger"),
+        _ => (s.ToString(), "badge-light-primary")
+    };
+    <div class="card mb-3">
+        <div class="card-header justify-content-between">
+            <span>Persetujuan</span>
+            @if (approval.Status == ApprovalStatus.Pending)
+            {
+                <a asp-controller="Approvals" asp-action="Details" asp-route-id="@approval.Id" class="btn btn-sm btn-light-primary">Tinjau Persetujuan</a>
+            }
+        </div>
+        <div class="card-body p-0">
+            <table class="table align-middle mb-0">
+                <thead><tr>
+                    <th>Level</th>
+                    <th>Jabatan</th>
+                    <th>Status</th>
+                    <th>Diputuskan Oleh</th>
+                    <th>Catatan</th>
+                </tr></thead>
+                <tbody>
+                @foreach (var s in approval.Steps.OrderBy(x => x.Level))
+                {
+                    var ab = ApBadge(s.Status);
+                    <tr>
+                        <td>@s.Level</td>
+                        <td class="fw-semibold text-dark">@s.Position?.Name</td>
+                        <td><span class="@ab.Css px-2 py-1 rounded">@ab.Label</span></td>
+                        <td>@s.DecidedBy</td>
+                        <td>@s.Note</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 
 <div class="card mb-3">
     <div class="card-header">Item PO</div>

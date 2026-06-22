@@ -82,7 +82,8 @@ diurut berdasarkan dampak terhadap fondasi yang ada.
 5. **Price List** (daftar harga per pelanggan/mata uang) — ✅ **selesai** ([Tahap 28](28-price-list.md));
    harga bertingkat & aturan diskon menyusul.
 6. **Sales Quotation → SO** (penawaran penjualan) — ✅ **selesai** ([Tahap 29](29-sales-quotation.md)).
-7. **Workflow approval** berjenjang (PO/SO di atas nilai tertentu butuh persetujuan).
+7. **Workflow approval** berjenjang — ✅ **selesai** untuk Purchase Order ([Tahap 30](30-approval-workflow.md));
+   dapat diperluas ke SO/dokumen lain (mesin generik).
 8. **Batch/Lot & Serial number + kedaluwarsa**, serta **reorder point (min/max)** + saran pembelian.
 
 ### Tier 3 — Modul lanjutan / industri

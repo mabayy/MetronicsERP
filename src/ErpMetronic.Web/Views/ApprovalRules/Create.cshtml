@@ -1,0 +1,104 @@
+@model ApprovalRuleCreateViewModel
+@{ ViewData["Title"] = "Aturan Persetujuan Baru"; }
+
+<div class="card">
+    <div class="card-header">Form Aturan Persetujuan Baru</div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label fw-semibold"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DocumentType" class="form-label fw-semibold"></label>
+                    <select asp-for="DocumentType" asp-items="ViewBag.DocumentTypes" class="form-select">
+                        <option value="">-- Pilih dokumen --</option>
+                    </select>
+                    <span asp-validation-for="DocumentType" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="MinAmount" class="form-label fw-semibold"></label>
+                    <input asp-for="MinAmount" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="MinAmount" class="text-danger small"></span>
+                </div>
+                <div class="col-12 form-check ms-2">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+            <h6 class="fw-semibold mb-3">Langkah Persetujuan (berurutan)</h6>
+            <div id="stepsBody">
+                @for (int i = 0; i < Model.StepPositionIds.Count; i++)
+                {
+                    <div class="input-group mb-2 step-row">
+                        <span class="input-group-text">Level <span class="lvl">@(i + 1)</span></span>
+                        <select name="StepPositionIds" class="form-select">
+                            <option value="">-- Pilih jabatan --</option>
+                            @foreach (var p in (IEnumerable<dynamic>)ViewBag.Positions)
+                            { <option value="@p.Id" selected="@(((int)p.Id) == Model.StepPositionIds[i])">@p.Display</option> }
+                        </select>
+                        <button type="button" class="btn btn-light text-danger removeStep"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                }
+            </div>
+            <button type="button" class="btn btn-light btn-sm" id="addStep"><i class="bi bi-plus-lg"></i> Tambah Langkah</button>
+            <template id="stepTpl">
+                <div class="input-group mb-2 step-row">
+                    <span class="input-group-text">Level <span class="lvl">0</span></span>
+                    <select name="StepPositionIds" class="form-select">
+                        <option value="">-- Pilih jabatan --</option>
+                        @foreach (var p in (IEnumerable<dynamic>)ViewBag.Positions)
+                        { <option value="@p.Id">@p.Display</option> }
+                    </select>
+                    <button type="button" class="btn btn-light text-danger removeStep"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </template>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
+                <a asp-action="Index" class="btn btn-light">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const body = document.getElementById('stepsBody');
+            const tpl = document.getElementById('stepTpl');
+
+            function renumber() {
+                body.querySelectorAll('.step-row .lvl').forEach(function (el, idx) {
+                    el.textContent = idx + 1;
+                });
+            }
+
+            function addStep() {
+                const clone = tpl.content.firstElementChild.cloneNode(true);
+                body.appendChild(clone);
+                renumber();
+            }
+
+            document.getElementById('addStep').addEventListener('click', addStep);
+
+            body.addEventListener('click', function (e) {
+                const btn = e.target.closest('.removeStep');
+                if (!btn) return;
+                const row = btn.closest('.step-row');
+                if (row) row.remove();
+                renumber();
+            });
+
+            if (!body.querySelector('.step-row')) {
+                addStep();
+            }
+        })();
+    </script>
+}

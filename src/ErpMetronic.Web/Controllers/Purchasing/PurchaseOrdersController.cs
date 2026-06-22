@@ -18,13 +18,15 @@ public class PurchaseOrdersController : Controller
     private readonly IStockService _stock;
     private readonly IDocumentNumberService _docNumber;
     private readonly ITaxService _tax;
+    private readonly IApprovalService _approval;
 
-    public PurchaseOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber, ITaxService tax)
+    public PurchaseOrdersController(ApplicationDbContext db, IStockService stock, IDocumentNumberService docNumber, ITaxService tax, IApprovalService approval)
     {
         _db = db;
         _stock = stock;
         _docNumber = docNumber;
         _tax = tax;
+        _approval = approval;
     }
 
     public async Task<IActionResult> Index()
@@ -182,6 +184,7 @@ public class PurchaseOrdersController : Controller
         ViewBag.Receipts = await _db.GoodsReceipts
             .Where(g => g.PurchaseOrderId == id).Include(g => g.Warehouse)
             .OrderBy(g => g.Id).ToListAsync();
+        ViewBag.Approval = await _approval.GetForDocumentAsync("PurchaseOrder", id);
         return View(po);
     }
 
@@ -189,16 +192,20 @@ public class PurchaseOrdersController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Confirm(int id)
     {
-        var po = await _db.PurchaseOrders.FindAsync(id);
+        var po = await _db.PurchaseOrders.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id);
         if (po is null) return NotFound();
         if (po.Status != PurchaseOrderStatus.Draft)
         {
             TempData["Error"] = "Hanya PO berstatus Draft yang dapat dikonfirmasi.";
             return RedirectToAction(nameof(Details), new { id });
         }
-        po.Status = PurchaseOrderStatus.Ordered;
+        // Bila nilai PO melewati ambang aturan persetujuan → minta persetujuan dulu.
+        var needsApproval = await _approval.CreateRequestAsync("PurchaseOrder", po.Id, po.ReferenceNumber, po.GrandTotal, User.Identity?.Name);
+        po.Status = needsApproval ? PurchaseOrderStatus.PendingApproval : PurchaseOrderStatus.Ordered;
         await _db.SaveChangesAsync();
-        TempData["Success"] = "PO dikonfirmasi (Ordered) — siap menerima barang.";
+        TempData["Success"] = needsApproval
+            ? "PO diajukan untuk persetujuan (di atas ambang nilai)."
+            : "PO dikonfirmasi (Ordered) — siap menerima barang.";
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -215,6 +222,7 @@ public class PurchaseOrdersController : Controller
             TempData["Error"] = "PO yang sudah menerima barang atau selesai/batal tidak dapat dibatalkan.";
             return RedirectToAction(nameof(Details), new { id });
         }
+        // (Draft, Ordered, atau PendingApproval boleh dibatalkan selama belum ada penerimaan.)
         po.Status = PurchaseOrderStatus.Cancelled;
         await _db.SaveChangesAsync();
         TempData["Success"] = "PO dibatalkan.";

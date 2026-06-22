@@ -1,0 +1,39 @@
+@using ErpMetronic.Domain.Enums
+@model List<ErpMetronic.Domain.Entities.ApprovalRequest>
+@{ ViewData["Title"] = "Kotak Persetujuan"; }
+
+<div class="card">
+    <div class="card-header">
+        <span>Kotak Persetujuan</span>
+    </div>
+    <div class="card-body p-0">
+        <p class="text-muted px-4 pt-3 mb-2">Permintaan menunggu keputusan Anda.</p>
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr>
+                <th>Dokumen</th>
+                <th class="text-end">Nilai</th>
+                <th>Level Berjalan</th>
+                <th>Penyetuju Saat Ini</th>
+                <th class="text-end">Aksi</th>
+            </tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="5" class="text-center text-muted py-4">Tidak ada permintaan menunggu.</td></tr>
+            }
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td class="fw-semibold text-dark">@r.DocumentType #@r.ReferenceNumber</td>
+                    <td class="text-end">@r.Amount.ToString("N2")</td>
+                    <td>@r.CurrentLevel dari @r.Steps.Count</td>
+                    <td>@(r.Steps.FirstOrDefault(s => s.Level == r.CurrentLevel)?.Position?.Name)</td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-light-primary">Tinjau</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -497,6 +497,20 @@ public static class DbSeeder
             }
         }
 
+        // 12b-18. Menu Aturan Persetujuan (Administrasi) + Persetujuan (top-level, semua pengguna)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "ApprovalRules"))
+        {
+            var adminGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Administrasi" && m.ParentId == null);
+            if (adminGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == adminGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.Add(new MenuItem { Title = "Aturan Persetujuan", Icon = "bi-diagram-3", Controller = "ApprovalRules", Action = "Index", ParentId = adminGroup.Id, SortOrder = maxChild + 1, RequiredRole = AppRoles.Administrator, IsSystem = true });
+            }
+            var maxTop = await context.MenuItems.Where(m => m.ParentId == null).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+            context.MenuItems.Add(new MenuItem { Title = "Persetujuan", Icon = "bi-check2-square", Controller = "Approvals", Action = "Index", ParentId = null, SortOrder = maxTop + 1, IsSystem = true });
+            await context.SaveChangesAsync();
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

@@ -7,5 +7,14 @@ public enum PurchaseOrderStatus
     Ordered = 1,            // Dikonfirmasi/dipesan ke pemasok
     PartiallyReceived = 2,  // Sebagian barang sudah diterima
     Received = 3,           // Seluruh barang diterima
-    Cancelled = 4           // Dibatalkan
+    Cancelled = 4,          // Dibatalkan
+    PendingApproval = 5     // Menunggu persetujuan (di atas ambang nilai)
+}
+
+/// <summary>Status persetujuan (approval) dokumen & langkahnya.</summary>
+public enum ApprovalStatus
+{
+    Pending = 0,
+    Approved = 1,
+    Rejected = 2
 }
