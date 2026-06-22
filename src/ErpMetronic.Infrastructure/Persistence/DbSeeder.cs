@@ -523,6 +523,20 @@ public static class DbSeeder
             }
         }
 
+        // 12b-20. Menu Manajemen Stok → Stok per Lot + Nomor Seri (idempoten)
+        if (!await context.MenuItems.AnyAsync(m => m.Controller == "StockTracking"))
+        {
+            var invGroup = await context.MenuItems.FirstOrDefaultAsync(m => m.Title == "Manajemen Stok" && m.ParentId == null);
+            if (invGroup is not null)
+            {
+                var maxChild = await context.MenuItems.Where(m => m.ParentId == invGroup.Id).MaxAsync(m => (int?)m.SortOrder) ?? 0;
+                context.MenuItems.AddRange(
+                    new MenuItem { Title = "Stok per Lot", Icon = "bi-box-seam", Controller = "StockTracking", Action = "Lots", ParentId = invGroup.Id, SortOrder = maxChild + 1, IsSystem = true },
+                    new MenuItem { Title = "Nomor Seri", Icon = "bi-upc-scan", Controller = "StockTracking", Action = "Serials", ParentId = invGroup.Id, SortOrder = maxChild + 2, IsSystem = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
         // 12c. Penomoran dokumen bawaan (idempoten per kode)
         foreach (var (code, name) in Domain.Constants.DocumentCodes.BuiltIns)
         {

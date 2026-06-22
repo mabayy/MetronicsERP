@@ -71,6 +71,11 @@
                     <input asp-for="ReorderQuantity" class="form-control" />
                     <span asp-validation-for="ReorderQuantity" class="text-danger small"></span>
                 </div>
+                <div class="col-md-3">
+                    <label asp-for="TrackingType" class="form-label fw-semibold">Pelacakan</label>
+                    <select asp-for="TrackingType" asp-items="Html.GetEnumSelectList<ErpMetronic.Domain.Enums.ProductTrackingType>()" class="form-select"></select>
+                    <span class="text-muted small">None / Lot (batch+kadaluarsa) / Serial</span>
+                </div>
                 <div class="col-12 form-check ms-2">
                     <input asp-for="IsActive" class="form-check-input" />
                     <label asp-for="IsActive" class="form-check-label">Aktif</label>

@@ -39,6 +39,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 29 | [Penawaran Penjualan (Quotation)](29-sales-quotation.md) | Quotation → konversi ke Sales Order (gaya Odoo) | ✅ |
 | 30 | [Workflow Persetujuan](30-approval-workflow.md) | Approval berjenjang (ambang nilai) untuk Purchase Order | ✅ |
 | 31 | [Reorder & Saran Pembelian](31-reorder-saran-pembelian.md) | Titik reorder + saran pembelian → buat PO draft | ✅ |
+| 32 | [Batch/Lot & Serial Number](32-batch-lot-serial.md) | Pelacakan lot (+kadaluarsa, FEFO) & nomor seri | ✅ |
 
 ## Cara membaca dokumen ini
 

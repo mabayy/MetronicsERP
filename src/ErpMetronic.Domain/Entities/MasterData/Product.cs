@@ -1,12 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using ErpMetronic.Domain.Common;
+using ErpMetronic.Domain.Enums;
 
 namespace ErpMetronic.Domain.Entities;
 
 /// <summary>Produk / barang (master data inti).</summary>
 public class Product : BaseEntity
 {
+    /// <summary>Jenis pelacakan persediaan: tanpa, per batch/lot, atau per nomor seri.</summary>
+    public ProductTrackingType TrackingType { get; set; } = ProductTrackingType.None;
+
     [Required, StringLength(40)]
     public string Sku { get; set; } = string.Empty;
 

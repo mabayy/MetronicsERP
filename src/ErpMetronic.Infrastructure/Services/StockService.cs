@@ -22,7 +22,8 @@ public class StockService : IStockService
             .Select(s => (int?)s.Quantity)
             .FirstOrDefaultAsync() ?? 0;
 
-    public async Task<StockResult> StockInAsync(int productId, int warehouseId, int quantity, DateTime date, string? note, string? user, decimal? unitCost = null)
+    public async Task<StockResult> StockInAsync(int productId, int warehouseId, int quantity, DateTime date, string? note, string? user,
+        decimal? unitCost = null, string? lotNumber = null, DateTime? expiry = null, IEnumerable<string>? serials = null)
     {
         if (quantity <= 0) return StockResult.Fail("Jumlah harus lebih dari 0.");
         if (!await ValidateAsync(productId, warehouseId)) return StockResult.Fail("Produk atau gudang tidak valid.");
@@ -44,10 +45,47 @@ public class StockService : IStockService
         stock.Quantity += quantity;
         product.StockQuantity += quantity;
 
+        // Sub-ledger pelacakan (lot/serial) — otomatis konsisten dengan saldo gudang.
+        if (product.TrackingType == ProductTrackingType.Lot)
+            await ReceiveLotAsync(productId, warehouseId, quantity, lotNumber, expiry, date);
+        else if (product.TrackingType == ProductTrackingType.Serial)
+            await ReceiveSerialsAsync(productId, warehouseId, quantity, serials, date);
+
         var movement = await BuildMovementAsync(MovementType.StockIn, productId, warehouseId, null, quantity, date, note, user, movementCost);
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement, movementCost);
+    }
+
+    private async Task ReceiveLotAsync(int productId, int warehouseId, int quantity, string? lotNumber, DateTime? expiry, DateTime date)
+    {
+        var lot = (lotNumber ?? "").Trim();
+        if (lot.Length == 0) lot = $"LOT-{date:yyyyMMdd}"; // auto bila tak diisi
+        var existing = await _db.StockLots.FirstOrDefaultAsync(l => l.ProductId == productId && l.WarehouseId == warehouseId && l.LotNumber == lot);
+        if (existing is null)
+            _db.StockLots.Add(new StockLot { ProductId = productId, WarehouseId = warehouseId, LotNumber = lot, ExpiryDate = expiry, Quantity = quantity });
+        else
+        {
+            existing.Quantity += quantity;
+            if (expiry.HasValue) existing.ExpiryDate = expiry;
+        }
+    }
+
+    private async Task ReceiveSerialsAsync(int productId, int warehouseId, int quantity, IEnumerable<string>? serials, DateTime date)
+    {
+        var list = (serials ?? Enumerable.Empty<string>())
+            .Select(s => s?.Trim() ?? "").Where(s => s.Length > 0).Distinct().ToList();
+        // Auto-generate placeholder bila jumlah serial tak sesuai (mis. tanpa input di alur PO/SO).
+        if (list.Count != quantity)
+        {
+            var baseTick = date.ToString("yyyyMMddHHmmss");
+            list = Enumerable.Range(1, quantity).Select(n => $"SN-{productId}-{baseTick}-{n}").ToList();
+        }
+        foreach (var sn in list)
+        {
+            if (await _db.SerialNumbers.AnyAsync(x => x.ProductId == productId && x.SerialNo == sn)) continue;
+            _db.SerialNumbers.Add(new SerialNumber { ProductId = productId, SerialNo = sn, WarehouseId = warehouseId, IsInStock = true });
+        }
     }
 
     public async Task<StockResult> StockOutAsync(int productId, int warehouseId, int quantity, DateTime date, string? note, string? user)
@@ -64,6 +102,12 @@ public class StockService : IStockService
 
         stock.Quantity -= quantity;
         product.StockQuantity -= quantity;
+
+        // Kurangi sub-ledger pelacakan: lot secara FEFO (kedaluwarsa terdekat dulu), serial yang tersedia.
+        if (product.TrackingType == ProductTrackingType.Lot)
+            await ConsumeLotsFefoAsync(productId, warehouseId, quantity);
+        else if (product.TrackingType == ProductTrackingType.Serial)
+            await ConsumeSerialsAsync(productId, warehouseId, quantity);
 
         var movement = await BuildMovementAsync(MovementType.StockOut, productId, warehouseId, null, quantity, date, note, user, cost);
         _db.StockMovements.Add(movement);
@@ -111,6 +155,32 @@ public class StockService : IStockService
         _db.StockMovements.Add(movement);
         await _db.SaveChangesAsync();
         return StockResult.Ok(movement);
+    }
+
+    // Konsumsi lot secara FEFO: kedaluwarsa paling awal dulu (null = paling akhir). Best-effort.
+    private async Task ConsumeLotsFefoAsync(int productId, int warehouseId, int quantity)
+    {
+        var remaining = quantity;
+        var lots = await _db.StockLots
+            .Where(l => l.ProductId == productId && l.WarehouseId == warehouseId && l.Quantity > 0)
+            .OrderBy(l => l.ExpiryDate == null).ThenBy(l => l.ExpiryDate).ThenBy(l => l.Id)
+            .ToListAsync();
+        foreach (var lot in lots)
+        {
+            if (remaining <= 0) break;
+            var take = Math.Min(lot.Quantity, remaining);
+            lot.Quantity -= take;
+            remaining -= take;
+        }
+    }
+
+    // Tandai sejumlah unit serial yang masih in-stock di gudang ini sebagai keluar.
+    private async Task ConsumeSerialsAsync(int productId, int warehouseId, int quantity)
+    {
+        var units = await _db.SerialNumbers
+            .Where(s => s.ProductId == productId && s.WarehouseId == warehouseId && s.IsInStock)
+            .OrderBy(s => s.Id).Take(quantity).ToListAsync();
+        foreach (var u in units) { u.IsInStock = false; u.WarehouseId = null; }
     }
 
     // ---------- helpers ----------

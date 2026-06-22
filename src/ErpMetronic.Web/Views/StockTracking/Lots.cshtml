@@ -1,0 +1,39 @@
+@model List<ErpMetronic.Domain.Entities.StockLot>
+@{
+    ViewData["Title"] = "Stok per Lot";
+    var today = DateTime.Today;
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-box-seam text-primary me-2"></i> Stok per Batch/Lot</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Produk</th><th>Gudang</th><th>No. Lot</th><th>Kadaluarsa</th><th class="text-end">Jumlah</th></tr></thead>
+                <tbody>
+                @if (!Model.Any()) { <tr><td colspan="5" class="text-center text-muted py-4">Belum ada lot</td></tr> }
+                @foreach (var l in Model)
+                {
+                    var expired = l.ExpiryDate.HasValue && l.ExpiryDate.Value.Date < today;
+                    var near = l.ExpiryDate.HasValue && !expired && l.ExpiryDate.Value.Date <= today.AddDays(30);
+                    <tr>
+                        <td class="fw-semibold text-dark">@l.Product?.Sku — @l.Product?.Name</td>
+                        <td>@l.Warehouse?.Name</td>
+                        <td><span class="badge-light-primary px-2 py-1 rounded">@l.LotNumber</span></td>
+                        <td>
+                            @if (l.ExpiryDate.HasValue)
+                            {
+                                <span>@l.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
+                                @if (expired) { <span class="badge-light-danger px-2 rounded ms-1">Kedaluwarsa</span> }
+                                else if (near) { <span class="badge-light-warning px-2 rounded ms-1">≤ 30 hari</span> }
+                            }
+                            else { <span class="text-muted">—</span> }
+                        </td>
+                        <td class="text-end fw-semibold">@l.Quantity.ToString("N0")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

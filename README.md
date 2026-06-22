@@ -36,6 +36,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Penawaran Penjualan | ✅ | Sales Quotation → konversi ke Sales Order (gaya Odoo) |
 | Workflow Persetujuan | ✅ | Approval berjenjang per jabatan (ambang nilai) untuk Purchase Order |
 | Reorder & Saran Pembelian | ✅ | Titik reorder + saran pembelian otomatis → buat PO draft |
+| Batch/Lot & Serial Number | ✅ | Pelacakan per lot (+kadaluarsa, FEFO) & per nomor seri, terintegrasi stok |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -116,6 +117,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 29. [Penawaran Penjualan (Quotation)](docs/29-sales-quotation.md)
 30. [Workflow Persetujuan](docs/30-approval-workflow.md)
 31. [Reorder & Saran Pembelian](docs/31-reorder-saran-pembelian.md)
+32. [Batch/Lot & Serial Number](docs/32-batch-lot-serial.md)
 
 ## 🧰 Tech Stack
 

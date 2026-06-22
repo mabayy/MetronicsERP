@@ -22,6 +22,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
     public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<StockLot> StockLots => Set<StockLot>();
+    public DbSet<SerialNumber> SerialNumbers => Set<SerialNumber>();
     public DbSet<Division> Divisions => Set<Division>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<MenuItemDivision> MenuItemDivisions => Set<MenuItemDivision>();
@@ -346,6 +348,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.DestinationWarehouse).WithMany().HasForeignKey(x => x.DestinationWarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StockLot>(e =>
+        {
+            e.HasIndex(x => new { x.ProductId, x.WarehouseId, x.LotNumber }).IsUnique();
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<SerialNumber>(e =>
+        {
+            e.HasIndex(x => new { x.ProductId, x.SerialNo }).IsUnique();
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<Division>().HasIndex(x => x.Code).IsUnique();

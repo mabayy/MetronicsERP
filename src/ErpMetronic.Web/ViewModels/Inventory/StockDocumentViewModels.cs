@@ -24,6 +24,14 @@ public class ReceiptLineInput
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitCost { get; set; }
+
+    /// <summary>Untuk produk berlacak Lot: nomor batch & kedaluwarsa (opsional).</summary>
+    public string? LotNumber { get; set; }
+    [DataType(DataType.Date)]
+    public DateTime? ExpiryDate { get; set; }
+
+    /// <summary>Untuk produk berlacak Serial: nomor seri, pisahkan dengan koma/baris baru.</summary>
+    public string? Serials { get; set; }
 }
 
 public class DeliveryCreateViewModel
