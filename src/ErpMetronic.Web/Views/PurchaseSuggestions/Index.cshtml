@@ -1,0 +1,74 @@
+@model List<ErpMetronic.Web.ViewModels.SuggestionRow>
+@{
+    ViewData["Title"] = "Saran Pembelian";
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-lightbulb text-primary me-2"></i> Saran Pembelian (stok ≤ titik reorder)</div>
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <div class="text-center text-muted py-4"><i class="bi bi-check-circle fs-3 d-block mb-2"></i> Semua stok berada di atas titik reorder.</div>
+        }
+        else
+        {
+            <form asp-action="CreatePo" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Pemasok</label>
+                        <select name="SupplierId" asp-items="ViewBag.Suppliers" class="form-select"><option value="">-- Pilih pemasok --</option></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Gudang Tujuan</label>
+                        <select name="WarehouseId" asp-items="ViewBag.Warehouses" class="form-select"><option value="">-- Pilih gudang --</option></select>
+                    </div>
+                </div>
+
+                <div class="lines-scroll">
+                <table class="table align-middle" id="linesTable">
+                    <thead><tr>
+                        <th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input" /></th>
+                        <th>Produk</th>
+                        <th class="text-end">Stok</th>
+                        <th class="text-end">Titik Reorder</th>
+                        <th class="text-end" style="width:120px">Pesan</th>
+                        <th class="text-end">Harga Beli</th>
+                    </tr></thead>
+                    <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var r = Model[i];
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="Lines[@i].Selected" value="true" checked class="form-check-input rowCheck" />
+                                <input type="hidden" name="Lines[@i].ProductId" value="@r.ProductId" />
+                                <input type="hidden" name="Lines[@i].UnitPrice" value="@r.PurchasePrice" />
+                            </td>
+                            <td><span class="text-muted small">@r.Sku</span> @r.Name</td>
+                            <td class="text-end"><span class="badge-light-danger px-2 py-1 rounded">@r.Stock</span></td>
+                            <td class="text-end">@r.ReorderLevel</td>
+                            <td><input name="Lines[@i].Quantity" type="number" min="1" value="@r.SuggestedQty" class="form-control form-control-sm text-end" /></td>
+                            <td class="text-end">@r.PurchasePrice.ToString("N2")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-cart-plus"></i> Buat PO Draft dari Pilihan</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const all = document.getElementById('checkAll');
+        if (all) all.addEventListener('change', function () {
+            document.querySelectorAll('.rowCheck').forEach(c => c.checked = all.checked);
+        });
+    </script>
+}

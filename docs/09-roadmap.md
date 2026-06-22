@@ -84,7 +84,8 @@ diurut berdasarkan dampak terhadap fondasi yang ada.
 6. **Sales Quotation → SO** (penawaran penjualan) — ✅ **selesai** ([Tahap 29](29-sales-quotation.md)).
 7. **Workflow approval** berjenjang — ✅ **selesai** untuk Purchase Order ([Tahap 30](30-approval-workflow.md));
    dapat diperluas ke SO/dokumen lain (mesin generik).
-8. **Batch/Lot & Serial number + kedaluwarsa**, serta **reorder point (min/max)** + saran pembelian.
+8. **Reorder point + saran pembelian** — ✅ **selesai** ([Tahap 31](31-reorder-saran-pembelian.md)).
+   **Batch/Lot & Serial number + kedaluwarsa** — belum (modul tersendiri; menyentuh inti stok & HPP).
 
 ### Tier 3 — Modul lanjutan / industri
 9. **Manufaktur**: Bill of Materials (BoM) + Production Order + MRP.

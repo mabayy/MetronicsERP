@@ -27,7 +27,12 @@ public class Product : BaseEntity
     public decimal AverageCost { get; set; }
 
     public int StockQuantity { get; set; }
+
+    /// <summary>Titik pemesanan ulang (stok minimum). Bila stok ≤ nilai ini, muncul di saran pembelian.</summary>
     public int ReorderLevel { get; set; }
+
+    /// <summary>Jumlah pemesanan ulang yang disarankan (lot size). 0 = isi sampai titik reorder.</summary>
+    public int ReorderQuantity { get; set; }
 
     public int CategoryId { get; set; }
     public Category? Category { get; set; }

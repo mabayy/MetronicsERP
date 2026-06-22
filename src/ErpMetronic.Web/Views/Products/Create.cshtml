@@ -58,10 +58,15 @@
                     <input asp-for="StockQuantity" class="form-control" />
                     <span asp-validation-for="StockQuantity" class="text-danger small"></span>
                 </div>
-                <div class="col-md-6">
-                    <label asp-for="ReorderLevel" class="form-label fw-semibold"></label>
+                <div class="col-md-3">
+                    <label asp-for="ReorderLevel" class="form-label fw-semibold">Titik Reorder</label>
                     <input asp-for="ReorderLevel" class="form-control" />
                     <span asp-validation-for="ReorderLevel" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ReorderQuantity" class="form-label fw-semibold">Jumlah Pemesanan</label>
+                    <input asp-for="ReorderQuantity" class="form-control" />
+                    <span asp-validation-for="ReorderQuantity" class="text-danger small"></span>
                 </div>
                 <div class="col-12 form-check ms-2">
                     <input asp-for="IsActive" class="form-check-input" />

@@ -38,6 +38,7 @@ mewakili satu tahap yang dapat dikerjakan dan diverifikasi secara berurutan.
 | 28 | [Daftar Harga (Price List)](28-price-list.md) | Daftar harga per pelanggan, auto-isi harga di Sales Order | ✅ |
 | 29 | [Penawaran Penjualan (Quotation)](29-sales-quotation.md) | Quotation → konversi ke Sales Order (gaya Odoo) | ✅ |
 | 30 | [Workflow Persetujuan](30-approval-workflow.md) | Approval berjenjang (ambang nilai) untuk Purchase Order | ✅ |
+| 31 | [Reorder & Saran Pembelian](31-reorder-saran-pembelian.md) | Titik reorder + saran pembelian → buat PO draft | ✅ |
 
 ## Cara membaca dokumen ini
 

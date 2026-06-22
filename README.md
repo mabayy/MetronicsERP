@@ -35,6 +35,7 @@ dokumentasi lengkap pada folder [`docs/`](docs/).
 | Daftar Harga (Price List) | ✅ | Daftar harga per pelanggan, harga jual auto-isi di Sales Order |
 | Penawaran Penjualan | ✅ | Sales Quotation → konversi ke Sales Order (gaya Odoo) |
 | Workflow Persetujuan | ✅ | Approval berjenjang per jabatan (ambang nilai) untuk Purchase Order |
+| Reorder & Saran Pembelian | ✅ | Titik reorder + saran pembelian otomatis → buat PO draft |
 | Document Numbering | ✅ | Penomoran dokumen dapat dikustomisasi: prefix, format token, padding, reset bulanan/tahunan |
 | Currency Management | ✅ | Multi-currency: mata uang dasar, kurs ber-tanggal, konversi + harga produk multi-currency |
 | Dashboard | ✅ | Kartu statistik, produk terbaru, stok menipis |
@@ -114,6 +115,7 @@ untuk indeks lengkap, atau langsung ke tiap tahap:
 28. [Daftar Harga (Price List)](docs/28-price-list.md)
 29. [Penawaran Penjualan (Quotation)](docs/29-sales-quotation.md)
 30. [Workflow Persetujuan](docs/30-approval-workflow.md)
+31. [Reorder & Saran Pembelian](docs/31-reorder-saran-pembelian.md)
 
 ## 🧰 Tech Stack
 
