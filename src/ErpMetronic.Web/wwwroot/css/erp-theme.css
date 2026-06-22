@@ -437,3 +437,21 @@ a:hover { color: var(--erp-primary-hover); }
     /* Tombol ciut desktop disembunyikan di mobile (pakai off-canvas) */
     .erp-collapse-btn { display: none; }
 }
+
+/* ===== Tabel detail item: scroll horizontal & vertikal ===== */
+.lines-scroll {
+  max-height: 58vh;
+  overflow: auto;
+  border: 1px solid rgba(0, 0, 0, .08);
+  border-radius: .5rem;
+}
+.lines-scroll > table {
+  margin-bottom: 0;
+  min-width: 820px;
+}
+.lines-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--erp-card-bg, #fff);
+}
